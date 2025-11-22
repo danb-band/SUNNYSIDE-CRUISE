@@ -1,26 +1,29 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
-  "private": true,
+  "name": "sunnyside-cruise",
+  "version": "1.0.0",
+  "description": "",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.0.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "assassin": "pnpm --filter assassin",
+    "preinstall": "npx only-allow pnpm",
+    "lint": "eslint ."
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^9.39.1",
     "eslint-config-next": "16.0.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "pnpm": "^10.23.0",
+    "prettier": "^3.6.2"
+  },
+  "engines": {
+    "node": ">=24.11.1",
+    "pnpm": ">=10.23.0"
+  },
+  "packageManager": "pnpm@10.23.0",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
