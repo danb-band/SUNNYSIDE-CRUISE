@@ -1,5 +1,3 @@
-"use server";
-
 import SongService from "../song/service";
 import { Player, PlayerResponse, playerResponseSchema, playerSchema } from "./schemas/player";
 
