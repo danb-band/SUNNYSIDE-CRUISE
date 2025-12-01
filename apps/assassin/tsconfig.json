@@ -11,7 +11,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@app/*": ["./src/app/*"],
+      "@components/*": ["./src/components/*"],
+      "@features/*": ["./src/features/*"],
+      "@libs/*": ["./src/libs/*"],
+      "@stores/*": ["./src/stores/*"]
     }
   },
   "include": [
