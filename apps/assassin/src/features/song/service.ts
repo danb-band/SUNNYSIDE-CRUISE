@@ -1,8 +1,12 @@
-const assertSongExists = async (songId: string): Promise<void> => {
-  // const song = await songApi.getById(songId);
-  const song = null; // TODO: replace with songApi.getById(songId)
+import SongRepository from "./lib/song.repository";
+import { songSchema } from "./schemas/song";
 
-  if (!song) {
+const assertSongExists = async (songId: string): Promise<void> => {
+  const song = await SongRepository.getSongById(songId);
+
+  const parsed = songSchema.safeParse(song);
+
+  if (!parsed.success) {
     throw new Error(`Song with ID ${songId} does not exist.`);
   }
 };
