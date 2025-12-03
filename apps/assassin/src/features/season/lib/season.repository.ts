@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client"
-import { seasonSchema } from "../schemas/season"
+import { CreateSeasonInput, seasonSchema, UpdateSeasonInput } from "../schemas/season"
 
 export async function getAllSeasons() {
   const { data, error } = await supabase
@@ -26,4 +26,44 @@ export async function getSeasonById(id: string) {
   }
 
   return seasonSchema.parse(data)
+}
+
+export async function createSeason(input: CreateSeasonInput) {
+  const { data, error } = await supabase
+    .from("season")
+    .insert([input])
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return seasonSchema.parse(data)
+}
+
+export async function updateSeason(id: string, input: UpdateSeasonInput) {
+  const { data, error } = await supabase
+    .from("season")
+    .update(input)
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return seasonSchema.parse(data)
+}
+
+export async function deleteSeason(id: string) {
+  const { error } = await supabase
+    .from("season")
+    .delete()
+    .eq("id", id)
+
+  if (error) {
+    throw error
+  }
 }
