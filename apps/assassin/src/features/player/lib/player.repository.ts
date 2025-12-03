@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client"
-import { CreatePlayerInput, Player, playerSchema, UpdatePlayerInput } from "../schemas/player"
+import { CreatePlayerInput, UpdatePlayerInput } from "../schemas/player"
 
 export async function getAllPlayers() {
   const { data, error } = await supabase
@@ -11,7 +11,7 @@ export async function getAllPlayers() {
     throw error
   }
 
-  return playerSchema.parse(data)
+  return data;
 }
 
 export async function getPlayerById(id: string) {
@@ -25,7 +25,7 @@ export async function getPlayerById(id: string) {
     throw error
   }
 
-  return playerSchema.parse(data)
+  return data;
 }
 
 export async function createPlayer(input: CreatePlayerInput) {
@@ -39,7 +39,7 @@ export async function createPlayer(input: CreatePlayerInput) {
     throw error
   }
 
-  return playerSchema.parse(data)
+  return data;
 }
 
 export async function updatePlayer(id: string, input: UpdatePlayerInput) {
@@ -54,7 +54,7 @@ export async function updatePlayer(id: string, input: UpdatePlayerInput) {
     throw error
   }
 
-  return playerSchema.parse(data)
+  return data;
 }
 
 export async function deletePlayer(id: string) {

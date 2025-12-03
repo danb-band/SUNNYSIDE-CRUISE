@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client"
-import { CreateSongInput, songSchema, UpdateSongInput } from "../schemas/song"
+import { CreateSongInput, UpdateSongInput } from "../schemas/song"
 
 
 export async function getAllSongs() {
@@ -12,7 +12,7 @@ export async function getAllSongs() {
     throw error
   }
 
-  return songSchema.parse(data)
+  return data;
 }
 
 export async function getSongById(id: string) {
@@ -26,7 +26,7 @@ export async function getSongById(id: string) {
     throw error
   }
 
-  return songSchema.parse(data)
+  return data;
 }
 
 export async function createSong(input: CreateSongInput) {
@@ -40,7 +40,7 @@ export async function createSong(input: CreateSongInput) {
     throw error
   }
 
-  return songSchema.parse(data)
+  return data;
 }
 
 export async function updateSong(id: string, input: UpdateSongInput) {
@@ -55,7 +55,7 @@ export async function updateSong(id: string, input: UpdateSongInput) {
     throw error
   }
 
-  return songSchema.parse(data)
+  return data;
 }
 
 export async function deleteSong(id: string) {

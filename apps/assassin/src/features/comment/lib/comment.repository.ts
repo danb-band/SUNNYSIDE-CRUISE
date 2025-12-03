@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client"
-import { commentSchema, CreateCommentInput, UpdateCommentInput } from "../schemas/comment"
+import { CreateCommentInput, UpdateCommentInput } from "../schemas/comment"
 
 export async function getAllComments() {
   const { data, error } = await supabase
@@ -11,7 +11,7 @@ export async function getAllComments() {
     throw error
   }
 
-  return commentSchema.parse(data)
+  return data;
 }
 
 export async function getCommentById(id: string) {
@@ -25,7 +25,7 @@ export async function getCommentById(id: string) {
     throw error
   }
 
-  return commentSchema.parse(data)
+  return data;
 }
 
 export async function createComment(input: CreateCommentInput) {
@@ -39,7 +39,7 @@ export async function createComment(input: CreateCommentInput) {
     throw error
   }
 
-  return commentSchema.parse(data)
+  return data;
 }
 
 export async function updateComment(id: string, input: UpdateCommentInput) {
@@ -54,7 +54,7 @@ export async function updateComment(id: string, input: UpdateCommentInput) {
     throw error
   }
 
-  return commentSchema.parse(data)
+  return data;
 }
 
 export async function deleteComment(id: string) {
