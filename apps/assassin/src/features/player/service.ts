@@ -5,7 +5,9 @@ import PlayerRepository from "./lib/player.repository";
 const assertPlayerExists = async (playerId: string): Promise<void> => {
   const player = await PlayerRepository.getPlayerById(playerId);
 
-  if (!player) {
+  const parsed = playerSchema.safeParse(player);
+
+  if (!parsed.success) {
     throw new Error(`Player with ID ${playerId} does not exist.`);
   }
 };
@@ -24,7 +26,7 @@ const createPlayer = async (player: Player): Promise<Player> => {
   return parsed.data;
 };
 
-const getPlayerById = async (id: string) => {
+const getPlayerById = async (id: string): Promise<Player> => {
   const player = await PlayerRepository.getPlayerById(id);
 
   const parsed = playerSchema.safeParse(player);
@@ -59,7 +61,7 @@ const updatePlayer = async (id: string, player: Partial<Player>) => {
     throw new Error("Invalid player input");
   }
 
-  const newPlayerData = { ...existed, ...parsedInput.data };
+  const newPlayerData: Player = { ...existed, ...parsedInput.data };
 
   const updatedPlayer = await PlayerRepository.updatePlayer(id, newPlayerData);
 
