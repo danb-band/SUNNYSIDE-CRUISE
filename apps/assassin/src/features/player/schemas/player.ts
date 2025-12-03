@@ -2,18 +2,24 @@ import * as z from "zod";
 
 const instrumentEnum = z.enum(["VOCAL", "GUITAR", "DRUM", "BASS", "KEYBOARD"]);
 
-export const playerSchema = z.object({
+// DB에 저장할 때 입력 스키마
+export const createPlayerSchema = z.object({
   songId: z.uuid(),
-  name: z.string(),
+  name: z.string().min(1, "Name required"),
   instrument: instrumentEnum,
 });
 
-export const playerResponseSchema = playerSchema.extend({
+// 부분 업데이트
+export const updatePlayerSchema = createPlayerSchema.partial();
+
+// DB에서 받은 응답 스키마
+export const playerSchema = createPlayerSchema.extend({
   id: z.uuid(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  deletedAt: z.date(),
+  deletedAt: z.date().nullable(),
 });
 
+export type CreatePlayerInput = z.infer<typeof createPlayerSchema>;
+export type UpdatePlayerInput = z.infer<typeof updatePlayerSchema>;
 export type Player = z.infer<typeof playerSchema>;
-export type PlayerResponse = z.infer<typeof playerResponseSchema>;

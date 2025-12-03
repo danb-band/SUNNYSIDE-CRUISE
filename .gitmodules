@@ -1,0 +1,3 @@
+[submodule "config"]
+	path = config
+	url = https://github.com/danb-band/env-config.git
