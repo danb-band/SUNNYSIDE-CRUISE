@@ -1,22 +1,21 @@
 import SongService from "@features/song/service";
-import { Player, PlayerResponse, playerResponseSchema, playerSchema } from "./schemas/player";
+import { Player, playerSchema } from "./schemas/player";
+import PlayerRepository from "./lib/player.repository";
 
 const assertPlayerExists = async (playerId: string): Promise<void> => {
-  // const player = await playerApi.getById(playerId);
-  const player = null; // TODO: replace with playerApi.getById(playerId)
+  const player = await PlayerRepository.getPlayerById(playerId);
 
   if (!player) {
     throw new Error(`Player with ID ${playerId} does not exist.`);
   }
 };
 
-const createPlayer = async (player: Player): Promise<PlayerResponse> => {
+const createPlayer = async (player: Player): Promise<Player> => {
   await SongService.assertSongExists(player.songId);
 
-  // const result = playerApi.create(player);
-  const result = null; // TODO: replace with playerApi.create(player)
+  const result = await PlayerRepository.createPlayer(player);
 
-  const parsed = playerResponseSchema.safeParse(result);
+  const parsed = playerSchema.safeParse(result);
 
   if (!parsed.success) {
     throw new Error("Invalid player response from DB");
@@ -26,10 +25,9 @@ const createPlayer = async (player: Player): Promise<PlayerResponse> => {
 };
 
 const getPlayerById = async (id: string) => {
-  // const player = await playerApi.getById(id);
-  const player = null; // TODO: replace with playerApi.getById(id)
+  const player = await PlayerRepository.getPlayerById(id);
 
-  const parsed = playerResponseSchema.safeParse(player);
+  const parsed = playerSchema.safeParse(player);
 
   if (!parsed.success) {
     throw new Error("Invalid player response from DB");
@@ -38,13 +36,12 @@ const getPlayerById = async (id: string) => {
   return parsed.data;
 };
 
-const getPlayersBySongId = async (songId: string): Promise<Array<PlayerResponse>> => {
+const getPlayersBySongId = async (songId: string): Promise<Array<Player>> => {
   await SongService.assertSongExists(songId);
 
-  // const players = await playerApi.getBySongId(songId);
-  const players: Array<unknown> = []; // TODO: replace with playerApi.getBySongId(songId)
+  const players = await PlayerRepository.getPlayersBySongId(songId);
 
-  const parsed = playerResponseSchema.array().safeParse(players);
+  const parsed = playerSchema.array().safeParse(players);
 
   if (!parsed.success) {
     throw new Error("Invalid player responses from DB");
@@ -64,10 +61,9 @@ const updatePlayer = async (id: string, player: Partial<Player>) => {
 
   const newPlayerData = { ...existed, ...parsedInput.data };
 
-  // const updatedPlayer = await playerApi.update(id, newPlayerData);
-  const updatedPlayer = null; // TODO: replace with playerApi.update(id, newPlayerData)
+  const updatedPlayer = await PlayerRepository.updatePlayer(id, newPlayerData);
 
-  const parsed = playerResponseSchema.safeParse(updatedPlayer);
+  const parsed = playerSchema.safeParse(updatedPlayer);
 
   if (!parsed.success) {
     throw new Error("Invalid player response from DB");
@@ -78,8 +74,7 @@ const updatePlayer = async (id: string, player: Partial<Player>) => {
 
 const deletePlayer = async (id: string) => {
   await assertPlayerExists(id);
-
-  // await playerApi.delete(id);
+  await PlayerRepository.deletePlayer(id);
 };
 
 const PlayerService = {
