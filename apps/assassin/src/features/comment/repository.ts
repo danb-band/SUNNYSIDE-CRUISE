@@ -24,6 +24,16 @@ async function getCommentById(id: string) {
   return data;
 }
 
+async function getCommentsBySongId(songId: string) {
+  const { data, error } = await supabase.from("comment").select("*").eq("songId", songId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 async function createComment(input: CreateCommentInput) {
   const { data, error } = await supabase.from("comment").insert([input]).select("*").single();
 
@@ -60,6 +70,7 @@ async function deleteComment(id: string) {
 const CommentRepository = {
   getAllComments,
   getCommentById,
+  getCommentsBySongId,
   createComment,
   updateComment,
   deleteComment,
