@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client";
-import { CreateSeasonInput, UpdateSeasonInput } from "./schemas/season";
+import { CreateSeasonInput, UpdateSeasonInput } from "./schema";
 
 async function getAllSeasons() {
   const { data, error } = await supabase
