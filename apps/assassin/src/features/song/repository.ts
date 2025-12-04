@@ -24,6 +24,16 @@ async function getSongById(id: string) {
   return data;
 }
 
+async function getSongsBySeasonId(seasonId: string) {
+  const { data, error } = await supabase.from("song").select("*").eq("seasonId", seasonId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function createSong(input: CreateSongInput) {
   const { data, error } = await supabase.from("song").insert([input]).select().single();
 
@@ -55,6 +65,7 @@ async function deleteSong(id: string) {
 const SongRepository = {
   getAllSongs,
   getSongById,
+  getSongsBySeasonId,
   createSong,
   updateSong,
   deleteSong,
