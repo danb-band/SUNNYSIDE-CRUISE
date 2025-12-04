@@ -1,6 +1,6 @@
 import SongService from "@features/song/service";
 import { Player, playerSchema } from "./schemas/player";
-import PlayerRepository from "./lib/player.repository";
+import PlayerRepository from "./repository";
 
 const assertPlayerExists = async (playerId: string): Promise<void> => {
   const player = await PlayerRepository.getPlayerById(playerId);

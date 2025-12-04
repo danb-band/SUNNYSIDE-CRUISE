@@ -1,4 +1,4 @@
-import SongRepository from "./lib/song.repository";
+import SongRepository from "./repository";
 import { songSchema } from "./schemas/song";
 
 const assertSongExists = async (songId: string): Promise<void> => {

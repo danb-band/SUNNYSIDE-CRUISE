@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client";
-import { CreateSongInput, UpdateSongInput } from "../schemas/song";
+import { CreateSongInput, UpdateSongInput } from "./schemas/song";
 
 async function getAllSongs() {
   const { data, error } = await supabase

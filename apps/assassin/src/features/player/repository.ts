@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client";
-import { CreatePlayerInput, UpdatePlayerInput } from "../schemas/player";
+import { CreatePlayerInput, UpdatePlayerInput } from "./schemas/player";
 
 async function getAllPlayers() {
   const { data, error } = await supabase
@@ -25,7 +25,7 @@ async function getPlayerById(id: string) {
 }
 
 async function getPlayersBySongId(songId: string) {
-  const { data, error } = await supabase.from("player").select().eq("songId", songId);
+  const { data, error } = await supabase.from("player").select("*").eq("songId", songId);
 
   if (error) {
     throw error;
