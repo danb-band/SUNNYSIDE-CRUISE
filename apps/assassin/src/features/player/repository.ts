@@ -35,7 +35,7 @@ async function getPlayersBySongId(songId: string) {
 }
 
 async function createPlayer(input: CreatePlayerInput) {
-  const { data, error } = await supabase.from("player").insert([input]).select().single();
+  const { data, error } = await supabase.from("player").insert([input]).select("*").single();
 
   if (error) {
     throw error;
@@ -49,7 +49,7 @@ async function updatePlayer(id: string, input: UpdatePlayerInput) {
     .from("player")
     .update(input)
     .eq("id", id)
-    .select()
+    .select("*")
     .single();
 
   if (error) {

@@ -35,7 +35,7 @@ async function getSongsBySeasonId(seasonId: string) {
 }
 
 export async function createSong(input: CreateSongInput) {
-  const { data, error } = await supabase.from("song").insert([input]).select().single();
+  const { data, error } = await supabase.from("song").insert([input]).select("*").single();
 
   if (error) {
     throw error;
@@ -45,7 +45,12 @@ export async function createSong(input: CreateSongInput) {
 }
 
 async function updateSong(id: string, input: UpdateSongInput) {
-  const { data, error } = await supabase.from("song").update(input).eq("id", id).select().single();
+  const { data, error } = await supabase
+    .from("song")
+    .update(input)
+    .eq("id", id)
+    .select("*")
+    .single();
 
   if (error) {
     throw error;

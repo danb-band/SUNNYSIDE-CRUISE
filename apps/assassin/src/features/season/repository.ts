@@ -25,7 +25,7 @@ async function getSeasonById(id: string) {
 }
 
 async function createSeason(input: CreateSeasonInput) {
-  const { data, error } = await supabase.from("season").insert([input]).select().single();
+  const { data, error } = await supabase.from("season").insert([input]).select("*").single();
 
   if (error) {
     throw error;
