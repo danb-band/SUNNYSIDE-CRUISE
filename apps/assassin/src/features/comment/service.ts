@@ -1,6 +1,6 @@
 import SongService from "@features/song/service";
 import CommentRepository from "./repository";
-import { Comment, commentSchema } from "./schemas/comment";
+import { Comment, commentSchema } from "./schema";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);

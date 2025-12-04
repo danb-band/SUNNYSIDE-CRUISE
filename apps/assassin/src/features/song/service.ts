@@ -1,6 +1,6 @@
 import SeasonService from "@features/season/service";
 import SongRepository from "./repository";
-import { Song, songSchema } from "./schemas/song";
+import { Song, songSchema } from "./schema";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);

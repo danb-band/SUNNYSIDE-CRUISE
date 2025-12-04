@@ -1,5 +1,5 @@
 import SongService from "@features/song/service";
-import { Player, playerSchema } from "./schemas/player";
+import { Player, playerSchema } from "./schema";
 import PlayerRepository from "./repository";
 
 const assertPlayerExists = async (playerId: string): Promise<void> => {
