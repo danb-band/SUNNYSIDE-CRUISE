@@ -1,6 +1,8 @@
 import SeasonService from "@features/season/service";
 import SongRepository from "./repository";
 import { Song, songSchema } from "./schema";
+import PlayerRepository from "@features/player/repository";
+import CommentRepository from "@features/comment/repository";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -75,7 +77,13 @@ const updateSong = async (id: string, song: Partial<Song>) => {
 };
 
 const deleteSong = async (id: string) => {
+  // TODO transaction
   await assertSongExists(id);
+
+  await PlayerRepository.deletePlayersBySongId(id);
+
+  await CommentRepository.deleteCommentsBySongId(id);
+
   await SongRepository.deleteSong(id);
 };
 

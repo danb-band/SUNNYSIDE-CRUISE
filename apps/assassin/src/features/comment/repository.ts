@@ -67,10 +67,19 @@ async function deleteComment(id: string) {
   }
 }
 
+async function deleteCommentsBySongId(songId: string) {
+  const { error } = await supabase.from("comment").delete().eq("songId", songId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 const CommentRepository = {
   getAllComments,
   getCommentById,
   getCommentsBySongId,
+  deleteCommentsBySongId,
   createComment,
   updateComment,
   deleteComment,

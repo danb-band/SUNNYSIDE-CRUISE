@@ -67,6 +67,14 @@ async function deletePlayer(id: string) {
   }
 }
 
+async function deletePlayersBySongId(songId: string) {
+  const { error } = await supabase.from("player").delete().eq("songId", songId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 const PlayerRepository = {
   getAllPlayers,
   getPlayerById,
@@ -74,6 +82,7 @@ const PlayerRepository = {
   createPlayer,
   updatePlayer,
   deletePlayer,
+  deletePlayersBySongId,
 };
 
 export default PlayerRepository;
