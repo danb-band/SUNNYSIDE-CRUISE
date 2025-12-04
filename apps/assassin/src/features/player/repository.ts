@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client";
-import { CreatePlayerInput, UpdatePlayerInput } from "./schemas/player";
+import { CreatePlayerInput, UpdatePlayerInput } from "./schema";
 
 async function getAllPlayers() {
   const { data, error } = await supabase

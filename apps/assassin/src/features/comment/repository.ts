@@ -1,5 +1,5 @@
 import { supabase } from "@libs/supabase/client";
-import { CreateCommentInput, UpdateCommentInput } from "./schemas/comment";
+import { CreateCommentInput, UpdateCommentInput } from "./schema";
 
 async function getAllComments() {
   const { data, error } = await supabase
