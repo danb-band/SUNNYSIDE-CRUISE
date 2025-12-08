@@ -8,7 +8,7 @@ datasource db {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model comment {
+model Comment {
   id         String    @id(map: "Comments_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   song_id    String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content    String?
@@ -17,11 +17,13 @@ model comment {
   created_at DateTime  @default(now()) @db.Timestamptz(6)
   updated_at DateTime? @default(now()) @db.Timestamptz(6)
   deleted_at DateTime? @db.Timestamptz(6)
-  song       song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Comments_song_id_fkey")
+  song       Song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Comments_song_id_fkey")
+
+  @@map("comment")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model player {
+model Player {
   id         String    @id(map: "Players_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   song_id    String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String?
@@ -29,22 +31,26 @@ model player {
   created_at DateTime  @default(now()) @db.Timestamptz(6)
   updated_at DateTime? @default(now()) @db.Timestamptz(6)
   deleted_at DateTime? @db.Timestamptz(6)
-  song       song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Players_song_id_fkey")
+  song       Song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Players_song_id_fkey")
+
+  @@map("player")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model season {
+model Season {
   id          String    @id(map: "Seasons_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String?
   order       BigInt?
   is_archived Boolean
   created_at  DateTime  @default(now()) @db.Timestamptz(6)
   updated_at  DateTime? @default(now()) @db.Timestamptz(6)
-  song        song[]
+  song        Song[]
+
+  @@map("season")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model song {
+model Song {
   id          String    @id(map: "Songs_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   season_id   String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String?
@@ -57,7 +63,9 @@ model song {
   created_at  DateTime  @default(now()) @db.Timestamptz(6)
   updated_at  DateTime? @default(now()) @db.Timestamptz(6)
   deleted_at  DateTime? @db.Timestamptz(6)
-  comment     comment[]
-  player      player[]
-  season      season?   @relation(fields: [season_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Songs_season_id_fkey")
+  comment     Comment[]
+  player      Player[]
+  season      Season?   @relation(fields: [season_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Songs_season_id_fkey")
+
+  @@map("song")
 }
