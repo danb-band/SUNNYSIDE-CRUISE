@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model comment {
+  id         String    @id(map: "Comments_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  song_id    String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content    String?
+  writer     String?
+  delete_pw  String?
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  song       song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Comments_song_id_fkey")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model player {
+  id         String    @id(map: "Players_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  song_id    String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String?
+  instrument String?
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  song       song?     @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Players_song_id_fkey")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model season {
+  id          String    @id(map: "Seasons_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  order       BigInt?
+  is_archived Boolean
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  song        song[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model song {
+  id          String    @id(map: "Songs_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  season_id   String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  artist      String?
+  description String?
+  youtube_url String?
+  order       BigInt?
+  writer      String?
+  delete_pw   String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime? @db.Timestamptz(6)
+  comment     comment[]
+  player      player[]
+  season      season?   @relation(fields: [season_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Songs_season_id_fkey")
+}
