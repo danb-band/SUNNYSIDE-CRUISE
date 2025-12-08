@@ -1,60 +1,47 @@
-import { supabase } from "@libs/supabase/client";
-import { CreateSeasonInput, UpdateSeasonInput } from "./schemas/season";
+import { prisma } from "@libs/prisma/client";
+import { CreateSeasonInput, UpdateSeasonInput } from "./schema";
 
 async function getAllSeasons() {
-  const { data, error } = await supabase
-    .from("season")
-    .select("*")
-    .order("createdAt", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const seasons = await prisma.season.findMany({
+    orderBy: { created_at: "desc" },
+  });
+  return seasons;
 }
 
 async function getSeasonById(id: string) {
-  const { data, error } = await supabase.from("season").select("*").eq("id", id).single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const season = await prisma.season.findUnique({
+    where: { id },
+  });
+  return season;
 }
 
 async function createSeason(input: CreateSeasonInput) {
-  const { data, error } = await supabase.from("season").insert([input]).select().single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const season = await prisma.season.create({
+    data: {
+      name: input.name,
+      order: input.order,
+      is_archived: input.isArchived,
+    },
+  });
+  return season;
 }
 
 async function updateSeason(id: string, input: UpdateSeasonInput) {
-  const { data, error } = await supabase
-    .from("season")
-    .update(input)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const season = await prisma.season.update({
+    where: { id },
+    data: {
+      name: input.name,
+      order: input.order,
+      is_archived: input.isArchived,
+    },
+  });
+  return season;
 }
 
 async function deleteSeason(id: string) {
-  const { error } = await supabase.from("season").delete().eq("id", id);
-
-  if (error) {
-    throw error;
-  }
+  await prisma.season.delete({
+    where: { id },
+  });
 }
 
 const SeasonRepository = {

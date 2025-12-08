@@ -1,55 +1,57 @@
-import { supabase } from "@libs/supabase/client";
+import { prisma } from "@libs/prisma/client";
 import { CreateSongInput, UpdateSongInput } from "./schema";
 
 async function getAllSongs() {
-  const { data, error } = await supabase
-    .from("song")
-    .select("*")
-    .order("createdAt", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const songs = await prisma.song.findMany({
+    orderBy: { created_at: "desc" },
+  });
+  return songs;
 }
 
 async function getSongById(id: string) {
-  const { data, error } = await supabase.from("song").select("*").eq("id", id).single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const song = await prisma.song.findUnique({
+    where: { id },
+  });
+  return song;
 }
 
 export async function createSong(input: CreateSongInput) {
-  const { data, error } = await supabase.from("song").insert([input]).select().single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const song = await prisma.song.create({
+    data: {
+      name: input.name,
+      artist: input.artist,
+      description: input.description,
+      youtube_url: input.youtubeUrl,
+      order: input.order,
+      writer: input.writer,
+      delete_pw: input.deletePw,
+      season_id: input.seasonId,
+    },
+  });
+  return song;
 }
 
 async function updateSong(id: string, input: UpdateSongInput) {
-  const { data, error } = await supabase.from("song").update(input).eq("id", id).select().single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  const song = await prisma.song.update({
+    where: { id },
+    data: {
+      name: input.name,
+      artist: input.artist,
+      description: input.description,
+      youtube_url: input.youtubeUrl,
+      order: input.order,
+      writer: input.writer,
+      delete_pw: input.deletePw,
+      season_id: input.seasonId,
+    },
+  });
+  return song;
 }
 
 async function deleteSong(id: string) {
-  const { error } = await supabase.from("song").delete().eq("id", id);
-
-  if (error) {
-    throw error;
-  }
+  await prisma.song.delete({
+    where: { id },
+  });
 }
 
 const SongRepository = {
