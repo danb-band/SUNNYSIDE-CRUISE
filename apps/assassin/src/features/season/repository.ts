@@ -1,21 +1,22 @@
 import { prisma } from "@libs/prisma/client";
+import type { Season } from "../../generated/prisma/client";
 import { CreateSeasonInput, UpdateSeasonInput } from "./schema";
 
-async function getAllSeasons() {
+async function getAllSeasons(): Promise<Season[]> {
   const seasons = await prisma.season.findMany({
     orderBy: { created_at: "desc" },
   });
   return seasons;
 }
 
-async function getSeasonById(id: string) {
+async function getSeasonById(id: string): Promise<Season | null> {
   const season = await prisma.season.findUnique({
     where: { id },
   });
   return season;
 }
 
-async function createSeason(input: CreateSeasonInput) {
+async function createSeason(input: CreateSeasonInput): Promise<Season> {
   const season = await prisma.season.create({
     data: {
       name: input.name,
@@ -26,7 +27,7 @@ async function createSeason(input: CreateSeasonInput) {
   return season;
 }
 
-async function updateSeason(id: string, input: UpdateSeasonInput) {
+async function updateSeason(id: string, input: UpdateSeasonInput): Promise<Season> {
   const season = await prisma.season.update({
     where: { id },
     data: {
@@ -38,7 +39,7 @@ async function updateSeason(id: string, input: UpdateSeasonInput) {
   return season;
 }
 
-async function deleteSeason(id: string) {
+async function deleteSeason(id: string): Promise<void> {
   await prisma.season.delete({
     where: { id },
   });

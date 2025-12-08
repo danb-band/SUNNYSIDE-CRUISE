@@ -1,21 +1,22 @@
 import { prisma } from "@libs/prisma/client";
+import type { Song } from "../../generated/prisma/client";
 import { CreateSongInput, UpdateSongInput } from "./schema";
 
-async function getAllSongs() {
+async function getAllSongs(): Promise<Song[]> {
   const songs = await prisma.song.findMany({
     orderBy: { created_at: "desc" },
   });
   return songs;
 }
 
-async function getSongById(id: string) {
+async function getSongById(id: string): Promise<Song | null> {
   const song = await prisma.song.findUnique({
     where: { id },
   });
   return song;
 }
 
-export async function createSong(input: CreateSongInput) {
+export async function createSong(input: CreateSongInput): Promise<Song> {
   const song = await prisma.song.create({
     data: {
       name: input.name,
@@ -31,7 +32,7 @@ export async function createSong(input: CreateSongInput) {
   return song;
 }
 
-async function updateSong(id: string, input: UpdateSongInput) {
+async function updateSong(id: string, input: UpdateSongInput): Promise<Song> {
   const song = await prisma.song.update({
     where: { id },
     data: {
@@ -48,7 +49,7 @@ async function updateSong(id: string, input: UpdateSongInput) {
   return song;
 }
 
-async function deleteSong(id: string) {
+async function deleteSong(id: string): Promise<void> {
   await prisma.song.delete({
     where: { id },
   });

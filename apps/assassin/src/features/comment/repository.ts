@@ -1,28 +1,29 @@
 import { prisma } from "@libs/prisma/client";
+import type { Comment } from "../../generated/prisma/client";
 import { CreateCommentInput, UpdateCommentInput } from "./schema";
 
-async function getAllComments() {
+async function getAllComments(): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
     orderBy: { created_at: "desc" },
   });
   return comments;
 }
 
-async function getCommentById(id: string) {
+async function getCommentById(id: string): Promise<Comment | null> {
   const comment = await prisma.comment.findUnique({
     where: { id },
   });
   return comment;
 }
 
-async function getCommentsBySongId(songId: string) {
+async function getCommentsBySongId(songId: string): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
     where: { song_id: songId },
   });
   return comments;
 }
 
-async function createComment(input: CreateCommentInput) {
+async function createComment(input: CreateCommentInput): Promise<Comment> {
   const comment = await prisma.comment.create({
     data: {
       content: input.content,
@@ -34,7 +35,10 @@ async function createComment(input: CreateCommentInput) {
   return comment;
 }
 
-async function updateComment(id: string, input: UpdateCommentInput) {
+async function updateComment(
+  id: string,
+  input: UpdateCommentInput
+): Promise<Comment> {
   const comment = await prisma.comment.update({
     where: { id },
     data: {
@@ -47,7 +51,7 @@ async function updateComment(id: string, input: UpdateCommentInput) {
   return comment;
 }
 
-async function deleteComment(id: string) {
+async function deleteComment(id: string): Promise<void> {
   await prisma.comment.delete({
     where: { id },
   });
