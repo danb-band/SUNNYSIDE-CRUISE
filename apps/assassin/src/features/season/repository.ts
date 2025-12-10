@@ -20,7 +20,7 @@ async function createSeason(input: CreateSeasonInput): Promise<Season> {
   const season = await prisma.season.create({
     data: {
       name: input.name,
-      order: input.order,
+      sort_order: input.sortOrder,
       is_archived: input.isArchived,
     },
   });
@@ -32,7 +32,7 @@ async function updateSeason(id: string, input: UpdateSeasonInput): Promise<Seaso
     where: { id },
     data: {
       name: input.name,
-      order: input.order,
+      sort_order: input.sortOrder,
       is_archived: input.isArchived,
     },
   });

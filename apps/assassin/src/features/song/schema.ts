@@ -7,7 +7,7 @@ export const createSongSchema = z.object({
   artist: z.string().min(1, "Artist required"),
   description: z.string(),
   youtubeUrl: z.url(),
-  order: z.number().int(),
+  sortOrder: z.number().int(),
   writer: z.string().min(1, "Writer required"),
   deletePw: z.string().min(1, "Password required"),
 });
