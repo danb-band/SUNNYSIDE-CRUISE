@@ -50,4 +50,5 @@
 *.sw?
 
 # env
-.env.local
+**/.env
+**/.env.local
