@@ -15,7 +15,8 @@
       "@components/*": ["./src/components/*"],
       "@features/*": ["./src/features/*"],
       "@libs/*": ["./src/libs/*"],
-      "@stores/*": ["./src/stores/*"]
+      "@stores/*": ["./src/stores/*"],
+      "@generated/*": ["./src/generated/*"]
     }
   },
   "include": [

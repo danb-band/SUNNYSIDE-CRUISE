@@ -1,5 +1,5 @@
 import { prisma } from "@libs/prisma/client";
-import type { Song } from "../../generated/prisma/client";
+import type { Song } from "@generated/prisma/client";
 import { CreateSongInput, UpdateSongInput } from "./schema";
 
 async function getAllSongs(): Promise<Song[]> {

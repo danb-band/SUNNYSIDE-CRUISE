@@ -1,5 +1,5 @@
 import { prisma } from "@libs/prisma/client";
-import type { Comment } from "../../generated/prisma/client";
+import type { Comment } from "@generated/prisma/client";
 import { CreateCommentInput, UpdateCommentInput } from "./schema";
 
 async function getAllComments(): Promise<Comment[]> {
@@ -35,10 +35,7 @@ async function createComment(input: CreateCommentInput): Promise<Comment> {
   return comment;
 }
 
-async function updateComment(
-  id: string,
-  input: UpdateCommentInput
-): Promise<Comment> {
+async function updateComment(id: string, input: UpdateCommentInput): Promise<Comment> {
   const comment = await prisma.comment.update({
     where: { id },
     data: {
@@ -58,11 +55,9 @@ async function deleteComment(id: string): Promise<void> {
 }
 
 async function deleteCommentsBySongId(songId: string) {
-  const { error } = await supabase.from("comment").delete().eq("songId", songId);
-
-  if (error) {
-    throw error;
-  }
+  await prisma.comment.deleteMany({
+    where: { song_id: songId },
+  });
 }
 
 const CommentRepository = {

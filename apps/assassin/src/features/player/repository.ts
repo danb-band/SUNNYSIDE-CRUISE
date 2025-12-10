@@ -1,5 +1,5 @@
 import { prisma } from "@libs/prisma/client";
-import type { Player } from "../generated/prisma/client";
+import type { Player } from "@generated/prisma/client";
 import { CreatePlayerInput, UpdatePlayerInput } from "./schema";
 
 async function getAllPlayers(): Promise<Player[]> {
