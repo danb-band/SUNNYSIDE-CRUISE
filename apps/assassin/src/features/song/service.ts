@@ -1,6 +1,7 @@
 import SeasonService from "@features/season/service";
 import SongRepository from "./repository";
 import { Song, songSchema } from "./schema";
+import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
 
@@ -77,14 +78,18 @@ const updateSong = async (id: string, song: Partial<Song>) => {
 };
 
 const deleteSong = async (id: string) => {
-  // TODO transaction
   await assertSongExists(id);
 
-  await PlayerRepository.deletePlayersBySongId(id);
-
-  await CommentRepository.deleteCommentsBySongId(id);
-
-  await SongRepository.deleteSong(id);
+  try {
+    await prisma.$transaction(async (tx) => {
+      await PlayerRepository.deletePlayersBySongId(id, tx);
+      await CommentRepository.deleteCommentsBySongId(id, tx);
+      await SongRepository.deleteSong(id, tx);
+    });
+  } catch (error) {
+    console.error(`Failed to delete song ${id}:`, error);
+    throw new Error("Song deletion failed");
+  }
 };
 
 const SongService = {

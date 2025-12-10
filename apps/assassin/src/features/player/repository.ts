@@ -1,6 +1,7 @@
 import { prisma } from "@libs/prisma/client";
 import type { Player } from "@generated/prisma/client";
 import { CreatePlayerInput, UpdatePlayerInput } from "./schema";
+import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllPlayers(): Promise<Player[]> {
   const players = await prisma.player.findMany({
@@ -46,14 +47,16 @@ async function updatePlayer(id: string, input: UpdatePlayerInput): Promise<Playe
   return player;
 }
 
-async function deletePlayer(id: string): Promise<void> {
-  await prisma.player.delete({
+async function deletePlayer(id: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.delete({
     where: { id },
   });
 }
 
-async function deletePlayersBySongId(songId: string) {
-  await prisma.player.deleteMany({
+async function deletePlayersBySongId(songId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.deleteMany({
     where: { song_id: songId },
   });
 }

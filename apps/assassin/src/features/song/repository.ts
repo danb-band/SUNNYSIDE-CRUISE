@@ -1,6 +1,7 @@
 import { prisma } from "@libs/prisma/client";
-import type { Song } from "@generated/prisma/client";
+import type { PrismaClient, Song } from "@generated/prisma/client";
 import { CreateSongInput, UpdateSongInput } from "./schema";
+import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllSongs(): Promise<Song[]> {
   const songs = await prisma.song.findMany({
@@ -56,8 +57,9 @@ async function updateSong(id: string, input: UpdateSongInput): Promise<Song> {
   return song;
 }
 
-async function deleteSong(id: string): Promise<void> {
-  await prisma.song.delete({
+async function deleteSong(id: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.song.delete({
     where: { id },
   });
 }

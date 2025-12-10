@@ -1,6 +1,7 @@
 import { prisma } from "@libs/prisma/client";
-import type { Comment } from "@generated/prisma/client";
+import type { Comment, PrismaClient } from "@generated/prisma/client";
 import { CreateCommentInput, UpdateCommentInput } from "./schema";
+import { TransactionClient } from "@generated/prisma/internal/prismaNamespaceBrowser";
 
 async function getAllComments(): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
@@ -48,14 +49,16 @@ async function updateComment(id: string, input: UpdateCommentInput): Promise<Com
   return comment;
 }
 
-async function deleteComment(id: string): Promise<void> {
-  await prisma.comment.delete({
+async function deleteComment(id: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.delete({
     where: { id },
   });
 }
 
-async function deleteCommentsBySongId(songId: string) {
-  await prisma.comment.deleteMany({
+async function deleteCommentsBySongId(songId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.deleteMany({
     where: { song_id: songId },
   });
 }
