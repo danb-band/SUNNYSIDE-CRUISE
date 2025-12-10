@@ -7,9 +7,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:pull": "export $(grep -v '^#' .env.local | xargs) && prisma db pull",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "@supabase/supabase-js": "^2.86.0",
     "next": "16.0.3",
     "react": "19.2.0",
@@ -21,6 +25,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "global-eslint": "workspace:^",
+    "prisma": "^7.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
