@@ -9,6 +9,15 @@ pnpm assassin dev # at root
 pnpm dev # at assassin directory
 ```
 
+### Prisma init
+
+```bash
+pnpm install # (새로운 환경변수 추가)
+pnpm assassin exec prisma init # (prisma init)
+pnpm assassin db:pull # (supabase database를 읽어서 prisma/schema.prisma 파일을 자동 생성)
+pnpm assassin db:generate # (prisma/schema.prisma를 읽어서 타입과 클라이언트 코드 생성)
+```
+
 ### 디렉토리 구조
 
 ```
