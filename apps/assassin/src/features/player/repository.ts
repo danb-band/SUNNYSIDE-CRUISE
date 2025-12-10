@@ -1,78 +1,61 @@
-import { supabase } from "@libs/supabase/client";
+import { prisma } from "@libs/prisma/client";
+import type { Player } from "../generated/prisma/client";
 import { CreatePlayerInput, UpdatePlayerInput } from "./schema";
 
-async function getAllPlayers() {
-  const { data, error } = await supabase
-    .from("player")
-    .select("*")
-    .order("createdAt", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+async function getAllPlayers(): Promise<Player[]> {
+  const players = await prisma.player.findMany({
+    orderBy: { created_at: "desc" },
+  });
+  return players;
 }
 
-async function getPlayerById(id: string) {
-  const { data, error } = await supabase.from("player").select("*").eq("id", id).single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+async function getPlayerById(id: string): Promise<Player | null> {
+  const player = await prisma.player.findUnique({
+    where: { id },
+  });
+  return player;
 }
 
-async function getPlayersBySongId(songId: string) {
-  const { data, error } = await supabase.from("player").select("*").eq("songId", songId);
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+async function getPlayersBySongId(songId: string): Promise<Player[]> {
+  const players = await prisma.player.findMany({
+    where: { song_id: songId },
+  });
+  return players;
 }
 
-async function createPlayer(input: CreatePlayerInput) {
-  const { data, error } = await supabase.from("player").insert([input]).select("*").single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+async function createPlayer(input: CreatePlayerInput): Promise<Player> {
+  const player = await prisma.player.create({
+    data: {
+      name: input.name,
+      instrument: input.instrument,
+      song_id: input.songId,
+    },
+  });
+  return player;
 }
 
-async function updatePlayer(id: string, input: UpdatePlayerInput) {
-  const { data, error } = await supabase
-    .from("player")
-    .update(input)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+async function updatePlayer(id: string, input: UpdatePlayerInput): Promise<Player> {
+  const player = await prisma.player.update({
+    where: { id },
+    data: {
+      name: input.name,
+      instrument: input.instrument,
+      song_id: input.songId,
+    },
+  });
+  return player;
 }
 
-async function deletePlayer(id: string) {
-  const { error } = await supabase.from("player").delete().eq("id", id);
-
-  if (error) {
-    throw error;
-  }
+async function deletePlayer(id: string): Promise<void> {
+  await prisma.player.delete({
+    where: { id },
+  });
 }
 
 async function deletePlayersBySongId(songId: string) {
-  const { error } = await supabase.from("player").delete().eq("songId", songId);
-
-  if (error) {
-    throw error;
-  }
+  await prisma.player.deleteMany({
+    where: { song_id: songId },
+  });
 }
 
 const PlayerRepository = {

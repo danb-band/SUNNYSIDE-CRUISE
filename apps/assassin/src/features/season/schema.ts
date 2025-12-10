@@ -4,7 +4,7 @@ import * as z from "zod";
 export const createSeasonSchema = z.object({
   name: z.string().min(1, "Name required"),
   description: z.string(),
-  order: z.number().int(),
+  sortOrder: z.number().int(),
   isArchived: z.boolean().default(false),
 })
 
