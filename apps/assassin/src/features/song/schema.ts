@@ -1,4 +1,4 @@
-import { dbSchema, DBType } from "@libs/prisma/types";
+import { dbSchema } from "@libs/prisma/types";
 import * as z from "zod";
 
 // DB에 저장할 때 입력 스키마
@@ -14,11 +14,11 @@ export const createSongSchema = z.object({
 });
 
 // 부분 업데이트
-export const updateSongSchema = createSongSchema.partial();
+export const updateSongSchema = createSongSchema.partial().extend(dbSchema.shape);
 
 // DB에서 받은 응답 스키마
 export const songSchema = createSongSchema.extend(dbSchema.shape);
 
 export type SongPayload = z.infer<typeof createSongSchema>;
-export type SongUpdatePayload = z.infer<typeof updateSongSchema> & DBType;
+export type SongUpdatePayload = z.infer<typeof updateSongSchema>;
 export type Song = z.infer<typeof songSchema>;

@@ -10,7 +10,7 @@ export const createCommentSchema = z.object({
 });
 
 // 부분 업데이트
-export const updateCommentSchema = createCommentSchema.partial();
+export const updateCommentSchema = createCommentSchema.partial().extend(dbSchema.shape);
 
 // DB에서 받은 응답 스키마
 export const commentSchema = createCommentSchema.extend(dbSchema.shape);
