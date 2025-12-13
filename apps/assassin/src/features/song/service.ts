@@ -1,6 +1,6 @@
 import SeasonService from "@features/season/service";
 import SongRepository from "./repository";
-import { Song, songSchema } from "./schema";
+import { SongPayload, Song, songSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
@@ -15,7 +15,7 @@ const assertSongExists = async (songId: string): Promise<void> => {
   }
 };
 
-const createSong = async (song: Song) => {
+const createSong = async (song: SongPayload) => {
   await SeasonService.assertSeasonExists(song.seasonId);
 
   const result = await SongRepository.createSong(song);

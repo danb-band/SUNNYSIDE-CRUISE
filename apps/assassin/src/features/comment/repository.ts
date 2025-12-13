@@ -1,6 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import type { Comment, PrismaClient } from "@generated/prisma/client";
-import { CreateCommentInput, UpdateCommentInput } from "./schema";
+import { CommentPayload, CommentUpdatePayload } from "./schema";
 import { TransactionClient } from "@generated/prisma/internal/prismaNamespaceBrowser";
 
 async function getAllComments(): Promise<Comment[]> {
@@ -24,7 +24,7 @@ async function getCommentsBySongId(songId: string): Promise<Comment[]> {
   return comments;
 }
 
-async function createComment(input: CreateCommentInput): Promise<Comment> {
+async function createComment(input: CommentPayload): Promise<Comment> {
   const comment = await prisma.comment.create({
     data: {
       content: input.content,
@@ -36,7 +36,7 @@ async function createComment(input: CreateCommentInput): Promise<Comment> {
   return comment;
 }
 
-async function updateComment(id: string, input: UpdateCommentInput): Promise<Comment> {
+async function updateComment(id: string, input: CommentUpdatePayload): Promise<Comment> {
   const comment = await prisma.comment.update({
     where: { id },
     data: {

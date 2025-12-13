@@ -1,6 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import type { Season } from "@generated/prisma/client";
-import { CreateSeasonInput, UpdateSeasonInput } from "./schema";
+import { SeasonPayload, SeasonUpdatePayload } from "./schema";
 
 async function getAllSeasons(): Promise<Season[]> {
   const seasons = await prisma.season.findMany({
@@ -16,7 +16,7 @@ async function getSeasonById(id: string): Promise<Season | null> {
   return season;
 }
 
-async function createSeason(input: CreateSeasonInput): Promise<Season> {
+async function createSeason(input: SeasonPayload): Promise<Season> {
   const season = await prisma.season.create({
     data: {
       name: input.name,
@@ -27,7 +27,7 @@ async function createSeason(input: CreateSeasonInput): Promise<Season> {
   return season;
 }
 
-async function updateSeason(id: string, input: UpdateSeasonInput): Promise<Season> {
+async function updateSeason(id: string, input: SeasonUpdatePayload): Promise<Season> {
   const season = await prisma.season.update({
     where: { id },
     data: {

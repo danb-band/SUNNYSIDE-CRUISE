@@ -1,6 +1,6 @@
 import SongService from "@features/song/service";
 import CommentRepository from "./repository";
-import { Comment, commentSchema } from "./schema";
+import { Comment, commentSchema, CommentPayload } from "./schema";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);
@@ -12,7 +12,7 @@ const assertCommentExists = async (commentId: string): Promise<void> => {
   }
 };
 
-const createComment = async (comment: Comment): Promise<Comment> => {
+const createComment = async (comment: CommentPayload): Promise<Comment> => {
   await SongService.assertSongExists(comment.songId);
 
   const result = await CommentRepository.createComment(comment);

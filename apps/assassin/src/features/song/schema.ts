@@ -1,3 +1,4 @@
+import { dbSchema, DBType } from "@libs/prisma/types";
 import * as z from "zod";
 
 // DB에 저장할 때 입력 스키마
@@ -16,13 +17,8 @@ export const createSongSchema = z.object({
 export const updateSongSchema = createSongSchema.partial();
 
 // DB에서 받은 응답 스키마
-export const songSchema = createSongSchema.extend({
-  id: z.uuid(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-});
+export const songSchema = createSongSchema.extend(dbSchema.shape);
 
-export type CreateSongInput = z.infer<typeof createSongSchema>;
-export type UpdateSongInput = z.infer<typeof updateSongSchema>;
+export type SongPayload = z.infer<typeof createSongSchema>;
+export type SongUpdatePayload = z.infer<typeof updateSongSchema> & DBType;
 export type Song = z.infer<typeof songSchema>;
