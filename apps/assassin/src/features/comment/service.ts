@@ -1,6 +1,12 @@
 import SongService from "@features/song/service";
 import CommentRepository from "./repository";
-import { Comment, commentSchema, CommentPayload } from "./schema";
+import {
+  Comment,
+  commentSchema,
+  CommentPayload,
+  CommentUpdatePayload,
+  updateCommentSchema,
+} from "./schema";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);
@@ -52,10 +58,10 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
-const updateComment = async (id: string, comment: Partial<Comment>) => {
+const updateComment = async (id: string, comment: CommentUpdatePayload) => {
   const existed = await getCommentById(id);
 
-  const parsedInput = commentSchema.partial().safeParse(comment);
+  const parsedInput = updateCommentSchema.safeParse(comment);
 
   if (!parsedInput.success) {
     throw new Error("Invalid comment input");

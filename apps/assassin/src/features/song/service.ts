@@ -1,6 +1,6 @@
 import SeasonService from "@features/season/service";
 import SongRepository from "./repository";
-import { SongPayload, Song, songSchema } from "./schema";
+import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
@@ -55,10 +55,10 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: Partial<Song>) => {
+const updateSong = async (id: string, song: SongUpdatePayload) => {
   const existed = await getSongById(id);
 
-  const parsedInput = songSchema.partial().safeParse(song);
+  const parsedInput = updateSongSchema.safeParse(song);
 
   if (!parsedInput.success) {
     throw new Error("Invalid song input");
