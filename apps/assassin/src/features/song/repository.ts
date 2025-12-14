@@ -1,6 +1,7 @@
 import { prisma } from "@libs/prisma/client";
-import type { Song } from "../../generated/prisma/client";
+import type { PrismaClient, Song } from "@generated/prisma/client";
 import { CreateSongInput, UpdateSongInput } from "./schema";
+import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllSongs(): Promise<Song[]> {
   const songs = await prisma.song.findMany({
@@ -16,7 +17,14 @@ async function getSongById(id: string): Promise<Song | null> {
   return song;
 }
 
-export async function createSong(input: CreateSongInput): Promise<Song> {
+async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
+  const songs = await prisma.song.findMany({
+    where: { season_id: seasonId },
+  });
+  return songs;
+}
+
+async function createSong(input: CreateSongInput): Promise<Song> {
   const song = await prisma.song.create({
     data: {
       name: input.name,
@@ -49,8 +57,9 @@ async function updateSong(id: string, input: UpdateSongInput): Promise<Song> {
   return song;
 }
 
-async function deleteSong(id: string): Promise<void> {
-  await prisma.song.delete({
+async function deleteSong(id: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.song.delete({
     where: { id },
   });
 }
@@ -58,6 +67,7 @@ async function deleteSong(id: string): Promise<void> {
 const SongRepository = {
   getAllSongs,
   getSongById,
+  getSongsBySeasonId,
   createSong,
   updateSong,
   deleteSong,

@@ -1,5 +1,5 @@
 import { prisma } from "@libs/prisma/client";
-import type { Season } from "../../generated/prisma/client";
+import type { Season } from "@generated/prisma/client";
 import { CreateSeasonInput, UpdateSeasonInput } from "./schema";
 
 async function getAllSeasons(): Promise<Season[]> {
