@@ -1,6 +1,6 @@
 import { prisma } from "@libs/prisma/client";
-import type { PrismaClient, Song } from "@generated/prisma/client";
-import { CreateSongInput, UpdateSongInput } from "./schema";
+import type { Song } from "@generated/prisma/client";
+import { SongPayload, SongUpdatePayload } from "./schema";
 import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllSongs(): Promise<Song[]> {
@@ -24,7 +24,7 @@ async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
   return songs;
 }
 
-async function createSong(input: CreateSongInput): Promise<Song> {
+async function createSong(input: SongPayload): Promise<Song> {
   const song = await prisma.song.create({
     data: {
       name: input.name,
@@ -40,7 +40,7 @@ async function createSong(input: CreateSongInput): Promise<Song> {
   return song;
 }
 
-async function updateSong(id: string, input: UpdateSongInput): Promise<Song> {
+async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
   const song = await prisma.song.update({
     where: { id },
     data: {

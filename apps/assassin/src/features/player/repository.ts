@@ -1,6 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import type { Player } from "@generated/prisma/client";
-import { CreatePlayerInput, UpdatePlayerInput } from "./schema";
+import { PlayerPayload, PlayerUpdatePayload } from "./schema";
 import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllPlayers(): Promise<Player[]> {
@@ -24,7 +24,7 @@ async function getPlayersBySongId(songId: string): Promise<Player[]> {
   return players;
 }
 
-async function createPlayer(input: CreatePlayerInput): Promise<Player> {
+async function createPlayer(input: PlayerPayload): Promise<Player> {
   const player = await prisma.player.create({
     data: {
       name: input.name,
@@ -35,7 +35,7 @@ async function createPlayer(input: CreatePlayerInput): Promise<Player> {
   return player;
 }
 
-async function updatePlayer(id: string, input: UpdatePlayerInput): Promise<Player> {
+async function updatePlayer(id: string, input: PlayerUpdatePayload): Promise<Player> {
   const player = await prisma.player.update({
     where: { id },
     data: {

@@ -1,3 +1,4 @@
+import { dbSchema } from "@libs/prisma/types";
 import * as z from "zod";
 
 const instrumentEnum = z.enum(["VOCAL", "GUITAR", "DRUM", "BASS", "KEYBOARD"]);
@@ -10,16 +11,11 @@ export const createPlayerSchema = z.object({
 });
 
 // 부분 업데이트
-export const updatePlayerSchema = createPlayerSchema.partial();
+export const updatePlayerSchema = createPlayerSchema.partial().extend(dbSchema.shape);
 
 // DB에서 받은 응답 스키마
-export const playerSchema = createPlayerSchema.extend({
-  id: z.uuid(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-});
+export const playerSchema = createPlayerSchema.extend(dbSchema.shape);
 
-export type CreatePlayerInput = z.infer<typeof createPlayerSchema>;
-export type UpdatePlayerInput = z.infer<typeof updatePlayerSchema>;
+export type PlayerPayload = z.infer<typeof createPlayerSchema>;
+export type PlayerUpdatePayload = z.infer<typeof updatePlayerSchema>;
 export type Player = z.infer<typeof playerSchema>;
