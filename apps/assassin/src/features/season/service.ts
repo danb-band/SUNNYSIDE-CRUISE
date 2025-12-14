@@ -69,12 +69,18 @@ const updateSeason = async (id: string, season: SeasonPayload) => {
   return parsedOutput.data;
 };
 
+const deleteSeason = async (id: string): Promise<void> => {
+  await assertSeasonExists(id);
+  await SeasonRepository.deleteSeason(id);
+};
+
 const SeasonService = {
   assertSeasonExists,
   createSeason,
   getSeasonById,
   getAllSeasons,
   updateSeason,
+  deleteSeason,
 };
 
 export default SeasonService;
