@@ -55,6 +55,18 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
+const getAllSongs = async (): Promise<Array<Song>> => {
+  const songs = await SongRepository.getAllSongs();
+
+  const parsed = songSchema.array().safeParse(songs);
+
+  if (!parsed.success) {
+    throw new Error("Invalid song responses from DB");
+  }
+
+  return parsed.data;
+};
+
 const updateSong = async (id: string, song: SongUpdatePayload) => {
   const existed = await getSongById(id);
 
@@ -97,6 +109,7 @@ const SongService = {
   createSong,
   getSongById,
   getSongsBySeasonId,
+  getAllSongs,
   updateSong,
   deleteSong,
 };
