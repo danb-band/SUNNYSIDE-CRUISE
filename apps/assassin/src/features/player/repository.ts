@@ -5,6 +5,7 @@ import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllPlayers(): Promise<Player[]> {
   const players = await prisma.player.findMany({
+    where: { deleted_at: null },
     orderBy: { created_at: "desc" },
   });
   return players;
@@ -12,14 +13,20 @@ async function getAllPlayers(): Promise<Player[]> {
 
 async function getPlayerById(id: string): Promise<Player | null> {
   const player = await prisma.player.findUnique({
-    where: { id },
+    where: {
+      id,
+      deleted_at: null,
+    },
   });
   return player;
 }
 
 async function getPlayersBySongId(songId: string): Promise<Player[]> {
   const players = await prisma.player.findMany({
-    where: { song_id: songId },
+    where: {
+      song_id: songId,
+      deleted_at: null,
+    },
   });
   return players;
 }
@@ -49,15 +56,17 @@ async function updatePlayer(id: string, input: PlayerUpdatePayload): Promise<Pla
 
 async function deletePlayer(id: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
-  await prismaClient.player.delete({
+  await prismaClient.player.update({
     where: { id },
+    data: { deleted_at: new Date() },
   });
 }
 
 async function deletePlayersBySongId(songId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
-  await prismaClient.player.deleteMany({
+  await prismaClient.player.updateMany({
     where: { song_id: songId },
+    data: { deleted_at: new Date() },
   });
 }
 

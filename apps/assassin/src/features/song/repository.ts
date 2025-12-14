@@ -5,6 +5,7 @@ import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllSongs(): Promise<Song[]> {
   const songs = await prisma.song.findMany({
+    where: { deleted_at: null },
     orderBy: { created_at: "desc" },
   });
   return songs;
@@ -12,14 +13,20 @@ async function getAllSongs(): Promise<Song[]> {
 
 async function getSongById(id: string): Promise<Song | null> {
   const song = await prisma.song.findUnique({
-    where: { id },
+    where: {
+      id,
+      deleted_at: null,
+    },
   });
   return song;
 }
 
 async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
   const songs = await prisma.song.findMany({
-    where: { season_id: seasonId },
+    where: {
+      season_id: seasonId,
+      deleted_at: null,
+    },
   });
   return songs;
 }
@@ -59,8 +66,9 @@ async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
 
 async function deleteSong(id: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
-  await prismaClient.song.delete({
+  await prismaClient.song.update({
     where: { id },
+    data: { deleted_at: new Date() },
   });
 }
 
