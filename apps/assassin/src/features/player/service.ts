@@ -1,7 +1,6 @@
 import SongService from "@features/song/service";
-import { PlayerPayload, Player, playerSchema, PlayerUpdatePayload } from "./schema";
+import { PlayerPayload, Player, playerSchema, PlayerUpdatePayload, updatePlayerSchema } from "./schema";
 import PlayerRepository from "./repository";
-import { updateSeasonSchema } from "@features/season/schema";
 
 const assertPlayerExists = async (playerId: string): Promise<void> => {
   const player = await PlayerRepository.getPlayerById(playerId);
@@ -56,7 +55,7 @@ const getPlayersBySongId = async (songId: string): Promise<Array<Player>> => {
 const updatePlayer = async (id: string, player: PlayerUpdatePayload) => {
   const existed = await getPlayerById(id);
 
-  const parsedInput = updateSeasonSchema.safeParse(player);
+  const parsedInput = updatePlayerSchema.safeParse(player);
 
   if (!parsedInput.success) {
     throw new Error("Invalid player input");
