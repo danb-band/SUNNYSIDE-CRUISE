@@ -58,18 +58,6 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
-const getAllComments = async (): Promise<Array<Comment>> => {
-  const comments = await CommentRepository.getAllComments();
-
-  const parsed = commentSchema.array().safeParse(comments);
-
-  if (!parsed.success) {
-    throw new Error("Invalid comment responses from DB");
-  }
-
-  return parsed.data;
-};
-
 const updateComment = async (id: string, comment: CommentUpdatePayload) => {
   const existed = await getCommentById(id);
 
@@ -104,7 +92,6 @@ const CommentService = {
   createComment,
   getCommentById,
   getCommentsBySongId,
-  getAllComments,
   updateComment,
   deleteComment,
 };

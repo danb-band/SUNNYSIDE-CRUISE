@@ -3,10 +3,6 @@
 import CommentService from "./service";
 import { CommentPayload, CommentUpdatePayload } from "./schema";
 
-export const getCommentsAction = async () => {
-  return await CommentService.getAllComments();
-};
-
 export const getCommentAction = async (id: string) => {
   return await CommentService.getCommentById(id);
 };
