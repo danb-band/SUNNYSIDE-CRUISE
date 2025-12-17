@@ -52,18 +52,6 @@ const getPlayersBySongId = async (songId: string): Promise<Array<Player>> => {
   return parsed.data;
 };
 
-const getAllPlayers = async (): Promise<Array<Player>> => {
-  const players = await PlayerRepository.getAllPlayers();
-
-  const parsed = playerSchema.array().safeParse(players);
-
-  if (!parsed.success) {
-    throw new Error("Invalid player responses from DB");
-  }
-
-  return parsed.data;
-};
-
 const updatePlayer = async (id: string, player: PlayerUpdatePayload) => {
   const existed = await getPlayerById(id);
 
@@ -95,7 +83,6 @@ const PlayerService = {
   createPlayer,
   getPlayerById,
   getPlayersBySongId,
-  getAllPlayers,
   updatePlayer,
   deletePlayer,
 };
