@@ -3,10 +3,6 @@
 import SongService from "./service";
 import { SongPayload, SongUpdatePayload } from "./schema";
 
-export const getSongsAction = async () => {
-  return await SongService.getAllSongs();
-};
-
 export const getSongAction = async (id: string) => {
   return await SongService.getSongById(id);
 };
