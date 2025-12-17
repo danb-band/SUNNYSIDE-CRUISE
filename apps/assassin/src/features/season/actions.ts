@@ -18,7 +18,3 @@ export const createSeasonAction = async (data: SeasonPayload) => {
 export const updateSeasonAction = async (id: string, data: SeasonUpdatePayload) => {
   return await SeasonService.updateSeason(id, data);
 };
-
-export const deleteSeasonAction = async (id: string) => {
-  return await SeasonService.deleteSeason(id);
-};
