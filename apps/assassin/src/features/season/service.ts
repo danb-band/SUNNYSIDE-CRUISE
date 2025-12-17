@@ -1,5 +1,5 @@
 import SeasonRepository from "./repository";
-import { Season, SeasonPayload, seasonSchema } from "./schema";
+import { Season, SeasonPayload, seasonSchema, SeasonUpdatePayload } from "./schema";
 
 const assertSeasonExists = async (seasonId: string): Promise<void> => {
   const season = await SeasonRepository.getSeasonById(seasonId);
@@ -47,7 +47,7 @@ const getAllSeasons = async (): Promise<Array<Season>> => {
   return parsed.data;
 };
 
-const updateSeason = async (id: string, season: SeasonPayload) => {
+const updateSeason = async (id: string, season: SeasonUpdatePayload) => {
   const existed = await getSeasonById(id);
 
   const parsedInput = seasonSchema.safeParse(season);
