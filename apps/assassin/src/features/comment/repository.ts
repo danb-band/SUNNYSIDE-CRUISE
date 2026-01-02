@@ -5,8 +5,8 @@ import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllComments(): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
-    where: { deleted_at: null },
-    orderBy: { created_at: "desc" },
+    where: { deletedAt: null },
+    orderBy: { createdAt: "desc" },
   });
   return comments;
 }
@@ -15,7 +15,7 @@ async function getCommentById(id: string): Promise<Comment | null> {
   const comment = await prisma.comment.findUnique({
     where: {
       id,
-      deleted_at: null,
+      deletedAt: null,
     },
   });
   return comment;
@@ -24,8 +24,8 @@ async function getCommentById(id: string): Promise<Comment | null> {
 async function getCommentsBySongId(songId: string): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
     where: {
-      song_id: songId,
-      deleted_at: null,
+      songId: songId,
+      deletedAt: null,
     },
   });
   return comments;
@@ -36,8 +36,8 @@ async function createComment(input: CommentPayload): Promise<Comment> {
     data: {
       content: input.content,
       writer: input.writer,
-      delete_pw: input.deletePw,
-      song_id: input.songId,
+      deletePw: input.deletePw,
+      songId: input.songId,
     },
   });
   return comment;
@@ -49,8 +49,8 @@ async function updateComment(id: string, input: CommentUpdatePayload): Promise<C
     data: {
       content: input.content,
       writer: input.writer,
-      delete_pw: input.deletePw,
-      song_id: input.songId,
+      deletePw: input.deletePw,
+      songId: input.songId,
     },
   });
   return comment;
@@ -60,15 +60,15 @@ async function deleteComment(id: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.comment.update({
     where: { id },
-    data: { deleted_at: new Date() },
+    data: { deletedAt: new Date() },
   });
 }
 
 async function deleteCommentsBySongId(songId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.comment.updateMany({
-    where: { song_id: songId },
-    data: { deleted_at: new Date() },
+    where: { songId: songId },
+    data: { deletedAt: new Date() },
   });
 }
 

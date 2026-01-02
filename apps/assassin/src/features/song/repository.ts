@@ -5,8 +5,8 @@ import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllSongs(): Promise<Song[]> {
   const songs = await prisma.song.findMany({
-    where: { deleted_at: null },
-    orderBy: { created_at: "desc" },
+    where: { deletedAt: null },
+    orderBy: { createdAt: "desc" },
   });
   return songs;
 }
@@ -15,7 +15,7 @@ async function getSongById(id: string): Promise<Song | null> {
   const song = await prisma.song.findUnique({
     where: {
       id,
-      deleted_at: null,
+      deletedAt: null,
     },
   });
   return song;
@@ -24,8 +24,8 @@ async function getSongById(id: string): Promise<Song | null> {
 async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
   const songs = await prisma.song.findMany({
     where: {
-      season_id: seasonId,
-      deleted_at: null,
+      seasonId: seasonId,
+      deletedAt: null,
     },
   });
   return songs;
@@ -37,11 +37,11 @@ async function createSong(input: SongPayload): Promise<Song> {
       name: input.name,
       artist: input.artist,
       description: input.description,
-      youtube_url: input.youtubeUrl,
-      sort_order: input.sortOrder,
+      youtubeUrl: input.youtubeUrl,
+      sortOrder: input.sortOrder,
       writer: input.writer,
-      delete_pw: input.deletePw,
-      season_id: input.seasonId,
+      deletePw: input.deletePw,
+      seasonId: input.seasonId,
     },
   });
   return song;
@@ -54,11 +54,11 @@ async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
       name: input.name,
       artist: input.artist,
       description: input.description,
-      youtube_url: input.youtubeUrl,
-      sort_order: input.sortOrder,
+      youtubeUrl: input.youtubeUrl,
+      sortOrder: input.sortOrder,
       writer: input.writer,
-      delete_pw: input.deletePw,
-      season_id: input.seasonId,
+      deletePw: input.deletePw,
+      seasonId: input.seasonId,
     },
   });
   return song;
@@ -68,7 +68,7 @@ async function deleteSong(id: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.song.update({
     where: { id },
-    data: { deleted_at: new Date() },
+    data: { deletedAt: new Date() },
   });
 }
 

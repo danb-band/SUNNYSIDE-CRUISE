@@ -5,8 +5,8 @@ import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllPlayers(): Promise<Player[]> {
   const players = await prisma.player.findMany({
-    where: { deleted_at: null },
-    orderBy: { created_at: "desc" },
+    where: { deletedAt: null },
+    orderBy: { createdAt: "desc" },
   });
   return players;
 }
@@ -15,7 +15,7 @@ async function getPlayerById(id: string): Promise<Player | null> {
   const player = await prisma.player.findUnique({
     where: {
       id,
-      deleted_at: null,
+      deletedAt: null,
     },
   });
   return player;
@@ -24,8 +24,8 @@ async function getPlayerById(id: string): Promise<Player | null> {
 async function getPlayersBySongId(songId: string): Promise<Player[]> {
   const players = await prisma.player.findMany({
     where: {
-      song_id: songId,
-      deleted_at: null,
+      songId: songId,
+      deletedAt: null,
     },
   });
   return players;
@@ -36,7 +36,7 @@ async function createPlayer(input: PlayerPayload): Promise<Player> {
     data: {
       name: input.name,
       instrument: input.instrument,
-      song_id: input.songId,
+      songId: input.songId,
     },
   });
   return player;
@@ -48,7 +48,7 @@ async function updatePlayer(id: string, input: PlayerUpdatePayload): Promise<Pla
     data: {
       name: input.name,
       instrument: input.instrument,
-      song_id: input.songId,
+      songId: input.songId,
     },
   });
   return player;
@@ -58,15 +58,15 @@ async function deletePlayer(id: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.player.update({
     where: { id },
-    data: { deleted_at: new Date() },
+    data: { deletedAt: new Date() },
   });
 }
 
 async function deletePlayersBySongId(songId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.player.updateMany({
-    where: { song_id: songId },
-    data: { deleted_at: new Date() },
+    where: { songId: songId },
+    data: { deletedAt: new Date() },
   });
 }
 

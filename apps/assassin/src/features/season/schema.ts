@@ -1,11 +1,11 @@
 import { dbSchemaWithoutDeletedAt } from "@libs/prisma/types";
+import { bigIntToNumber } from "@libs/utils/zod";
 import * as z from "zod";
 
 // 입력값 스키마
 export const createSeasonSchema = z.object({
   name: z.string().min(1, "Name required"),
-  description: z.string(),
-  sortOrder: z.number().int(),
+  sortOrder: bigIntToNumber,
   isArchived: z.boolean().default(false),
 });
 

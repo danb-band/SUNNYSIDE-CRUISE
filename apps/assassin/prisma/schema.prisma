@@ -9,15 +9,15 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Comment {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  song_id    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content    String
-  writer     String
-  delete_pw  String
-  created_at DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-  song       Song      @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Comments_song_id_fkey")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content   String
+  writer    String
+  deletePw  String
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+  song      Song      @relation(fields: [songId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comments_song_id_fkey")
 
   @@map("comment")
 }
@@ -25,26 +25,26 @@ model Comment {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Player {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  song_id    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId     String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String
   instrument String
-  created_at DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-  song       Song      @relation(fields: [song_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Players_song_id_fkey")
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt  DateTime? @db.Timestamptz(6)
+  song       Song      @relation(fields: [songId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_song_id_fkey")
 
   @@map("player")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Season {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  sort_order  BigInt
-  is_archived Boolean
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime @default(now()) @db.Timestamptz(6)
-  song        Song[]
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  sortOrder  Decimal  @db.Decimal
+  isArchived Boolean
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+  song       Song[]
 
   @@map("season")
 }
@@ -52,20 +52,20 @@ model Season {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Song {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  season_id   String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seasonId    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   artist      String
   description String
-  youtube_url String
-  sort_order  BigInt
+  youtubeUrl  String
+  sortOrder   BigInt
   writer      String
-  delete_pw   String
-  created_at  DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
+  deletePw    String
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt   DateTime? @db.Timestamptz(6)
   comment     Comment[]
   player      Player[]
-  season      Season    @relation(fields: [season_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Songs_season_id_fkey")
+  season      Season    @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")
 
   @@map("song")
 }
