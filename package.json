@@ -7,8 +7,7 @@
     "assassin": "pnpm --filter assassin",
     "global-eslint": "pnpm --filter global-eslint",
     "preinstall": "npx only-allow pnpm",
-    "lint": "eslint .",
-    "postinstall": "cp config/.env.local apps/assassin/.env.local"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@types/node": "^20",
