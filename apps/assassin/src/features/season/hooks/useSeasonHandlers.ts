@@ -11,12 +11,9 @@ interface UseSeasonHandlersProps {
   onError?: (error: string) => void;
 }
 
-export const useSeasonHandlers = ({
-  mode,
-  initialData = {},
-  onSuccess,
-  onError,
-}: UseSeasonHandlersProps) => {
+export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
+  const { mode, initialData = {}, onSuccess, onError } = props;
+
   const createSeasonMutation = useCreateSeason();
   const updateSeasonMutation = useUpdateSeason();
 
@@ -25,14 +22,15 @@ export const useSeasonHandlers = ({
       if (mode === "create") {
         await createSeasonMutation.mutateAsync(data as SeasonPayload);
         onSuccess?.("Season created successfully");
-      } else {
-        const updateData = data as SeasonUpdatePayload;
-        if (!updateData.id) {
-          throw new Error("Season ID is required for update");
-        }
-        await updateSeasonMutation.mutateAsync({ id: updateData.id, data: updateData });
-        onSuccess?.("Season updated successfully");
+        return;
       }
+
+      const updateData = data as SeasonUpdatePayload;
+      if (!updateData.id) {
+        throw new Error("Season ID is required for update");
+      }
+      await updateSeasonMutation.mutateAsync({ id: updateData.id, data: updateData });
+      onSuccess?.("Season updated successfully");
     },
     [mode, createSeasonMutation, updateSeasonMutation, onSuccess],
   );
@@ -46,7 +44,6 @@ export const useSeasonHandlers = ({
   const { state: formState } = form;
   const { actions: formActions } = form;
 
-  // Simplified submit handler with validation
   const handleSubmit = useCallback(async () => {
     try {
       const success = await formActions.submitForm();

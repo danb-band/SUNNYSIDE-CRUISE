@@ -3,11 +3,9 @@ import { useSeasons } from "../queries/useSeasons";
 import type { Season, SeasonPayload } from "../schema";
 
 export const useSeasonLogic = () => {
-  // Get all seasons for business logic operations
   const { data: seasons = [] } = useSeasons();
 
-  // Check if season name already exists (for duplicate validation)
-  const checkNameExists = useCallback(
+  const isNameExists = useCallback(
     (name: string, excludeId?: string): boolean => {
       return seasons.some(
         (season) => season.name.toLowerCase() === name.toLowerCase() && season.id !== excludeId,
@@ -16,7 +14,6 @@ export const useSeasonLogic = () => {
     [seasons],
   );
 
-  // Generate next available sort order
   const getNextSortOrder = useCallback((): number => {
     if (seasons.length === 0) return 1;
 
@@ -57,17 +54,14 @@ export const useSeasonLogic = () => {
     [seasons, getNextSortOrder],
   );
 
-  // Validate season data with business rules
   const validateSeasonData = useCallback(
     (data: SeasonPayload, excludeId?: string): { isValid: boolean; errors: string[] } => {
       const errors: string[] = [];
 
-      // Check name uniqueness
-      if (checkNameExists(data.name, excludeId)) {
+      if (isNameExists(data.name, excludeId)) {
         errors.push(`Season name "${data.name}" already exists`);
       }
 
-      // Check name format (no leading/trailing spaces, not empty after trim)
       const trimmedName = data.name.trim();
       if (!trimmedName) {
         errors.push("Season name cannot be empty");
@@ -75,19 +69,8 @@ export const useSeasonLogic = () => {
         errors.push("Season name cannot have leading or trailing spaces");
       }
 
-      // Check name length
-      if (trimmedName.length > 100) {
-        errors.push("Season name cannot exceed 100 characters");
-      }
-
-      // Check sort order validity
       if (data.sortOrder < 0) {
         errors.push("Sort order must be a positive number");
-      }
-
-      // Check description length
-      if (data.description && data.description.length > 500) {
-        errors.push("Description cannot exceed 500 characters");
       }
 
       return {
@@ -95,53 +78,9 @@ export const useSeasonLogic = () => {
         errors,
       };
     },
-    [checkNameExists],
+    [isNameExists],
   );
 
-  // Check if season can be archived (has no active songs)
-  const canArchiveSeason = useCallback(
-    async (seasonId: string): Promise<{ canArchive: boolean; reason?: string }> => {
-      // This would need to check if season has active songs
-      // For now, we'll assume it can be archived
-      // In a real implementation, you'd query the songs by season
-
-      const season = seasons.find((s) => s.id === seasonId);
-      if (!season) {
-        return { canArchive: false, reason: "Season not found" };
-      }
-
-      if (season.isArchived) {
-        return { canArchive: false, reason: "Season is already archived" };
-      }
-
-      // TODO: Check if season has active songs
-      // const activeSongs = await getActiveSongsBySeason(seasonId);
-      // if (activeSongs.length > 0) {
-      //   return {
-      //     canArchive: false,
-      //     reason: `Season has ${activeSongs.length} active songs`
-      //   };
-      // }
-
-      return { canArchive: true };
-    },
-    [seasons],
-  );
-
-  // Prepare season data with business logic applied
-  const prepareSeasonData = useCallback(
-    (inputData: Partial<SeasonPayload>): SeasonPayload => {
-      return {
-        name: inputData.name?.trim() || "",
-        description: inputData.description?.trim() || "",
-        sortOrder: inputData.sortOrder ?? getNextSortOrder(),
-        isArchived: inputData.isArchived ?? false,
-      };
-    },
-    [getNextSortOrder],
-  );
-
-  // Reorder seasons (for drag and drop functionality)
   const reorderSeasons = useCallback(
     (fromId: string, toPosition: number): Season[] => {
       const reordered = [...seasons];
@@ -152,7 +91,6 @@ export const useSeasonLogic = () => {
       const [movedSeason] = reordered.splice(fromIndex, 1);
       reordered.splice(toPosition, 0, movedSeason);
 
-      // Recalculate sort orders
       return reordered.map((season, index) => ({
         ...season,
         sortOrder: index + 1,
@@ -176,16 +114,12 @@ export const useSeasonLogic = () => {
   );
 
   return {
-    // Business logic functions
-    checkNameExists,
+    isNameExists,
     getNextSortOrder,
     getSortOrderBetween,
     validateSeasonData,
-    canArchiveSeason,
-    prepareSeasonData,
     reorderSeasons,
 
-    // Computed data
     activeSeasons,
     archivedSeasons,
     seasonsCount,
