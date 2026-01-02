@@ -4,7 +4,7 @@ import { SeasonPayload, SeasonUpdatePayload } from "./schema";
 
 async function getAllSeasons(): Promise<Season[]> {
   const seasons = await prisma.season.findMany({
-    orderBy: { created_at: "desc" },
+    orderBy: { createdAt: "desc" },
   });
   return seasons;
 }
@@ -20,8 +20,8 @@ async function createSeason(input: SeasonPayload): Promise<Season> {
   const season = await prisma.season.create({
     data: {
       name: input.name,
-      sort_order: input.sortOrder,
-      is_archived: input.isArchived,
+      sortOrder: input.sortOrder,
+      isArchived: input.isArchived,
     },
   });
   return season;
@@ -32,8 +32,8 @@ async function updateSeason(id: string, input: SeasonUpdatePayload): Promise<Sea
     where: { id },
     data: {
       name: input.name,
-      sort_order: input.sortOrder,
-      is_archived: input.isArchived,
+      sortOrder: input.sortOrder,
+      isArchived: input.isArchived,
     },
   });
   return season;
