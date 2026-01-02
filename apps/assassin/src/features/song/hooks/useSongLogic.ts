@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useSongs } from "../queries/useSongs";
 import type { Song, SongPayload } from "../schema";
 
@@ -21,7 +21,6 @@ export const useSongLogic = (seasonId: string) => {
     return maxSortOrder + 1;
   }, [songs]);
 
-  // Get optimal sort order for insertion between two songs
   const getSortOrderBetween = useCallback(
     (beforeId: string | null, afterId: string | null): number => {
       const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
@@ -116,23 +115,7 @@ export const useSongLogic = (seasonId: string) => {
     [songs],
   );
 
-  // Computed values
-  const songsCount = useMemo(() => songs.length, [songs.length]);
-
-  const songsByArtist = useMemo(() => {
-    const grouped = songs.reduce(
-      (acc, song) => {
-        const artist = song.artist;
-        if (!acc[artist]) {
-          acc[artist] = [];
-        }
-        acc[artist].push(song);
-        return acc;
-      },
-      {} as Record<string, Song[]>,
-    );
-    return grouped;
-  }, [songs]);
+  const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return {
     isNameExists,
@@ -141,7 +124,6 @@ export const useSongLogic = (seasonId: string) => {
     validateSongData,
     reorderSongs,
 
-    songsCount,
-    songsByArtist,
+    songs: sortedSongs,
   };
 };
