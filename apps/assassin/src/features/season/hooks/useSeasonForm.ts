@@ -28,7 +28,6 @@ export const useSeasonForm = (props: UseSeasonFormProps) => {
 
   const [formData, setFormData] = useState<Partial<SeasonPayload>>({
     name: initialData.name || "",
-    description: initialData.description || "",
     sortOrder: initialData.sortOrder || 0,
     isArchived: initialData.isArchived || false,
   });
@@ -92,7 +91,6 @@ export const useSeasonForm = (props: UseSeasonFormProps) => {
   const resetForm = useCallback(() => {
     setFormData({
       name: initialData.name || "",
-      description: initialData.description || "",
       sortOrder: initialData.sortOrder || 0,
       isArchived: initialData.isArchived || false,
     });
