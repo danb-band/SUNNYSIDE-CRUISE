@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { getSongsAction } from "../actions";
+import { getSongsBySeasonAction } from "../actions";
 import { songKeys } from "./keys";
 
-export const useSongs = () => {
+export const useSongs = (seasonId: string) => {
   return useSuspenseQuery({
     queryKey: songKeys.lists(),
-    queryFn: () => getSongsAction(),
+    queryFn: () => getSongsBySeasonAction(seasonId),
   });
 };

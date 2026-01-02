@@ -1,11 +1,10 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getSeasonsAction } from "../actions";
 import { seasonKeys } from "./keys";
 
 export const useSeasons = () => {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: seasonKeys.lists(),
     queryFn: () => getSeasonsAction(),
   });
 };
-
