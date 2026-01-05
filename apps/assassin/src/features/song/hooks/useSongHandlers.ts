@@ -95,9 +95,6 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
     handleDeleteSong,
 
     // States
-    isCreating,
-    isUpdating,
-    isDeleting,
     isProcessing,
   };
 };

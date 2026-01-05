@@ -115,8 +115,6 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
     handleRestoreSeason,
 
     // States
-    isCreating,
-    isUpdating,
     isProcessing,
   };
 };
