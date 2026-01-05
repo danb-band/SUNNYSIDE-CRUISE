@@ -9,9 +9,7 @@ export const createSeasonSchema = z.object({
   isArchived: z.boolean().default(false),
 });
 
-export const updateSeasonSchema = createSeasonSchema
-  .partial()
-  .extend(dbSchemaWithoutDeletedAt.shape);
+export const updateSeasonSchema = createSeasonSchema.partial();
 
 // 출력값 스키마 (DB 응답)
 export const seasonSchema = createSeasonSchema.extend(dbSchemaWithoutDeletedAt.shape);
