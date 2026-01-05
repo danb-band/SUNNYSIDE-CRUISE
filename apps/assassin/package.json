@@ -16,6 +16,7 @@
     "@prisma/client": "^7.1.0",
     "@supabase/supabase-js": "^2.86.0",
     "@tanstack/react-query": "^5.90.12",
+    "bcryptjs": "^3.0.3",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1",
