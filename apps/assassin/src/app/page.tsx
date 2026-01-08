@@ -1,5 +1,5 @@
-import SampleSeasonComponent from "@components/season/sample";
+import SeasonsContent from "@/components/season/SeasonsContent";
 
 export default function Home() {
-  return <SampleSeasonComponent />;
+  return <SeasonsContent />;
 }
