@@ -33,7 +33,7 @@ export const useSongForm = (props: UseSongFormProps) => {
     youtubeUrl: initialData.youtubeUrl || "",
     sortOrder: initialData.sortOrder || 0,
     writer: initialData.writer || "",
-    deletePw: initialData.deletePw || "",
+    deletePw: mode === "create" ? initialData.deletePw || "" : initialData.deletePw || undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -101,11 +101,11 @@ export const useSongForm = (props: UseSongFormProps) => {
       youtubeUrl: initialData.youtubeUrl || "",
       sortOrder: initialData.sortOrder || 0,
       writer: initialData.writer || "",
-      deletePw: initialData.deletePw || "",
+      deletePw: mode === "create" ? initialData.deletePw || "" : initialData.deletePw || undefined,
     });
     setErrors({});
     setIsDirty(false);
-  }, [initialData]);
+  }, [initialData, mode]);
 
   const submitForm = useCallback(async () => {
     const { isValid, errors: validationErrors } = validateForm();

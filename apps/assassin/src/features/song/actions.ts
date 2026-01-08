@@ -19,6 +19,6 @@ export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
   return await SongService.updateSong(id, data);
 };
 
-export const deleteSongAction = async (id: string) => {
-  return await SongService.deleteSong(id);
+export const deleteSongAction = async (id: string, pw: string) => {
+  return await SongService.deleteSong(id, pw);
 };

@@ -65,9 +65,9 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   );
 
   const handleDeleteSong = useCallback(
-    async (id: string) => {
+    async (id: string, pw: string) => {
       try {
-        await deleteSongMutation.mutateAsync(id);
+        await deleteSongMutation.mutateAsync({ id, pw });
         onSuccess?.("Song deleted successfully");
         return { success: true };
       } catch (error) {

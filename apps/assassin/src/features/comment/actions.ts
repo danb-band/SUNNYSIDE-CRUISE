@@ -19,6 +19,6 @@ export const updateCommentAction = async (id: string, data: CommentUpdatePayload
   return await CommentService.updateComment(id, data);
 };
 
-export const deleteCommentAction = async (id: string) => {
-  return await CommentService.deleteComment(id);
+export const deleteCommentAction = async (id: string, pw: string) => {
+  return await CommentService.deleteComment(id, pw);
 };
