@@ -4,42 +4,44 @@ import { useUpdateSeason } from "../mutations/useUpdateSeason";
 import { useSeasonForm } from "./useSeasonForm";
 import type { SeasonPayload, SeasonUpdatePayload } from "../schema";
 
-interface UseSeasonHandlersProps {
-  mode: "create" | "update";
-  initialData?: Partial<SeasonPayload>;
-  onSuccess?: (message: string) => void;
-  onError?: (error: string) => void;
-}
+type UseSeasonHandlersProps =
+  | {
+      mode: "create";
+      initialData: Partial<SeasonPayload>;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    }
+  | {
+      mode: "update";
+      seasonId: string;
+      initialData: SeasonUpdatePayload;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    };
 
 export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
-  const { mode, initialData = {}, onSuccess, onError } = props;
-
   const createSeasonMutation = useCreateSeason();
   const updateSeasonMutation = useUpdateSeason();
 
-  const submit = useCallback(
-    async (data: SeasonPayload | SeasonUpdatePayload) => {
-      if (mode === "create") {
-        await createSeasonMutation.mutateAsync(data as SeasonPayload);
-        onSuccess?.("Season created successfully");
-        return;
-      }
-
-      const updateData = data as SeasonUpdatePayload;
-      if (!updateData.id) {
-        throw new Error("Season ID is required for update");
-      }
-      await updateSeasonMutation.mutateAsync({ id: updateData.id, data: updateData });
-      onSuccess?.("Season updated successfully");
-    },
-    [mode, createSeasonMutation, updateSeasonMutation, onSuccess],
-  );
-
-  const form = useSeasonForm({
-    mode,
-    initialData,
-    onSubmit: submit,
-  });
+  const form =
+    props.mode === "create"
+      ? useSeasonForm({
+          mode: "create",
+          initialData: props.initialData ?? {},
+          onSubmit: async (data: SeasonPayload) => {
+            await createSeasonMutation.mutateAsync(data);
+            props.onSuccess?.("Season created successfully");
+          },
+        })
+      : useSeasonForm({
+          mode: "update",
+          seasonId: props.seasonId,
+          initialData: props.initialData,
+          onSubmit: async (id: string, data: SeasonUpdatePayload) => {
+            await updateSeasonMutation.mutateAsync({ id, data });
+            props.onSuccess?.("Season updated successfully");
+          },
+        });
 
   const { state: formState } = form;
   const { actions: formActions } = form;
@@ -50,10 +52,10 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
       return { success };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to submit form";
-      onError?.(errorMessage);
+      props.onError?.(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [formActions, onError]);
+  }, [formActions, props]);
 
   const handleChangeField = useCallback(
     (field: keyof SeasonPayload, value: string | number | boolean) => {
@@ -63,40 +65,40 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
   );
 
   const handleArchiveSeason = useCallback(
-    async (data: SeasonUpdatePayload) => {
+    async (id: string) => {
       try {
         await updateSeasonMutation.mutateAsync({
-          id: data.id,
-          data: { ...data, isArchived: true },
+          id,
+          data: { isArchived: true },
         });
-        onSuccess?.("Season archived successfully");
+        props.onSuccess?.("Season archived successfully");
         return { success: true };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to archive season";
-        onError?.(errorMessage);
+        props.onError?.(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [updateSeasonMutation, onSuccess, onError],
+    [updateSeasonMutation, props],
   );
 
   // unarchive
   const handleRestoreSeason = useCallback(
-    async (data: SeasonUpdatePayload) => {
+    async (id: string) => {
       try {
         await updateSeasonMutation.mutateAsync({
-          id: data.id,
-          data: { ...data, isArchived: false },
+          id,
+          data: { isArchived: false },
         });
-        onSuccess?.("Season restored successfully");
+        props.onSuccess?.("Season restored successfully");
         return { success: true };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to restore season";
-        onError?.(errorMessage);
+        props.onError?.(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [updateSeasonMutation, onSuccess, onError],
+    [updateSeasonMutation, props],
   );
 
   // Loading states
