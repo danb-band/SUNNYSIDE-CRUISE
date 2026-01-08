@@ -10,10 +10,7 @@ export const createCommentSchema = z.object({
 });
 
 // 부분 업데이트
-export const updateCommentSchema = createCommentSchema
-  .omit({ deletePw: true })
-  .partial()
-  .extend(dbSchema.shape);
+export const updateCommentSchema = createCommentSchema.partial().omit({ deletePw: true });
 
 // DB에서 받은 응답 스키마 (deletePw는 내려주지 않음)
 export const commentSchema = createCommentSchema.omit({ deletePw: true }).extend(dbSchema.shape);

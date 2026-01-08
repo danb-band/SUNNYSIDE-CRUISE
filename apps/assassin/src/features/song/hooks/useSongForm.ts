@@ -2,13 +2,18 @@ import { useState, useCallback } from "react";
 import { createSongSchema, updateSongSchema, SongPayload, SongUpdatePayload } from "../schema";
 import type { ZodError } from "zod";
 
-type FormMode = "create" | "update";
-
-interface UseSongFormProps {
-  mode: FormMode;
-  initialData: Partial<SongPayload>;
-  onSubmit: (data: SongPayload | SongUpdatePayload) => Promise<void>;
-}
+export type UseSongFormProps =
+  | {
+      mode: "create";
+      initialData: Partial<SongPayload>;
+      onSubmit: (data: SongPayload) => Promise<void>;
+    }
+  | {
+      mode: "update";
+      songId: string;
+      initialData: Partial<SongPayload>;
+      onSubmit: (id: string, data: SongUpdatePayload) => Promise<void>;
+    };
 
 interface FormErrors {
   seasonId?: string;
@@ -23,7 +28,7 @@ interface FormErrors {
 }
 
 export const useSongForm = (props: UseSongFormProps) => {
-  const { mode, initialData, onSubmit } = props;
+  const { mode, initialData } = props;
 
   const [formData, setFormData] = useState<Partial<SongPayload>>({
     seasonId: initialData.seasonId || "",
@@ -115,15 +120,15 @@ export const useSongForm = (props: UseSongFormProps) => {
       return false;
     }
 
-    if (!onSubmit) {
-      return true;
-    }
-
     setIsSubmitting(true);
     setErrors({});
 
     try {
-      await onSubmit(formData as SongPayload | SongUpdatePayload);
+      if (props.mode === "update") {
+        await props.onSubmit(props.songId, formData as SongUpdatePayload);
+      } else {
+        await props.onSubmit(formData as SongPayload);
+      }
       setIsDirty(false);
       return true;
     } catch (error) {
@@ -134,7 +139,7 @@ export const useSongForm = (props: UseSongFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, onSubmit]);
+  }, [formData, validateForm, props]);
 
   const isValid = validateForm().isValid;
 
