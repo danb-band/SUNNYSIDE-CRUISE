@@ -1,15 +1,30 @@
 "use client";
+
 import { useState } from "react";
-import { useSeasonLogic } from "@features/season/hooks/useSeasonLogic";
-import { SeasonBoard } from "./SeasonBoard";
-import { Button } from "@/components/ui/button";
 import { Archive, ArchiveRestore } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SeasonBoard } from "./SeasonBoard";
+import type { Season } from "@features/season/schema";
 
-export default function SeasonsContent() {
-  const { activeSeasons, archivedSeasons } = useSeasonLogic();
+interface SeasonPageClientProps {
+  seasons: Season[];
+}
+
+export function SeasonPageClient({ seasons: initialSeasons }: SeasonPageClientProps) {
   const [showArchived, setShowArchived] = useState(false);
+  const [seasons, setSeasons] = useState(initialSeasons);
 
-  const filteredSeasons = showArchived ? archivedSeasons : activeSeasons;
+  const activeSeasons = seasons.filter((s) => !s.isArchived);
+  const archivedSeasons = seasons.filter((s) => s.isArchived);
+  const displayedSeasons = showArchived ? archivedSeasons : activeSeasons;
+
+  const handleArchive = (season: Season) => {
+    setSeasons((prev) => prev.map((s) => (s.id === season.id ? { ...s, isArchived: true } : s)));
+  };
+
+  const handleRestore = (season: Season) => {
+    setSeasons((prev) => prev.map((s) => (s.id === season.id ? { ...s, isArchived: false } : s)));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -34,7 +49,11 @@ export default function SeasonsContent() {
               )}
             </Button>
           </div>
-          <SeasonBoard seasons={filteredSeasons} />
+          <SeasonBoard
+            seasons={displayedSeasons}
+            onArchive={handleArchive}
+            onRestore={handleRestore}
+          />
         </div>
       </div>
     </div>
