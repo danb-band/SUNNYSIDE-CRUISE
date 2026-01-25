@@ -11,7 +11,7 @@ const getCost = (): number => {
   return Number.isFinite(parsed) && parsed >= 8 && parsed <= 15 ? parsed : 10;
 };
 
-const looksLikeBcryptHash = (value: string): boolean => {
+const isBcryptHash = (value: string): boolean => {
   try {
     bcrypt.getRounds(value);
     return true;
@@ -21,7 +21,7 @@ const looksLikeBcryptHash = (value: string): boolean => {
 };
 
 export const hashPassword = (plain: string): string => {
-  if (looksLikeBcryptHash(plain)) return plain;
+  if (isBcryptHash(plain)) return plain;
   const peppered = `${plain}${getPepper()}`;
   return bcrypt.hashSync(peppered, getCost());
 };
@@ -31,7 +31,7 @@ export const verifyPassword = (plain: string, stored: string): boolean => {
 
   const peppered = `${plain}${getPepper()}`;
 
-  if (!looksLikeBcryptHash(stored)) {
+  if (!isBcryptHash(stored)) {
     return plain === stored;
   }
 
