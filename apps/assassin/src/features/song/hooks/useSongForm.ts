@@ -12,7 +12,7 @@ export type UseSongFormProps =
       mode: "update";
       songId: string;
       initialData: Partial<SongPayload>;
-      onSubmit: (id: string, data: SongUpdatePayload) => Promise<void>;
+      onSubmit: (id: string, data: SongUpdatePayload, pw: string) => Promise<void>;
     };
 
 interface FormErrors {
@@ -23,7 +23,7 @@ interface FormErrors {
   youtubeUrl?: string;
   sortOrder?: string;
   writer?: string;
-  deletePw?: string;
+  password?: string;
   _root?: string;
 }
 
@@ -38,7 +38,7 @@ export const useSongForm = (props: UseSongFormProps) => {
     youtubeUrl: initialData.youtubeUrl || "",
     sortOrder: initialData.sortOrder || 0,
     writer: initialData.writer || "",
-    deletePw: initialData.deletePw || "",
+    password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -106,11 +106,11 @@ export const useSongForm = (props: UseSongFormProps) => {
       youtubeUrl: initialData.youtubeUrl || "",
       sortOrder: initialData.sortOrder || 0,
       writer: initialData.writer || "",
-      deletePw: initialData.deletePw || "",
+      password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
     });
     setErrors({});
     setIsDirty(false);
-  }, [initialData]);
+  }, [initialData, mode]);
 
   const submitForm = useCallback(async () => {
     const { isValid, errors: validationErrors } = validateForm();
@@ -125,7 +125,7 @@ export const useSongForm = (props: UseSongFormProps) => {
 
     try {
       if (props.mode === "update") {
-        await props.onSubmit(props.songId, formData as SongUpdatePayload);
+        await props.onSubmit(props.songId, formData as SongUpdatePayload, formData.password || "");
       } else {
         await props.onSubmit(formData as SongPayload);
       }

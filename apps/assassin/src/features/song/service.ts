@@ -4,6 +4,7 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
+import { hashPassword, verifyPassword } from "@libs/utils/password";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -18,7 +19,12 @@ const assertSongExists = async (songId: string): Promise<void> => {
 const createSong = async (song: SongPayload) => {
   await SeasonService.assertSeasonExists(song.seasonId);
 
-  const result = await SongRepository.createSong(song);
+  const input: SongPayload = {
+    ...song,
+    password: hashPassword(song.password),
+  };
+
+  const result = await SongRepository.createSong(input);
 
   const parsed = songSchema.safeParse(result);
 
@@ -55,8 +61,18 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload) => {
+const updateSong = async (id: string, song: SongUpdatePayload, pw: string) => {
   const existed = await getSongById(id);
+
+  if (!existed.password) {
+    throw new Error("Song password is not set");
+  }
+
+  const isValid = verifyPassword(pw, existed.password);
+
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
 
   const parsedInput = updateSongSchema.safeParse(song);
 
@@ -77,8 +93,21 @@ const updateSong = async (id: string, song: SongUpdatePayload) => {
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string) => {
-  await assertSongExists(id);
+const deleteSong = async (id: string, pw: string) => {
+  const song = await SongRepository.getSongById(id);
+
+  if (!song) {
+    throw new Error(`Song with ID ${id} does not exist.`);
+  }
+
+  if (!song.password) {
+    throw new Error("Song password is not set");
+  }
+
+  const isValid = verifyPassword(pw, song.password);
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
 
   try {
     await prisma.$transaction(async (tx) => {

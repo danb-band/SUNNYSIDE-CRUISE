@@ -25,24 +25,27 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   const updateSongMutation = useUpdateSong();
   const deleteSongMutation = useDeleteSong();
 
-  const form = props.mode === "create"
-    ? useSongForm({
-        mode: "create",
-        initialData: props.initialData,
-        onSubmit: async (data: SongPayload) => {
-          await createSongMutation.mutateAsync(data);
-          props.onSuccess?.("Song created successfully");
-        },
-      })
-    : useSongForm({
-        mode: "update",
-        songId: props.songId,
-        initialData: props.initialData,
-        onSubmit: async (id: string, data: SongUpdatePayload) => {
-          await updateSongMutation.mutateAsync({ id, data });
-          props.onSuccess?.("Song updated successfully");
-        },
-      });
+  const formConfig =
+    props.mode === "create"
+      ? {
+          mode: props.mode,
+          initialData: props.initialData,
+          onSubmit: async (data: SongPayload) => {
+            await createSongMutation.mutateAsync(data);
+            props.onSuccess?.("Song created successfully");
+          },
+        }
+      : {
+          mode: props.mode,
+          songId: props.songId,
+          initialData: props.initialData,
+          onSubmit: async (id: string, data: SongUpdatePayload, pw: string) => {
+            await updateSongMutation.mutateAsync({ id, data, pw });
+            props.onSuccess?.("Song updated successfully");
+          },
+        };
+
+  const form = useSongForm(formConfig);
 
   const { state: formState } = form;
   const { actions: formActions } = form;
@@ -66,9 +69,9 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   );
 
   const handleDeleteSong = useCallback(
-    async (id: string) => {
+    async (id: string, pw: string) => {
       try {
-        await deleteSongMutation.mutateAsync(id);
+        await deleteSongMutation.mutateAsync({ id, pw });
         props.onSuccess?.("Song deleted successfully");
         return { success: true };
       } catch (error) {

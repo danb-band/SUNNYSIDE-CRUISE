@@ -6,11 +6,11 @@ export const createCommentSchema = z.object({
   songId: z.uuid(),
   content: z.string().min(1, "Content required"),
   writer: z.string().min(1, "Writer required"),
-  deletePw: z.string().min(1, "Password required"),
+  password: z.string().min(1, "Password required"),
 });
 
 // 부분 업데이트
-export const updateCommentSchema = createCommentSchema.partial();
+export const updateCommentSchema = createCommentSchema.partial().omit({ password: true });
 
 // DB에서 받은 응답 스키마
 export const commentSchema = createCommentSchema.extend(dbSchema.shape);

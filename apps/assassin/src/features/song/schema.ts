@@ -11,11 +11,11 @@ export const createSongSchema = z.object({
   youtubeUrl: z.url(),
   sortOrder: bigIntToNumber,
   writer: z.string().min(1, "Writer required"),
-  deletePw: z.string().min(1, "Password required"),
+  password: z.string().min(1, "Password required"),
 });
 
 // 부분 업데이트
-export const updateSongSchema = createSongSchema.partial();
+export const updateSongSchema = createSongSchema.partial().omit({ password: true });
 
 // DB에서 받은 응답 스키마
 export const songSchema = createSongSchema.extend(dbSchema.shape);

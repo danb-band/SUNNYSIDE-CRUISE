@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { useCreateSong } from "@features/song/mutations/useCreateSong";
 import { useSongsBySeason } from "@features/song/queries/useSongsBySeason";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +14,7 @@ interface AddSongDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddSongDialog({
-  seasonId,
-  open,
-  onOpenChange,
-}: AddSongDialogProps) {
+export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
   const { data: songs } = useSongsBySeason(seasonId);
   const createSong = useCreateSong();
 
@@ -33,7 +24,7 @@ export function AddSongDialog({
     description: "",
     youtubeUrl: "",
     writer: "",
-    deletePw: "",
+    password: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +38,7 @@ export function AddSongDialog({
         description: formData.description,
         youtubeUrl: formData.youtubeUrl,
         writer: formData.writer,
-        deletePw: formData.deletePw,
+        password: formData.password,
         sortOrder: songs.length,
       });
 
@@ -57,7 +48,7 @@ export function AddSongDialog({
         description: "",
         youtubeUrl: "",
         writer: "",
-        deletePw: "",
+        password: "",
       });
       onOpenChange(false);
     } catch (error) {
@@ -128,22 +119,18 @@ export function AddSongDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="deletePw">삭제 비밀번호 *</Label>
+            <Label htmlFor="password">삭제 비밀번호 *</Label>
             <Input
-              id="deletePw"
+              id="password"
               type="password"
-              value={formData.deletePw}
-              onChange={(e) => handleChange("deletePw", e.target.value)}
+              value={formData.password}
+              onChange={(e) => handleChange("password", e.target.value)}
               required
             />
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               취소
             </Button>
             <Button type="submit" disabled={createSong.isPending}>
