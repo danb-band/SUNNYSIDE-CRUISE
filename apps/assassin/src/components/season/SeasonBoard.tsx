@@ -29,7 +29,6 @@ export function SeasonBoard({ seasons, onArchive, onRestore }: SeasonBoardProps)
               <SeasonColumn
                 key={season.id}
                 season={season}
-                songCount={0}
                 onArchive={onArchive}
                 onRestore={onRestore}
               />
