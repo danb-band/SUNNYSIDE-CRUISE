@@ -11,7 +11,7 @@ export const createPlayerSchema = z.object({
 });
 
 // 부분 업데이트
-export const updatePlayerSchema = createPlayerSchema.partial().extend(dbSchema.shape);
+export const updatePlayerSchema = createPlayerSchema.partial();
 
 // DB에서 받은 응답 스키마
 export const playerSchema = createPlayerSchema.extend(dbSchema.shape);

@@ -7,6 +7,7 @@ import {
   CommentUpdatePayload,
   updateCommentSchema,
 } from "./schema";
+import { hashpassword, verifypassword } from "@libs/utils/password";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);
@@ -21,7 +22,12 @@ const assertCommentExists = async (commentId: string): Promise<void> => {
 const createComment = async (comment: CommentPayload): Promise<Comment> => {
   await SongService.assertSongExists(comment.songId);
 
-  const result = await CommentRepository.createComment(comment);
+  const input: CommentPayload = {
+    ...comment,
+    password: hashpassword(comment.password),
+  };
+
+  const result = await CommentRepository.createComment(input);
 
   const parsed = commentSchema.safeParse(result);
 
@@ -58,8 +64,18 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
-const updateComment = async (id: string, comment: CommentUpdatePayload) => {
+const updateComment = async (id: string, comment: CommentUpdatePayload, pw: string) => {
   const existed = await getCommentById(id);
+
+  if (!existed.password) {
+    throw new Error("Comment password is not set");
+  }
+
+  const isValid = verifypassword(pw, existed.password);
+
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
 
   const parsedInput = updateCommentSchema.safeParse(comment);
 
@@ -80,12 +96,24 @@ const updateComment = async (id: string, comment: CommentUpdatePayload) => {
   return parsed.data;
 };
 
-const deleteComment = async (id: string): Promise<void> => {
-  await assertCommentExists(id);
+const deleteComment = async (id: string, pw: string): Promise<void> => {
+  const comment = await CommentRepository.getCommentById(id);
+
+  if (!comment) {
+    throw new Error(`Comment with ID ${id} does not exist.`);
+  }
+
+  if (!comment.password) {
+    throw new Error("Comment password is not set");
+  }
+
+  const isValid = verifypassword(pw, comment.password);
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
+
   await CommentRepository.deleteComment(id);
 };
-
-
 
 const CommentService = {
   assertCommentExists,

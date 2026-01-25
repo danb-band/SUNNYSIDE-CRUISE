@@ -7,13 +7,18 @@ import {
 } from "../schema";
 import type { ZodError } from "zod";
 
-type FormMode = "create" | "update";
-
-interface UseSeasonFormProps {
-  mode: FormMode;
-  initialData: Partial<SeasonPayload>;
-  onSubmit: (data: SeasonPayload | SeasonUpdatePayload) => Promise<void>;
-}
+type UseSeasonFormProps =
+  | {
+      mode: "create";
+      initialData: Partial<SeasonPayload>;
+      onSubmit: (data: SeasonPayload) => Promise<void>;
+    }
+  | {
+      mode: "update";
+      seasonId: string;
+      initialData: SeasonUpdatePayload;
+      onSubmit: (id: string, data: SeasonUpdatePayload) => Promise<void>;
+    };
 
 interface FormErrors {
   name?: string;
@@ -24,12 +29,12 @@ interface FormErrors {
 }
 
 export const useSeasonForm = (props: UseSeasonFormProps) => {
-  const { mode, initialData, onSubmit } = props;
+  const { mode, initialData } = props;
 
   const [formData, setFormData] = useState<Partial<SeasonPayload>>({
-    name: initialData.name || "",
-    sortOrder: initialData.sortOrder || 0,
-    isArchived: initialData.isArchived || false,
+    name: initialData?.name || "",
+    sortOrder: initialData?.sortOrder || 0,
+    isArchived: initialData?.isArchived || false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -90,9 +95,9 @@ export const useSeasonForm = (props: UseSeasonFormProps) => {
 
   const resetForm = useCallback(() => {
     setFormData({
-      name: initialData.name || "",
-      sortOrder: initialData.sortOrder || 0,
-      isArchived: initialData.isArchived || false,
+      name: initialData?.name || "",
+      sortOrder: initialData?.sortOrder || 0,
+      isArchived: initialData?.isArchived || false,
     });
     setErrors({});
     setIsDirty(false);
@@ -106,15 +111,15 @@ export const useSeasonForm = (props: UseSeasonFormProps) => {
       return false;
     }
 
-    if (!onSubmit) {
-      return true;
-    }
-
     setIsSubmitting(true);
     setErrors({});
 
     try {
-      await onSubmit(formData as SeasonPayload | SeasonUpdatePayload);
+      if (props.mode === "update") {
+        await props.onSubmit(props.seasonId, formData as SeasonUpdatePayload);
+      } else {
+        await props.onSubmit(formData as SeasonPayload);
+      }
       setIsDirty(false);
       return true;
     } catch (error) {
@@ -125,7 +130,7 @@ export const useSeasonForm = (props: UseSeasonFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, onSubmit]);
+  }, [formData, validateForm, props]);
 
   const isValid = validateForm().isValid;
 

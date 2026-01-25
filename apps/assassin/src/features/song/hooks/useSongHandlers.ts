@@ -5,43 +5,47 @@ import { useDeleteSong } from "../mutations/useDeleteSong";
 import { useSongForm } from "./useSongForm";
 import type { SongPayload, SongUpdatePayload } from "../schema";
 
-interface UseSongHandlersProps {
-  mode: "create" | "update";
-  initialData?: Partial<SongPayload>;
-  onSuccess?: (message: string) => void;
-  onError?: (error: string) => void;
-}
+type UseSongHandlersProps =
+  | {
+      mode: "create";
+      initialData: Partial<SongPayload>;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    }
+  | {
+      mode: "update";
+      songId: string;
+      initialData: Partial<SongPayload>;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    };
 
 export const useSongHandlers = (props: UseSongHandlersProps) => {
-  const { mode, initialData = {}, onSuccess, onError } = props;
-
   const createSongMutation = useCreateSong();
   const updateSongMutation = useUpdateSong();
   const deleteSongMutation = useDeleteSong();
 
-  const submit = useCallback(
-    async (data: SongPayload | SongUpdatePayload) => {
-      if (mode === "create") {
-        await createSongMutation.mutateAsync(data as SongPayload);
-        onSuccess?.("Song created successfully");
-        return;
-      }
+  const formConfig =
+    props.mode === "create"
+      ? {
+          mode: props.mode,
+          initialData: props.initialData,
+          onSubmit: async (data: SongPayload) => {
+            await createSongMutation.mutateAsync(data);
+            props.onSuccess?.("Song created successfully");
+          },
+        }
+      : {
+          mode: props.mode,
+          songId: props.songId,
+          initialData: props.initialData,
+          onSubmit: async (id: string, data: SongUpdatePayload, pw: string) => {
+            await updateSongMutation.mutateAsync({ id, data, pw });
+            props.onSuccess?.("Song updated successfully");
+          },
+        };
 
-      const updateData = data as SongUpdatePayload;
-      if (!updateData.id) {
-        throw new Error("Song ID is required for update");
-      }
-      await updateSongMutation.mutateAsync({ id: updateData.id, data: updateData });
-      onSuccess?.("Song updated successfully");
-    },
-    [mode, createSongMutation, updateSongMutation, onSuccess],
-  );
-
-  const form = useSongForm({
-    mode,
-    initialData,
-    onSubmit: submit,
-  });
+  const form = useSongForm(formConfig);
 
   const { state: formState } = form;
   const { actions: formActions } = form;
@@ -52,10 +56,10 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
       return { success };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to submit form";
-      onError?.(errorMessage);
+      props.onError?.(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [formActions, onError]);
+  }, [formActions, props]);
 
   const handleChangeField = useCallback(
     (field: keyof SongPayload, value: string | number) => {
@@ -65,18 +69,18 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   );
 
   const handleDeleteSong = useCallback(
-    async (id: string) => {
+    async (id: string, pw: string) => {
       try {
-        await deleteSongMutation.mutateAsync(id);
-        onSuccess?.("Song deleted successfully");
+        await deleteSongMutation.mutateAsync({ id, pw });
+        props.onSuccess?.("Song deleted successfully");
         return { success: true };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to delete song";
-        onError?.(errorMessage);
+        props.onError?.(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [deleteSongMutation, onSuccess, onError],
+    [deleteSongMutation, props],
   );
 
   // Loading states
