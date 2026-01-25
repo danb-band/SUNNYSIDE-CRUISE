@@ -132,7 +132,7 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, onSubmit, mode]);
+  }, [validateForm, onSubmit, mode, props, formData]);
 
   const isValid = validateForm().isValid;
 
