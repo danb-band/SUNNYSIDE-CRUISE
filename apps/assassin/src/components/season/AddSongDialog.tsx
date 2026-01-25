@@ -15,7 +15,7 @@ interface AddSongDialogProps {
 }
 
 export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
-  const { data: songs } = useSongsBySeason(seasonId);
+  const { data: songs = [] } = useSongsBySeason(seasonId);
   const createSong = useCreateSong();
 
   const [formData, setFormData] = useState({
