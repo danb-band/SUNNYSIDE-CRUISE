@@ -1,14 +1,16 @@
 import { Season } from "@features/season/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SeasonColumn } from "./SeasonColumn";
+import type { Song } from "@features/song/schema";
 
 interface SeasonBoardProps {
   seasons: Season[];
+  songsBySeason: Record<string, Song[]>;
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
 }
 
-export function SeasonBoard({ seasons, onArchive, onRestore }: SeasonBoardProps) {
+export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return (
@@ -29,7 +31,7 @@ export function SeasonBoard({ seasons, onArchive, onRestore }: SeasonBoardProps)
               <SeasonColumn
                 key={season.id}
                 season={season}
-                songCount={0}
+                initialSongs={songsBySeason[season.id] ?? []}
                 onArchive={onArchive}
                 onRestore={onRestore}
               />

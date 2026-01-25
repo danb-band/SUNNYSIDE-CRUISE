@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCreateSong } from "@features/song/mutations/useCreateSong";
 import { useSongsBySeason } from "@features/song/queries/useSongsBySeason";
+import type { Song } from "@features/song/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +11,18 @@ import { Label } from "@/components/ui/label";
 
 interface AddSongDialogProps {
   seasonId: string;
+  initialSongs?: Song[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
-  const { data: songs } = useSongsBySeason(seasonId);
+export function AddSongDialog({
+  seasonId,
+  initialSongs = [],
+  open,
+  onOpenChange,
+}: AddSongDialogProps) {
+  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
   const createSong = useCreateSong();
 
   const [formData, setFormData] = useState({
