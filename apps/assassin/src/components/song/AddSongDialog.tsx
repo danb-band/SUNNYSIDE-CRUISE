@@ -7,21 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Music, User, Link2, FileText, Lock, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
-import type { SongPayload } from "@/features/song/schema";
-
-// Type Guard: 폼 데이터가 필드를 모두 가지고 있는지 체크
-function hasRequiredFields(data: Partial<SongPayload>): data is SongPayload {
-  return (
-    data.name !== undefined &&
-    data.artist !== undefined &&
-    data.description !== undefined &&
-    data.youtubeUrl !== undefined &&
-    data.writer !== undefined &&
-    data.password !== undefined &&
-    data.seasonId !== undefined &&
-    data.sortOrder !== undefined
-  );
-}
 
 interface AddSongDialogProps {
   seasonId: string;
@@ -75,10 +60,6 @@ export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogPro
   });
 
   const { formData } = formState;
-
-  if (!hasRequiredFields(formData)) {
-    return null;
-  }
 
   const youtubeId = extractYoutubeId(formData.youtubeUrl);
 
