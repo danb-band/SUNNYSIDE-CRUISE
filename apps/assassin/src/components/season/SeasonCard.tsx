@@ -52,6 +52,7 @@ export function SeasonCard({ season }: SeasonCardProps) {
 
       <AddSongDialog
         seasonId={season.id}
+        songCount={songs.length}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
