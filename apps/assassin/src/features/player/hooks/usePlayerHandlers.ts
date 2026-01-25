@@ -5,12 +5,20 @@ import { useDeletePlayer } from "../mutations/useDeletePlayer";
 import { usePlayerForm } from "./usePlayerForm";
 import type { PlayerPayload, PlayerUpdatePayload } from "../schema";
 
-interface UsePlayerHandlersProps {
-  mode: "create" | "update";
-  initialData?: Partial<PlayerPayload>;
-  onSuccess?: (message: string) => void;
-  onError?: (error: string) => void;
-}
+type UsePlayerHandlersProps =
+  | {
+      mode: "create";
+      initialData?: Partial<PlayerPayload>;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    }
+  | {
+      mode: "update";
+      playerId: string;
+      initialData: Partial<PlayerPayload>;
+      onSuccess?: (message: string) => void;
+      onError?: (error: string) => void;
+    };
 
 export const usePlayerHandlers = (props: UsePlayerHandlersProps) => {
   const { mode, initialData = {}, onSuccess, onError } = props;
@@ -19,29 +27,30 @@ export const usePlayerHandlers = (props: UsePlayerHandlersProps) => {
   const updatePlayerMutation = useUpdatePlayer();
   const deletePlayerMutation = useDeletePlayer();
 
-  const submit = useCallback(
-    async (data: PlayerPayload | PlayerUpdatePayload) => {
-      if (mode === "create") {
-        await createPlayerMutation.mutateAsync(data as PlayerPayload);
-        onSuccess?.("Player added successfully");
-        return;
-      }
+  const formConfig =
+    mode === "create"
+      ? {
+          mode,
+          initialData,
+          onSubmit: async (data: PlayerPayload) => {
+            await createPlayerMutation.mutateAsync(data);
+            props.onSuccess?.("Player added successfully");
+          },
+        }
+      : {
+          mode,
+          playerId: props.playerId,
+          initialData,
+          onSubmit: async (id: string, data: PlayerUpdatePayload) => {
+            if (!id) {
+              throw new Error("Player ID is required for update");
+            }
+            await updatePlayerMutation.mutateAsync({ id, data });
+            props.onSuccess?.("Player updated successfully");
+          },
+        };
 
-      const updateData = data as PlayerUpdatePayload;
-      if (!updateData.id) {
-        throw new Error("Player ID is required for update");
-      }
-      await updatePlayerMutation.mutateAsync({ id: updateData.id, data: updateData });
-      onSuccess?.("Player updated successfully");
-    },
-    [mode, createPlayerMutation, updatePlayerMutation, onSuccess],
-  );
-
-  const form = usePlayerForm({
-    mode,
-    initialData,
-    onSubmit: submit,
-  });
+  const form = usePlayerForm(formConfig);
 
   const { state: formState } = form;
   const { actions: formActions } = form;

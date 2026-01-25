@@ -7,14 +7,18 @@ import {
 } from "../schema";
 import type { ZodError } from "zod";
 
-type FormMode = "create" | "update";
-
-interface UsePlayerFormProps {
-  mode: FormMode;
-  initialData: Partial<PlayerPayload>;
-  onSubmit: (data: PlayerPayload | PlayerUpdatePayload) => Promise<void>;
-}
-
+export type UsePlayerFormProps =
+  | {
+      mode: "create";
+      initialData: Partial<PlayerPayload>;
+      onSubmit: (data: PlayerPayload) => Promise<void>;
+    }
+  | {
+      mode: "update";
+      playerId: string;
+      initialData: Partial<PlayerPayload>;
+      onSubmit: (id: string, data: PlayerUpdatePayload) => Promise<void>;
+    };
 interface FormErrors {
   songId?: string;
   name?: string;
@@ -113,7 +117,11 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
     setErrors({});
 
     try {
-      await onSubmit(formData as PlayerPayload | PlayerUpdatePayload);
+      if (mode === "update") {
+        await onSubmit(props.playerId, formData as PlayerUpdatePayload);
+      } else {
+        await onSubmit(formData as PlayerPayload);
+      }
       setIsDirty(false);
       return true;
     } catch (error) {
@@ -124,7 +132,7 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, onSubmit]);
+  }, [formData, validateForm, onSubmit, mode]);
 
   const isValid = validateForm().isValid;
 
