@@ -4,7 +4,7 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
-import { hashpassword, verifypassword } from "@libs/utils/password";
+import { hashPassword, verifyPassword } from "@libs/utils/password";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -21,7 +21,7 @@ const createSong = async (song: SongPayload) => {
 
   const input: SongPayload = {
     ...song,
-    password: hashpassword(song.password),
+    password: hashPassword(song.password),
   };
 
   const result = await SongRepository.createSong(input);
@@ -68,7 +68,7 @@ const updateSong = async (id: string, song: SongUpdatePayload, pw: string) => {
     throw new Error("Song password is not set");
   }
 
-  const isValid = verifypassword(pw, existed.password);
+  const isValid = verifyPassword(pw, existed.password);
 
   if (!isValid) {
     throw new Error("Invalid password");
@@ -104,7 +104,7 @@ const deleteSong = async (id: string, pw: string) => {
     throw new Error("Song password is not set");
   }
 
-  const isValid = verifypassword(pw, song.password);
+  const isValid = verifyPassword(pw, song.password);
   if (!isValid) {
     throw new Error("Invalid password");
   }
