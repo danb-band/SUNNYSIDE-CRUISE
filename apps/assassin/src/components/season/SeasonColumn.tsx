@@ -209,7 +209,6 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
 
       <AddSongDialog
         seasonId={season.id}
-        songCount={songCount}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />

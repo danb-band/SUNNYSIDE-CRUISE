@@ -1,17 +1,30 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useCreateSong } from "@features/song/mutations/useCreateSong";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Music, User, Link2, FileText, Lock, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
+import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
+import type { SongPayload } from "@/features/song/schema";
+
+// Type Guard: 폼 데이터가 필드를 모두 가지고 있는지 체크
+function hasRequiredFields(data: Partial<SongPayload>): data is SongPayload {
+  return (
+    data.name !== undefined &&
+    data.artist !== undefined &&
+    data.description !== undefined &&
+    data.youtubeUrl !== undefined &&
+    data.writer !== undefined &&
+    data.password !== undefined &&
+    data.seasonId !== undefined &&
+    data.sortOrder !== undefined
+  );
+}
 
 interface AddSongDialogProps {
   seasonId: string;
-  songCount: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -53,29 +66,23 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
   );
 }
 
-const initialFormData = {
-  name: "",
-  artist: "",
-  description: "",
-  youtubeUrl: "",
-  writer: "",
-  password: "",
-};
+export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
+  const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
+    mode: "create",
+    initialData: {
+      seasonId,
+    },
+  });
 
-export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSongDialogProps) {
-  const createSong = useCreateSong();
-  const [formData, setFormData] = useState(initialFormData);
+  const { formData } = formState;
 
-  const youtubeId = useMemo(() => extractYoutubeId(formData.youtubeUrl), [formData.youtubeUrl]);
+  if (!hasRequiredFields(formData)) {
+    return null;
+  }
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const youtubeId = extractYoutubeId(formData.youtubeUrl);
 
-  const resetForm = () => {
-    setFormData(initialFormData);
-  };
-
+  // 폼 제출 가능 여부
   const isValid =
     formData.name.trim() !== "" &&
     formData.artist.trim() !== "" &&
@@ -83,50 +90,16 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
     formData.writer.trim() !== "" &&
     formData.password.trim() !== "";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
-
-    try {
-      console.log("submit form", {
-        seasonId,
-        name: formData.name,
-        artist: formData.artist,
-        description: formData.description,
-        youtubeUrl: formData.youtubeUrl,
-        writer: formData.writer,
-        password: formData.password,
-        sortOrder: songCount,
-      });
-      await createSong.mutateAsync({
-        seasonId,
-        name: formData.name,
-        artist: formData.artist,
-        description: formData.description,
-        youtubeUrl: formData.youtubeUrl,
-        writer: formData.writer,
-        password: formData.password,
-        sortOrder: songCount,
-      });
-      resetForm();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to create song:", error);
-    }
-  };
-
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      resetForm();
-    }
-    onOpenChange(isOpen);
-  };
-
   const inputClassName =
     "h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen: boolean) => {
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent
         className={cn(
           "max-w-md p-0 gap-0 overflow-hidden",
@@ -160,7 +133,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
+                  onChange={(e) => handleChangeField("name", e.target.value)}
                   placeholder="노래 제목"
                   className={inputClassName}
                 />
@@ -175,7 +148,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
                 <Input
                   id="artist"
                   value={formData.artist}
-                  onChange={(e) => handleChange("artist", e.target.value)}
+                  onChange={(e) => handleChangeField("artist", e.target.value)}
                   placeholder="아티스트명"
                   className={inputClassName}
                 />
@@ -192,7 +165,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
                 id="youtubeUrl"
                 type="url"
                 value={formData.youtubeUrl}
-                onChange={(e) => handleChange("youtubeUrl", e.target.value)}
+                onChange={(e) => handleChangeField("youtubeUrl", e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
                 className={inputClassName}
               />
@@ -219,7 +192,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
+                onChange={(e) => handleChangeField("description", e.target.value)}
                 placeholder="이 노래에 대해 하고 싶은 말 (선택)"
                 className={cn(inputClassName, "min-h-[80px] resize-none")}
               />
@@ -248,7 +221,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
                 <Input
                   id="writer"
                   value={formData.writer}
-                  onChange={(e) => handleChange("writer", e.target.value)}
+                  onChange={(e) => handleChangeField("writer", e.target.value)}
                   placeholder="닉네임"
                   className={inputClassName}
                 />
@@ -264,7 +237,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
+                  onChange={(e) => handleChangeField("password", e.target.value)}
                   placeholder="삭제 시 필요"
                   className={inputClassName}
                 />
@@ -278,8 +251,8 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => handleOpenChange(false)}
-              disabled={createSong.isPending}
+              onClick={() => onOpenChange(false)}
+              disabled={isProcessing}
               className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-50 dark:hover:bg-slate-700"
             >
               취소
@@ -287,10 +260,10 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
             <Button
               type="submit"
               size="sm"
-              disabled={!isValid || createSong.isPending}
+              disabled={!isValid || isProcessing}
               className="bg-blue-500 hover:bg-blue-600 text-white min-w-[90px]"
             >
-              {createSong.isPending ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   추가 중...
