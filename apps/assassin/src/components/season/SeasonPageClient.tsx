@@ -32,10 +32,10 @@ export function SeasonPageClient({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="mx-auto max-w-[calc(100vw-4rem)] p-8">
-        <div className="bg-white dark:bg-slate-900 rounded-lg p-6 shadow-sm border border-slate-200 dark:border-slate-800 min-h-[800px]">
-          <div className="mb-6 flex items-center justify-start">
+    <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+      <div className="mx-auto max-w-[calc(100vw-4rem)] p-8 h-full">
+        <div className="bg-white dark:bg-slate-900 rounded-lg p-6 shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col min-h-0">
+          <div className="mb-6 flex items-center justify-start flex-shrink-0">
             <Button
               size="sm"
               onClick={() => setShowArchived(!showArchived)}
@@ -54,12 +54,14 @@ export function SeasonPageClient({
               )}
             </Button>
           </div>
-          <SeasonBoard
-            seasons={displayedSeasons}
-            songsBySeason={songsBySeason}
-            onArchive={handleArchive}
-            onRestore={handleRestore}
-          />
+          <div className="flex-1 min-h-0">
+            <SeasonBoard
+              seasons={displayedSeasons}
+              songsBySeason={songsBySeason}
+              onArchive={handleArchive}
+              onRestore={handleRestore}
+            />
+          </div>
         </div>
       </div>
     </div>

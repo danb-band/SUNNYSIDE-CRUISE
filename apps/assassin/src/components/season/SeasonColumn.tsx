@@ -88,9 +88,9 @@ export function SeasonColumn({
   };
 
   return (
-    <div className="w-80 flex-shrink-0">
+    <div className="w-80 min-w-0 flex-shrink-0">
       <Card
-        className={`border-slate-200 dark:border-slate-700 shadow-sm transition-all ${
+        className={`border-slate-200 dark:border-slate-700 shadow-sm transition-all h-full flex flex-col min-h-0 ${
           isArchived ? "bg-slate-100 dark:bg-slate-800/50 opacity-75" : "bg-white dark:bg-slate-800"
         }`}
       >
@@ -179,11 +179,11 @@ export function SeasonColumn({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 flex-1 min-h-0">
           {/* Songs Container */}
-          <div className="min-h-[500px] max-h-[600px] overflow-y-auto rounded-md bg-slate-50 dark:bg-slate-900 p-3 space-y-2">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 space-y-2">
             {songCount === 0 ? (
-              <div className="flex h-[200px] items-center justify-center">
+              <div className="flex items-center justify-center">
                 <div className="text-center">
                   <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
