@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Music, User, Link2, FileText, Lock, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
+import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 
 interface AddSongDialogProps {
   seasonId: string;
@@ -58,18 +59,11 @@ export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogPro
       seasonId,
     },
   });
+  const { validateSongData } = useSongLogic(seasonId);
 
   const { formData } = formState;
 
   const youtubeId = extractYoutubeId(formData.youtubeUrl);
-
-  // 폼 제출 가능 여부
-  const isValid =
-    formData.name.trim() !== "" &&
-    formData.artist.trim() !== "" &&
-    formData.youtubeUrl.trim() !== "" &&
-    formData.writer.trim() !== "" &&
-    formData.password.trim() !== "";
 
   const inputClassName =
     "h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
@@ -241,7 +235,7 @@ export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogPro
             <Button
               type="submit"
               size="sm"
-              disabled={!isValid || isProcessing}
+              disabled={!validateSongData(formData).isValid || isProcessing}
               className="bg-blue-500 hover:bg-blue-600 text-white min-w-[90px]"
             >
               {isProcessing ? (
