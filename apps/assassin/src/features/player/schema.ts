@@ -19,3 +19,4 @@ export const playerSchema = createPlayerSchema.extend(dbSchema.shape);
 export type PlayerPayload = z.infer<typeof createPlayerSchema>;
 export type PlayerUpdatePayload = z.infer<typeof updatePlayerSchema>;
 export type Player = z.infer<typeof playerSchema>;
+export type Instrument = z.infer<typeof instrumentEnum>;
