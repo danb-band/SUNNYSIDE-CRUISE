@@ -20,9 +20,7 @@ export function SongItem({ song }: SongItemProps) {
             <h4 className="truncate font-semibold">{song.name}</h4>
             <p className="truncate text-sm text-muted-foreground">{song.artist}</p>
             {song.description && (
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                {song.description}
-              </p>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{song.description}</p>
             )}
           </div>
         </div>

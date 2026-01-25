@@ -2,25 +2,32 @@
 
 import { useState } from "react";
 import { Season } from "@features/season/schema";
+import { useSongsBySeason } from "@features/song/queries/useSongsBySeason";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SongItem } from "../song/SongItem";
+import { AddSongDialog } from "./AddSongDialog";
 
 interface SeasonColumnProps {
   season: Season;
-  songCount?: number;
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
 }
 
-export function SeasonColumn({ season, songCount = 0, onArchive, onRestore }: SeasonColumnProps) {
+export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
+
+  const { data: songs } = useSongsBySeason(season.id);
+  const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  const songCount = sortedSongs.length;
 
   const handleSave = async () => {
     if (editedName.trim() === "" || editedName === season.name) {
@@ -174,14 +181,22 @@ export function SeasonColumn({ season, songCount = 0, onArchive, onRestore }: Se
                 <div className="text-center">
                   <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
-                  <Button size="sm" className="text-xs bg-blue-500 hover:bg-blue-600 text-white">
+                  <Button
+                    size="sm"
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
                     <Plus className="mr-1 h-3 w-3" />
                     Add song
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">{/* Placeholder for future song items */}</div>
+              <div className="space-y-2">
+                {sortedSongs.map((song) => (
+                  <SongItem key={song.id} song={song} />
+                ))}
+              </div>
             )}
           </div>
 
@@ -190,12 +205,19 @@ export function SeasonColumn({ season, songCount = 0, onArchive, onRestore }: Se
             variant="ghost"
             size="sm"
             className="w-full justify-start text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+            onClick={() => setIsAddDialogOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add a song
           </Button>
         </CardContent>
       </Card>
+
+      <AddSongDialog
+        seasonId={season.id}
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </div>
   );
 }
