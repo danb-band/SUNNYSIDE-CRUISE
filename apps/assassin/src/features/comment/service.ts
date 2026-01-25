@@ -64,8 +64,18 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
-const updateComment = async (id: string, comment: CommentUpdatePayload) => {
+const updateComment = async (id: string, comment: CommentUpdatePayload, pw: string) => {
   const existed = await getCommentById(id);
+
+  if (!existed.password) {
+    throw new Error("Comment password is not set");
+  }
+
+  const isValid = verifypassword(pw, existed.password);
+
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
 
   const parsedInput = updateCommentSchema.safeParse(comment);
 

@@ -57,7 +57,6 @@ async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
       youtubeUrl: input.youtubeUrl,
       sortOrder: input.sortOrder,
       writer: input.writer,
-      password: input.password,
       seasonId: input.seasonId,
     },
   });

@@ -49,7 +49,6 @@ async function updateComment(id: string, input: CommentUpdatePayload): Promise<C
     data: {
       content: input.content,
       writer: input.writer,
-      password: input.password,
       songId: input.songId,
     },
   });

@@ -61,8 +61,18 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload) => {
+const updateSong = async (id: string, song: SongUpdatePayload, pw: string) => {
   const existed = await getSongById(id);
+
+  if (!existed.password) {
+    throw new Error("Song password is not set");
+  }
+
+  const isValid = verifypassword(pw, existed.password);
+
+  if (!isValid) {
+    throw new Error("Invalid password");
+  }
 
   const parsedInput = updateSongSchema.safeParse(song);
 

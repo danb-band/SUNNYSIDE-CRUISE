@@ -12,8 +12,8 @@ export const createCommentSchema = z.object({
 // 부분 업데이트
 export const updateCommentSchema = createCommentSchema.partial().omit({ password: true });
 
-// DB에서 받은 응답 스키마 (password는 내려주지 않음)
-export const commentSchema = createCommentSchema.omit({ password: true }).extend(dbSchema.shape);
+// DB에서 받은 응답 스키마
+export const commentSchema = createCommentSchema.extend(dbSchema.shape);
 
 export type CommentPayload = z.infer<typeof createCommentSchema>;
 export type CommentUpdatePayload = z.infer<typeof updateCommentSchema>;
