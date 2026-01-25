@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,13 +56,15 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
 }
 
 export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: AddSongDialogProps) {
+  const { validateSongData, getNextSortOrder } = useSongLogic(seasonId, initialSongs);
+
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
     mode: "create",
     initialData: {
       seasonId,
+      sortOrder: getNextSortOrder(),
     },
   });
-  const { validateSongData } = useSongLogic(seasonId, initialSongs);
 
   const { formData } = formState;
 
