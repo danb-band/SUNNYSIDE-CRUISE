@@ -12,7 +12,7 @@ export type UseSongFormProps =
       mode: "update";
       songId: string;
       initialData: Partial<SongPayload>;
-      onSubmit: (id: string, data: SongUpdatePayload) => Promise<void>;
+      onSubmit: (id: string, data: SongUpdatePayload, pw: string) => Promise<void>;
     };
 
 interface FormErrors {
@@ -125,7 +125,7 @@ export const useSongForm = (props: UseSongFormProps) => {
 
     try {
       if (props.mode === "update") {
-        await props.onSubmit(props.songId, formData as SongUpdatePayload);
+        await props.onSubmit(props.songId, formData as SongUpdatePayload, formData.password || "");
       } else {
         await props.onSubmit(formData as SongPayload);
       }

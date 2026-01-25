@@ -39,8 +39,8 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
           mode: props.mode,
           songId: props.songId,
           initialData: props.initialData,
-          onSubmit: async (id: string, data: SongUpdatePayload) => {
-            await updateSongMutation.mutateAsync({ id, data });
+          onSubmit: async (id: string, data: SongUpdatePayload, pw: string) => {
+            await updateSongMutation.mutateAsync({ id, data, pw });
             props.onSuccess?.("Song updated successfully");
           },
         };
