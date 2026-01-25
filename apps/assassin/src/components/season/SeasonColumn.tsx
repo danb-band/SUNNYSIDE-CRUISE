@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Season } from "@features/season/schema";
-import { useSongsBySeason } from "@features/song/queries/useSongsBySeason";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SongItem } from "../song/SongItem";
 import { AddSongDialog } from "./AddSongDialog";
+import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 
 interface SeasonColumnProps {
   season: Season;
@@ -25,9 +25,8 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
 
-  const { data: songs } = useSongsBySeason(season.id);
-  const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
-  const songCount = sortedSongs.length;
+  const { songs } = useSongLogic(season.id);
+  const songCount = songs.length;
 
   const handleSave = async () => {
     if (editedName.trim() === "" || editedName === season.name) {
@@ -193,7 +192,7 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
               </div>
             ) : (
               <div className="space-y-2">
-                {sortedSongs.map((song) => (
+                {songs.map((song) => (
                   <SongItem key={song.id} song={song} />
                 ))}
               </div>
