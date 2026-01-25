@@ -36,7 +36,7 @@ async function createComment(input: CommentPayload): Promise<Comment> {
     data: {
       content: input.content,
       writer: input.writer,
-      deletePw: input.deletePw,
+      password: input.password,
       songId: input.songId,
     },
   });
@@ -49,7 +49,7 @@ async function updateComment(id: string, input: CommentUpdatePayload): Promise<C
     data: {
       content: input.content,
       writer: input.writer,
-      deletePw: input.deletePw,
+      password: input.password,
       songId: input.songId,
     },
   });

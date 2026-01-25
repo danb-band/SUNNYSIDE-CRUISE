@@ -7,7 +7,7 @@ import {
   CommentUpdatePayload,
   updateCommentSchema,
 } from "./schema";
-import { hashDeletePw, verifyDeletePw } from "@libs/utils/password";
+import { hashpassword, verifypassword } from "@libs/utils/password";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);
@@ -24,7 +24,7 @@ const createComment = async (comment: CommentPayload): Promise<Comment> => {
 
   const input: CommentPayload = {
     ...comment,
-    deletePw: hashDeletePw(comment.deletePw),
+    password: hashpassword(comment.password),
   };
 
   const result = await CommentRepository.createComment(input);
@@ -93,11 +93,11 @@ const deleteComment = async (id: string, pw: string): Promise<void> => {
     throw new Error(`Comment with ID ${id} does not exist.`);
   }
 
-  if (!comment.deletePw) {
+  if (!comment.password) {
     throw new Error("Comment password is not set");
   }
 
-  const isValid = verifyDeletePw(pw, comment.deletePw);
+  const isValid = verifypassword(pw, comment.password);
   if (!isValid) {
     throw new Error("Invalid password");
   }

@@ -20,13 +20,13 @@ const looksLikeBcryptHash = (value: string): boolean => {
   }
 };
 
-export const hashDeletePw = (plain: string): string => {
+export const hashpassword = (plain: string): string => {
   if (looksLikeBcryptHash(plain)) return plain;
   const peppered = `${plain}${getPepper()}`;
   return bcrypt.hashSync(peppered, getCost());
 };
 
-export const verifyDeletePw = (plain: string, stored: string): boolean => {
+export const verifypassword = (plain: string, stored: string): boolean => {
   if (!stored) return false;
 
   const peppered = `${plain}${getPepper()}`;

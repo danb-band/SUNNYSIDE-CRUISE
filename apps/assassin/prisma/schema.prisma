@@ -13,7 +13,7 @@ model Comment {
   songId    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content   String
   writer    String
-  deletePw  String
+  password  String
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt DateTime? @db.Timestamptz(6)
@@ -59,7 +59,7 @@ model Song {
   youtubeUrl  String
   sortOrder   BigInt
   writer      String
-  deletePw    String
+  password    String
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt   DateTime? @db.Timestamptz(6)

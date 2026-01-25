@@ -25,25 +25,27 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   const updateSongMutation = useUpdateSong();
   const deleteSongMutation = useDeleteSong();
 
-  const form =
+  const formConfig =
     props.mode === "create"
-      ? useSongForm({
-          mode: "create",
+      ? {
+          mode: props.mode,
           initialData: props.initialData,
           onSubmit: async (data: SongPayload) => {
             await createSongMutation.mutateAsync(data);
             props.onSuccess?.("Song created successfully");
           },
-        })
-      : useSongForm({
-          mode: "update",
+        }
+      : {
+          mode: props.mode,
           songId: props.songId,
           initialData: props.initialData,
           onSubmit: async (id: string, data: SongUpdatePayload) => {
             await updateSongMutation.mutateAsync({ id, data });
             props.onSuccess?.("Song updated successfully");
           },
-        });
+        };
+
+  const form = useSongForm(formConfig);
 
   const { state: formState } = form;
   const { actions: formActions } = form;

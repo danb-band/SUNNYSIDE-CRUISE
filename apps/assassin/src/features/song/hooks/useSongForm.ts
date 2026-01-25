@@ -23,7 +23,7 @@ interface FormErrors {
   youtubeUrl?: string;
   sortOrder?: string;
   writer?: string;
-  deletePw?: string;
+  password?: string;
   _root?: string;
 }
 
@@ -38,7 +38,7 @@ export const useSongForm = (props: UseSongFormProps) => {
     youtubeUrl: initialData.youtubeUrl || "",
     sortOrder: initialData.sortOrder || 0,
     writer: initialData.writer || "",
-    deletePw: mode === "create" ? initialData.deletePw || "" : initialData.deletePw || undefined,
+    password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -106,7 +106,7 @@ export const useSongForm = (props: UseSongFormProps) => {
       youtubeUrl: initialData.youtubeUrl || "",
       sortOrder: initialData.sortOrder || 0,
       writer: initialData.writer || "",
-      deletePw: mode === "create" ? initialData.deletePw || "" : initialData.deletePw || undefined,
+      password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
     });
     setErrors({});
     setIsDirty(false);
