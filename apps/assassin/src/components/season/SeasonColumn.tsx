@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AddSongDialog } from "./AddSongDialog";
+import { AddSongDialog } from "../song/AddSongDialog";
 
 interface SeasonColumnProps {
   season: Season;

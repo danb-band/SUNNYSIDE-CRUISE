@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Music, User, Link2, FileText, Lock, Loader2, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/libs/shadcn/utils";
 
 interface AddSongDialogProps {
   seasonId: string;
@@ -88,6 +88,16 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
     if (!isValid) return;
 
     try {
+      console.log("submit form", {
+        seasonId,
+        name: formData.name,
+        artist: formData.artist,
+        description: formData.description,
+        youtubeUrl: formData.youtubeUrl,
+        writer: formData.writer,
+        password: formData.password,
+        sortOrder: songCount,
+      });
       await createSong.mutateAsync({
         seasonId,
         name: formData.name,
@@ -121,7 +131,7 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
         className={cn(
           "max-w-md p-0 gap-0 overflow-hidden",
           "bg-slate-50 dark:bg-slate-800",
-          "border-slate-200 dark:border-slate-700"
+          "border-slate-200 dark:border-slate-700",
         )}
       >
         {/* Header */}
@@ -201,7 +211,11 @@ export function AddSongDialog({ seasonId, songCount, open, onOpenChange }: AddSo
               </div>
             )}
 
-            <FormField label="설명" htmlFor="description" icon={<FileText className="h-3.5 w-3.5" />}>
+            <FormField
+              label="설명"
+              htmlFor="description"
+              icon={<FileText className="h-3.5 w-3.5" />}
+            >
               <Textarea
                 id="description"
                 value={formData.description}

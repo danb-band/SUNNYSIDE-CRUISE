@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus } from "lucide-react";
 import { SongItem } from "../song/SongItem";
-import { AddSongDialog } from "./AddSongDialog";
+import { AddSongDialog } from "../song/AddSongDialog";
 
 interface SeasonCardProps {
   season: Season;
