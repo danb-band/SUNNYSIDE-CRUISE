@@ -1,35 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Season } from "@features/season/schema";
+import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
-import { getSongsBySeasonAction } from "@features/song/actions";
-import { songKeys } from "@features/song/queries/keys";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SongItem } from "../song/SongItem";
+import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 import { AddSongDialog } from "../song/AddSongDialog";
 
 interface SeasonColumnProps {
   season: Season;
+  initialSongs: Song[];
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
 }
 
-export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps) {
-  const { data: songs = [] } = useQuery({
-    queryKey: songKeys.bySeason(season.id),
-    queryFn: () => getSongsBySeasonAction(season.id),
-  });
-  const songCount = songs.length;
+export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
+
+  const { songs } = useSongLogic(season.id, initialSongs);
+  const songCount = songs.length;
 
   const handleSave = async () => {
     if (editedName.trim() === "" || editedName === season.name) {
@@ -178,20 +177,28 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
         <CardContent className="space-y-3">
           {/* Songs Container */}
           <div className="min-h-[500px] max-h-[600px] overflow-y-auto rounded-md bg-slate-50 dark:bg-slate-900 p-3 space-y-2">
-            <div className="flex h-[200px] items-center justify-center">
-              <div className="text-center">
-                <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
-                <Button
-                  size="sm"
-                  className="text-xs bg-blue-500 hover:bg-blue-600 text-white"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="mr-1 h-3 w-3" />
-                  Add song
-                </Button>
+            {songCount === 0 ? (
+              <div className="flex h-[200px] items-center justify-center">
+                <div className="text-center">
+                  <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
+                  <Button
+                    size="sm"
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add song
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                {songs.map((song) => (
+                  <SongItem key={song.id} song={song} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Add Song Button */}
@@ -209,6 +216,7 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
 
       <AddSongDialog
         seasonId={season.id}
+        initialSongs={initialSongs}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
