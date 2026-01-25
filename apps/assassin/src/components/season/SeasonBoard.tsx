@@ -4,9 +4,11 @@ import { SeasonColumn } from "./SeasonColumn";
 
 interface SeasonBoardProps {
   seasons: Season[];
+  onArchive: (season: Season) => void;
+  onRestore: (season: Season) => void;
 }
 
-export function SeasonBoard({ seasons }: SeasonBoardProps) {
+export function SeasonBoard({ seasons, onArchive, onRestore }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return (
@@ -24,7 +26,13 @@ export function SeasonBoard({ seasons }: SeasonBoardProps) {
         <ScrollArea className="w-full whitespace-nowrap pb-4 h-[700px]">
           <div className="flex gap-4 px-1 h-full">
             {sortedSeasons.map((season) => (
-              <SeasonColumn key={season.id} season={season} songCount={0} />
+              <SeasonColumn
+                key={season.id}
+                season={season}
+                songCount={0}
+                onArchive={onArchive}
+                onRestore={onRestore}
+              />
             ))}
           </div>
         </ScrollArea>

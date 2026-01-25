@@ -12,9 +12,11 @@ import { Input } from "@/components/ui/input";
 interface SeasonColumnProps {
   season: Season;
   songCount?: number;
+  onArchive: (season: Season) => void;
+  onRestore: (season: Season) => void;
 }
 
-export function SeasonColumn({ season, songCount = 0 }: SeasonColumnProps) {
+export function SeasonColumn({ season, songCount = 0, onArchive, onRestore }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
@@ -62,8 +64,12 @@ export function SeasonColumn({ season, songCount = 0 }: SeasonColumnProps) {
           isArchived: !isArchived,
         },
       });
+      if (isArchived) {
+        onRestore(season);
+      } else {
+        onArchive(season);
+      }
     } catch (error) {
-      console.log(error);
       console.error("Failed to toggle archive status:", error);
     }
   };
