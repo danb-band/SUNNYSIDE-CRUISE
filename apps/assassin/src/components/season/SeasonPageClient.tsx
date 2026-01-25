@@ -5,12 +5,17 @@ import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeasonBoard } from "./SeasonBoard";
 import type { Season } from "@features/season/schema";
+import type { Song } from "@features/song/schema";
 
 interface SeasonPageClientProps {
   seasons: Season[];
+  songsBySeason: Record<string, Song[]>;
 }
 
-export function SeasonPageClient({ seasons: initialSeasons }: SeasonPageClientProps) {
+export function SeasonPageClient({
+  seasons: initialSeasons,
+  songsBySeason,
+}: SeasonPageClientProps) {
   const [showArchived, setShowArchived] = useState(false);
   const [seasons, setSeasons] = useState(initialSeasons);
 
@@ -51,6 +56,7 @@ export function SeasonPageClient({ seasons: initialSeasons }: SeasonPageClientPr
           </div>
           <SeasonBoard
             seasons={displayedSeasons}
+            songsBySeason={songsBySeason}
             onArchive={handleArchive}
             onRestore={handleRestore}
           />

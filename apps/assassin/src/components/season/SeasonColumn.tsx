@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Season } from "@features/season/schema";
+import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,18 +15,24 @@ import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 
 interface SeasonColumnProps {
   season: Season;
+  initialSongs?: Song[];
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
 }
 
-export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps) {
+export function SeasonColumn({
+  season,
+  initialSongs = [],
+  onArchive,
+  onRestore,
+}: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
 
-  const { songs } = useSongLogic(season.id);
+  const { songs } = useSongLogic(season.id, initialSongs);
   const songCount = songs.length;
 
   const handleSave = async () => {
@@ -214,6 +221,7 @@ export function SeasonColumn({ season, onArchive, onRestore }: SeasonColumnProps
 
       <AddSongDialog
         seasonId={season.id}
+        initialSongs={initialSongs}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />

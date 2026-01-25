@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import type { Song, SongPayload } from "../schema";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 
-export const useSongLogic = (seasonId: string) => {
-  const { data: songs = [] } = useSongsBySeason(seasonId);
+export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
+  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
 
   const isNameExists = useCallback(
     (name: string, excludeId?: string): boolean => {
