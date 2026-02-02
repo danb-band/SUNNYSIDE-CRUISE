@@ -83,7 +83,7 @@ export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: Sea
   };
 
   return (
-    <div className="w-80 min-w-0 flex-shrink-0">
+    <div className="w-full min-w-0 flex-shrink-0">
       <Card
         className={`border-slate-200 dark:border-slate-700 shadow-sm transition-all h-full flex flex-col min-h-0 ${
           isArchived ? "bg-slate-100 dark:bg-slate-800/50 opacity-75" : "bg-white dark:bg-slate-800"
@@ -176,7 +176,7 @@ export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: Sea
         </CardHeader>
         <CardContent className="space-y-3 flex-1 min-h-0">
           {/* Songs Container */}
-          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 space-y-2">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4 space-y-2">
             {songCount === 0 ? (
               <div className="flex items-center justify-center">
                 <div className="text-center">

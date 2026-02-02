@@ -16,15 +16,17 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
     <div className="h-full min-h-0">
       {sortedSeasons.length === 0 ? (
         <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-          <div className="text-center space-y-4 p-8">
-            <p className="text-lg font-medium text-slate-900 dark:text-slate-100">No seasons yet</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          <div className="text-center space-y-3 sm:space-y-4 p-6 sm:p-8">
+            <p className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100">
+              No seasons yet
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 sm:mt-2">
               Create your first season to get started
             </p>
           </div>
         </div>
       ) : (
-        <div className="h-full min-h-0 grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+        <div className="h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {sortedSeasons.map((season) => (
             <SeasonColumn
               key={season.id}

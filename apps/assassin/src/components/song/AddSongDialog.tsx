@@ -82,15 +82,15 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
     >
       <DialogContent
         className={cn(
-          "max-w-md p-0 gap-0 overflow-hidden",
+          "w-full max-w-[calc(100%-1.5rem)] sm:max-w-md p-0 gap-0 overflow-hidden",
           "bg-slate-50 dark:bg-slate-800",
           "border-slate-200 dark:border-slate-700",
         )}
       >
         {/* Header */}
-        <DialogHeader className="px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <DialogHeader className="px-4 sm:px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-500">
               <Music className="h-4 w-4 text-white" />
             </div>
             <DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-50">
@@ -101,9 +101,9 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
 
         <form onSubmit={handleSubmit} className="flex flex-col">
           {/* Form Content */}
-          <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          <div className="px-4 sm:px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
             {/* Song Info */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 label="곡명"
                 htmlFor="name"
@@ -191,7 +191,7 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
             </div>
 
             {/* Author Info */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 label="작성자"
                 htmlFor="writer"
@@ -226,7 +226,7 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+          <div className="px-4 sm:px-5 py-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -241,7 +241,7 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
               type="submit"
               size="sm"
               disabled={!validateSongData(formData).isValid || isProcessing}
-              className="bg-blue-500 hover:bg-blue-600 text-white min-w-[90px]"
+              className="bg-blue-500 hover:bg-blue-600 text-white min-w-[90px] w-full sm:w-auto"
             >
               {isProcessing ? (
                 <>
