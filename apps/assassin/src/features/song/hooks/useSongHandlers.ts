@@ -2,20 +2,20 @@ import { useCallback } from "react";
 import { useCreateSong } from "../mutations/useCreateSong";
 import { useUpdateSong } from "../mutations/useUpdateSong";
 import { useDeleteSong } from "../mutations/useDeleteSong";
-import { useSongForm } from "./useSongForm";
-import type { SongPayload, SongUpdatePayload } from "../schema";
+import { useSongForm, SongFormData } from "./useSongForm";
+import type { SongUpdatePayload } from "../schema";
 
 type UseSongHandlersProps =
   | {
       mode: "create";
-      initialData: Partial<SongPayload>;
+      initialData: Partial<SongFormData>;
       onSuccess?: (message: string) => void;
       onError?: (error: string) => void;
     }
   | {
       mode: "update";
       songId: string;
-      initialData: Partial<SongPayload>;
+      initialData: Partial<SongFormData>;
       onSuccess?: (message: string) => void;
       onError?: (error: string) => void;
     };
@@ -30,7 +30,7 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
       ? {
           mode: props.mode,
           initialData: props.initialData,
-          onSubmit: async (data: SongPayload) => {
+          onSubmit: async (data: SongFormData) => {
             await createSongMutation.mutateAsync(data);
             props.onSuccess?.("Song created successfully");
           },
@@ -39,8 +39,8 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
           mode: props.mode,
           songId: props.songId,
           initialData: props.initialData,
-          onSubmit: async (id: string, data: SongUpdatePayload, pw: string) => {
-            await updateSongMutation.mutateAsync({ id, data, pw });
+          onSubmit: async (id: string, data: SongUpdatePayload) => {
+            await updateSongMutation.mutateAsync({ id, data });
             props.onSuccess?.("Song updated successfully");
           },
         };
@@ -62,16 +62,16 @@ export const useSongHandlers = (props: UseSongHandlersProps) => {
   }, [formActions, props]);
 
   const handleChangeField = useCallback(
-    (field: keyof SongPayload, value: string | number) => {
+    (field: keyof SongFormData, value: string | number) => {
       formActions.updateField(field, value);
     },
     [formActions],
   );
 
   const handleDeleteSong = useCallback(
-    async (id: string, pw: string) => {
+    async (id: string) => {
       try {
-        await deleteSongMutation.mutateAsync({ id, pw });
+        await deleteSongMutation.mutateAsync({ id });
         props.onSuccess?.("Song deleted successfully");
         return { success: true };
       } catch (error) {

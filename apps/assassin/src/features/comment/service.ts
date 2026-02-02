@@ -7,7 +7,6 @@ import {
   CommentUpdatePayload,
   updateCommentSchema,
 } from "./schema";
-import { hashPassword, verifyPassword } from "@libs/utils/password";
 
 const assertCommentExists = async (commentId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId);
@@ -22,12 +21,7 @@ const assertCommentExists = async (commentId: string): Promise<void> => {
 const createComment = async (comment: CommentPayload): Promise<Comment> => {
   await SongService.assertSongExists(comment.songId);
 
-  const input: CommentPayload = {
-    ...comment,
-    password: hashPassword(comment.password),
-  };
-
-  const result = await CommentRepository.createComment(input);
+  const result = await CommentRepository.createComment(comment);
 
   const parsed = commentSchema.safeParse(result);
 
@@ -64,17 +58,11 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
-const updateComment = async (id: string, comment: CommentUpdatePayload, pw: string) => {
+const updateComment = async (id: string, comment: CommentUpdatePayload, userId: string) => {
   const existed = await getCommentById(id);
 
-  if (!existed.password) {
-    throw new Error("Comment password is not set");
-  }
-
-  const isValid = verifyPassword(pw, existed.password);
-
-  if (!isValid) {
-    throw new Error("Invalid password");
+  if (existed.userId !== userId) {
+    throw new Error("Unauthorized: you can only edit your own comments");
   }
 
   const parsedInput = updateCommentSchema.safeParse(comment);
@@ -96,20 +84,15 @@ const updateComment = async (id: string, comment: CommentUpdatePayload, pw: stri
   return parsed.data;
 };
 
-const deleteComment = async (id: string, pw: string): Promise<void> => {
+const deleteComment = async (id: string, userId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(id);
 
   if (!comment) {
     throw new Error(`Comment with ID ${id} does not exist.`);
   }
 
-  if (!comment.password) {
-    throw new Error("Comment password is not set");
-  }
-
-  const isValid = verifyPassword(pw, comment.password);
-  if (!isValid) {
-    throw new Error("Invalid password");
+  if (comment.userId !== userId) {
+    throw new Error("Unauthorized: you can only delete your own comments");
   }
 
   await CommentRepository.deleteComment(id);

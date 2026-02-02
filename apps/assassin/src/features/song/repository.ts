@@ -39,8 +39,7 @@ async function createSong(input: SongPayload): Promise<Song> {
       description: input.description,
       youtubeUrl: input.youtubeUrl,
       sortOrder: input.sortOrder,
-      writer: input.writer,
-      password: input.password,
+      userId: input.userId,
       seasonId: input.seasonId,
     },
   });
@@ -56,7 +55,6 @@ async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
       description: input.description,
       youtubeUrl: input.youtubeUrl,
       sortOrder: input.sortOrder,
-      writer: input.writer,
       seasonId: input.seasonId,
     },
   });

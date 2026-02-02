@@ -7,8 +7,8 @@ export const useUpdateSong = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data, pw }: { id: string; data: SongUpdatePayload; pw: string }) =>
-      updateSongAction(id, data, pw),
+    mutationFn: ({ id, data }: { id: string; data: SongUpdatePayload }) =>
+      updateSongAction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.all });
     },

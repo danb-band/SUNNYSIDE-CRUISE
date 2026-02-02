@@ -5,12 +5,11 @@ import * as z from "zod";
 export const createCommentSchema = z.object({
   songId: z.uuid(),
   content: z.string().min(1, "Content required"),
-  writer: z.string().min(1, "Writer required"),
-  password: z.string().min(1, "Password required"),
+  userId: z.string().min(1, "User ID required"),
 });
 
-// 부분 업데이트
-export const updateCommentSchema = createCommentSchema.partial().omit({ password: true });
+// 부분 업데이트 (userId 제외)
+export const updateCommentSchema = createCommentSchema.partial().omit({ userId: true });
 
 // DB에서 받은 응답 스키마
 export const commentSchema = createCommentSchema.extend(dbSchema.shape);

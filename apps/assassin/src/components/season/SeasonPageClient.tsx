@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeasonBoard } from "./SeasonBoard";
+import { LogoutButton } from "@/components/common/LogoutButton";
 import type { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 
@@ -35,7 +36,7 @@ export function SeasonPageClient({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="mx-auto max-w-[calc(100vw-4rem)] p-8">
         <div className="bg-white dark:bg-slate-900 rounded-lg p-6 shadow-sm border border-slate-200 dark:border-slate-800 min-h-[800px]">
-          <div className="mb-6 flex items-center justify-start">
+          <div className="mb-6 flex items-center justify-between">
             <Button
               size="sm"
               onClick={() => setShowArchived(!showArchived)}
@@ -53,6 +54,7 @@ export function SeasonPageClient({
                 </>
               )}
             </Button>
+            <LogoutButton />
           </div>
           <SeasonBoard
             seasons={displayedSeasons}

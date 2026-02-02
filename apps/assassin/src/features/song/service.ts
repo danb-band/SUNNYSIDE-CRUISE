@@ -4,7 +4,6 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
-import { hashPassword, verifyPassword } from "@libs/utils/password";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -19,12 +18,7 @@ const assertSongExists = async (songId: string): Promise<void> => {
 const createSong = async (song: SongPayload) => {
   await SeasonService.assertSeasonExists(song.seasonId);
 
-  const input: SongPayload = {
-    ...song,
-    password: hashPassword(song.password),
-  };
-
-  const result = await SongRepository.createSong(input);
+  const result = await SongRepository.createSong(song);
 
   const parsed = songSchema.safeParse(result);
 
@@ -61,17 +55,11 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload, pw: string) => {
+const updateSong = async (id: string, song: SongUpdatePayload, userId: string) => {
   const existed = await getSongById(id);
 
-  if (!existed.password) {
-    throw new Error("Song password is not set");
-  }
-
-  const isValid = verifyPassword(pw, existed.password);
-
-  if (!isValid) {
-    throw new Error("Invalid password");
+  if (existed.userId !== userId) {
+    throw new Error("Unauthorized: you can only edit your own songs");
   }
 
   const parsedInput = updateSongSchema.safeParse(song);
@@ -93,20 +81,15 @@ const updateSong = async (id: string, song: SongUpdatePayload, pw: string) => {
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, pw: string) => {
+const deleteSong = async (id: string, userId: string) => {
   const song = await SongRepository.getSongById(id);
 
   if (!song) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
 
-  if (!song.password) {
-    throw new Error("Song password is not set");
-  }
-
-  const isValid = verifyPassword(pw, song.password);
-  if (!isValid) {
-    throw new Error("Invalid password");
+  if (song.userId !== userId) {
+    throw new Error("Unauthorized: you can only delete your own songs");
   }
 
   try {

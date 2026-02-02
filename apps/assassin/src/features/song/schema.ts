@@ -10,12 +10,11 @@ export const createSongSchema = z.object({
   description: z.string(),
   youtubeUrl: z.url(),
   sortOrder: bigIntToNumber,
-  writer: z.string().min(1, "Writer required"),
-  password: z.string().min(1, "Password required"),
+  userId: z.string().min(1, "User ID required"),
 });
 
-// 부분 업데이트
-export const updateSongSchema = createSongSchema.partial().omit({ password: true });
+// 부분 업데이트 (userId 제외)
+export const updateSongSchema = createSongSchema.partial().omit({ userId: true });
 
 // DB에서 받은 응답 스키마
 export const songSchema = createSongSchema.extend(dbSchema.shape);
