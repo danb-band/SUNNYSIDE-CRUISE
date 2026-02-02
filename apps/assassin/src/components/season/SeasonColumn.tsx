@@ -10,22 +10,17 @@ import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SongItem } from "../song/SongItem";
-import { AddSongDialog } from "./AddSongDialog";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
+import { AddSongDialog } from "../song/AddSongDialog";
 
 interface SeasonColumnProps {
   season: Season;
-  initialSongs?: Song[];
+  initialSongs: Song[];
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
 }
 
-export function SeasonColumn({
-  season,
-  initialSongs = [],
-  onArchive,
-  onRestore,
-}: SeasonColumnProps) {
+export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
