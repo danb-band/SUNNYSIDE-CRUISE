@@ -13,7 +13,7 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return (
-    <div className="h-full min-h-0">
+    <div className="h-full min-h-0 overflow-hidden">
       {sortedSeasons.length === 0 ? (
         <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
           <div className="text-center space-y-3 sm:space-y-4 p-6 sm:p-8">
@@ -26,7 +26,7 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
           </div>
         </div>
       ) : (
-        <div className="h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 auto-rows-fr">
           {sortedSeasons.map((season) => (
             <SeasonColumn
               key={season.id}

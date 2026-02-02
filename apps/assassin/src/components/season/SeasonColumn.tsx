@@ -174,7 +174,7 @@ export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: Sea
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 flex-1 min-h-0">
+        <CardContent className="space-y-3 flex flex-col flex-1 min-h-0">
           {/* Songs Container */}
           <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4 space-y-2">
             {songCount === 0 ? (
