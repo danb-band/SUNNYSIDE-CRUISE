@@ -9,7 +9,7 @@ const config = [
   ...nextTs,
 
   {
-    ignores: ["./eslint.config.js"],
+    ignores: ["./eslint.config.js", "./postcss.config.mjs"],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
