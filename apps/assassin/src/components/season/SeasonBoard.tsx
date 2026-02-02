@@ -26,16 +26,30 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
           </div>
         </div>
       ) : (
-        <div className="h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 auto-rows-fr">
-          {sortedSeasons.map((season) => (
-            <SeasonColumn
-              key={season.id}
-              season={season}
-              initialSongs={songsBySeason[season.id] ?? []}
-              onArchive={onArchive}
-              onRestore={onRestore}
-            />
-          ))}
+        <div className="h-full min-h-0">
+          <div className="flex h-full gap-4 overflow-x-auto pb-2 snap-x snap-mandatory sm:hidden">
+            {sortedSeasons.map((season) => (
+              <SeasonColumn
+                key={season.id}
+                season={season}
+                initialSongs={songsBySeason[season.id] ?? []}
+                onArchive={onArchive}
+                onRestore={onRestore}
+                variant="carousel"
+              />
+            ))}
+          </div>
+          <div className="hidden h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 auto-rows-fr sm:grid">
+            {sortedSeasons.map((season) => (
+              <SeasonColumn
+                key={season.id}
+                season={season}
+                initialSongs={songsBySeason[season.id] ?? []}
+                onArchive={onArchive}
+                onRestore={onRestore}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

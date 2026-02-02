@@ -18,9 +18,16 @@ interface SeasonColumnProps {
   initialSongs: Song[];
   onArchive: (season: Season) => void;
   onRestore: (season: Season) => void;
+  variant?: "carousel" | "grid";
 }
 
-export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: SeasonColumnProps) {
+export function SeasonColumn({
+  season,
+  initialSongs,
+  onArchive,
+  onRestore,
+  variant = "grid",
+}: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
@@ -83,7 +90,11 @@ export function SeasonColumn({ season, initialSongs, onArchive, onRestore }: Sea
   };
 
   return (
-    <div className="w-full min-w-0 flex-shrink-0">
+    <div
+      className={`min-w-0 flex-shrink-0 ${
+        variant === "carousel" ? "w-[78vw] max-w-xs snap-start" : "w-full"
+      }`}
+    >
       <Card
         className={`border-slate-200 dark:border-slate-700 shadow-sm transition-all h-full flex flex-col min-h-0 ${
           isArchived ? "bg-slate-100 dark:bg-slate-800/50 opacity-75" : "bg-white dark:bg-slate-800"
