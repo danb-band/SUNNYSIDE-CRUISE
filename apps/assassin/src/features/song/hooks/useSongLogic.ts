@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import type { Song, SongPayload } from "../schema";
+import type { Song } from "../schema";
+import type { SongFormData } from "./useSongForm";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 
 export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
@@ -54,7 +55,7 @@ export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
   );
 
   const validateSongData = useCallback(
-    (data: SongPayload, excludeId?: string): { isValid: boolean; errors: string[] } => {
+    (data: SongFormData, excludeId?: string): { isValid: boolean; errors: string[] } => {
       const errors: string[] = [];
 
       if (isNameExists(data.name, excludeId)) {
@@ -73,20 +74,6 @@ export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
         errors.push("Artist name cannot be empty");
       } else if (trimmedArtist !== data.artist) {
         errors.push("Artist name cannot have leading or trailing spaces");
-      }
-
-      const trimmedWriter = data.writer.trim();
-      if (!trimmedWriter) {
-        errors.push("Writer name cannot be empty");
-      } else if (trimmedWriter !== data.writer) {
-        errors.push("Writer name cannot have leading or trailing spaces");
-      }
-
-      const trimmedPassword = data.password.trim();
-      if (!trimmedPassword) {
-        errors.push("Password cannot be empty");
-      } else if (trimmedPassword !== data.password) {
-        errors.push("Password cannot have leading or trailing spaces");
       }
 
       if (Number(data.sortOrder) < 0) {

@@ -2,20 +2,20 @@ import { useCallback } from "react";
 import { useCreateComment } from "../mutations/useCreateComment";
 import { useDeleteComment } from "../mutations/useDeleteComment";
 import { useUpdateComment } from "../mutations/useUpdateComment";
-import type { CommentPayload, CommentUpdatePayload } from "../schema";
-import { useCommentForm } from "./useCommentForm";
+import type { CommentUpdatePayload } from "../schema";
+import { useCommentForm, CommentFormData } from "./useCommentForm";
 
 type UseCommentHandlersProps =
   | {
       mode: "create";
-      initialData: Partial<CommentPayload>;
+      initialData: Partial<CommentFormData>;
       onSuccess?: (message: string) => void;
       onError?: (error: string) => void;
     }
   | {
       mode: "update";
       commentId: string;
-      initialData: Partial<CommentPayload>;
+      initialData: Partial<CommentFormData>;
       onSuccess?: (message: string) => void;
       onError?: (error: string) => void;
     };
@@ -30,7 +30,7 @@ export const useCommentHandlers = (props: UseCommentHandlersProps) => {
       ? {
           mode: props.mode,
           initialData: props.initialData,
-          onSubmit: async (data: CommentPayload) => {
+          onSubmit: async (data: CommentFormData) => {
             await createCommentMutation.mutateAsync(data);
             props.onSuccess?.("Comment created successfully");
           },
@@ -39,8 +39,8 @@ export const useCommentHandlers = (props: UseCommentHandlersProps) => {
           mode: props.mode,
           commentId: props.commentId,
           initialData: props.initialData,
-          onSubmit: async (id: string, data: CommentUpdatePayload, pw: string) => {
-            await updateCommentMutation.mutateAsync({ id, data, pw });
+          onSubmit: async (id: string, data: CommentUpdatePayload) => {
+            await updateCommentMutation.mutateAsync({ id, data });
             props.onSuccess?.("Comment updated successfully");
           },
         };
@@ -62,16 +62,16 @@ export const useCommentHandlers = (props: UseCommentHandlersProps) => {
   }, [formActions, props]);
 
   const handleChangeField = useCallback(
-    (field: keyof CommentPayload, value: string) => {
+    (field: keyof CommentFormData, value: string) => {
       formActions.updateField(field, value);
     },
     [formActions],
   );
 
   const handleDeleteComment = useCallback(
-    async (id: string, pw: string) => {
+    async (id: string) => {
       try {
-        await deleteCommentMutation.mutateAsync({ id, pw });
+        await deleteCommentMutation.mutateAsync({ id });
         props.onSuccess?.("Comment deleted successfully");
         return { success: true };
       } catch (error) {

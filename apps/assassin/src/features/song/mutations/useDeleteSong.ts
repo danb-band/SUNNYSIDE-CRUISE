@@ -6,7 +6,7 @@ export const useDeleteSong = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, pw }: { id: string; pw: string }) => deleteSongAction(id, pw),
+    mutationFn: ({ id }: { id: string }) => deleteSongAction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.all });
     },

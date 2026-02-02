@@ -1,18 +1,27 @@
 import { useState, useCallback } from "react";
-import { createSongSchema, updateSongSchema, SongPayload, SongUpdatePayload } from "../schema";
+import { createSongSchema, updateSongSchema, SongUpdatePayload } from "../schema";
 import type { ZodError } from "zod";
+
+export type SongFormData = {
+  seasonId: string;
+  name: string;
+  artist: string;
+  description: string;
+  youtubeUrl: string;
+  sortOrder: number;
+};
 
 export type UseSongFormProps =
   | {
       mode: "create";
-      initialData: Partial<SongPayload>;
-      onSubmit: (data: SongPayload) => Promise<void>;
+      initialData: Partial<SongFormData>;
+      onSubmit: (data: SongFormData) => Promise<void>;
     }
   | {
       mode: "update";
       songId: string;
-      initialData: Partial<SongPayload>;
-      onSubmit: (id: string, data: SongUpdatePayload, pw: string) => Promise<void>;
+      initialData: Partial<SongFormData>;
+      onSubmit: (id: string, data: SongUpdatePayload) => Promise<void>;
     };
 
 interface FormErrors {
@@ -22,23 +31,19 @@ interface FormErrors {
   description?: string;
   youtubeUrl?: string;
   sortOrder?: string;
-  writer?: string;
-  password?: string;
   _root?: string;
 }
 
 export const useSongForm = (props: UseSongFormProps) => {
   const { mode, initialData } = props;
 
-  const [formData, setFormData] = useState<SongPayload>({
+  const [formData, setFormData] = useState<SongFormData>({
     seasonId: initialData.seasonId || "",
     name: initialData.name || "",
     artist: initialData.artist || "",
     description: initialData.description || "",
     youtubeUrl: initialData.youtubeUrl || "",
     sortOrder: initialData.sortOrder || 0,
-    writer: initialData.writer || "",
-    password: mode === "create" ? initialData.password || "" : initialData.password || "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -46,7 +51,7 @@ export const useSongForm = (props: UseSongFormProps) => {
   const [isDirty, setIsDirty] = useState(false);
 
   const validateField = useCallback(
-    (field: keyof SongPayload, value: unknown): string | undefined => {
+    (field: keyof SongFormData, value: unknown): string | undefined => {
       try {
         const schema = mode === "create" ? createSongSchema : updateSongSchema;
         const fieldSchema = schema.shape[field as keyof typeof schema.shape];
@@ -67,8 +72,19 @@ export const useSongForm = (props: UseSongFormProps) => {
 
   const validateForm = useCallback((): { isValid: boolean; errors: FormErrors } => {
     try {
-      const schema = mode === "create" ? createSongSchema : updateSongSchema;
-      schema.parse(formData);
+      if (mode === "create") {
+        // Validate without userId (it's added server-side)
+        const { userId: _u, ...schemaShape } = createSongSchema.shape;
+        const formSchema = createSongSchema.pick(
+          Object.fromEntries(Object.keys(schemaShape).map((k) => [k, true])) as Record<
+            string,
+            true
+          >,
+        );
+        formSchema.parse(formData);
+      } else {
+        updateSongSchema.parse(formData);
+      }
       return { isValid: true, errors: {} };
     } catch (error) {
       const zodError = error as ZodError;
@@ -86,7 +102,7 @@ export const useSongForm = (props: UseSongFormProps) => {
   }, [formData, mode]);
 
   const updateField = useCallback(
-    <K extends keyof SongPayload>(field: K, value: SongPayload[K]) => {
+    <K extends keyof SongFormData>(field: K, value: SongFormData[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
       setIsDirty(true);
 
@@ -105,16 +121,13 @@ export const useSongForm = (props: UseSongFormProps) => {
       description: initialData.description || "",
       youtubeUrl: initialData.youtubeUrl || "",
       sortOrder: initialData.sortOrder || 0,
-      writer: initialData.writer || "",
-      password: mode === "create" ? initialData.password || "" : initialData.password || "",
     });
     setErrors({});
     setIsDirty(false);
-  }, [initialData, mode]);
+  }, [initialData]);
 
   const submitForm = useCallback(async () => {
     const { isValid, errors: validationErrors } = validateForm();
-    console.log("submitForm", formData, isValid);
     if (!isValid) {
       setErrors(validationErrors);
       return false;
@@ -125,9 +138,9 @@ export const useSongForm = (props: UseSongFormProps) => {
 
     try {
       if (props.mode === "update") {
-        await props.onSubmit(props.songId, formData as SongUpdatePayload, formData.password || "");
+        await props.onSubmit(props.songId, formData as SongUpdatePayload);
       } else {
-        await props.onSubmit(formData as SongPayload);
+        await props.onSubmit(formData);
       }
       setIsDirty(false);
       return true;
