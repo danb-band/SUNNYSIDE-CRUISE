@@ -1,13 +1,14 @@
 import { useCallback } from "react";
 import { useCommentsBySong } from "../queries/useCommentsBySong";
-import type { Comment, CommentPayload } from "../schema";
+import type { Comment } from "../schema";
+import type { CommentFormData } from "./useCommentForm";
 
 export const useCommentLogic = (songId: string) => {
   const { data: comments = [] } = useCommentsBySong(songId);
 
   const toTime = useCallback((value: Date | string) => new Date(value).getTime(), []);
 
-  const validateCommentData = useCallback((data: CommentPayload) => {
+  const validateCommentData = useCallback((data: CommentFormData) => {
     const errors: string[] = [];
 
     const trimmedContent = data.content.trim();
@@ -15,13 +16,6 @@ export const useCommentLogic = (songId: string) => {
       errors.push("Content cannot be empty");
     } else if (trimmedContent !== data.content) {
       errors.push("Content cannot have leading or trailing spaces");
-    }
-
-    const trimmedWriter = data.writer.trim();
-    if (!trimmedWriter) {
-      errors.push("Writer cannot be empty");
-    } else if (trimmedWriter !== data.writer) {
-      errors.push("Writer cannot have leading or trailing spaces");
     }
 
     return {

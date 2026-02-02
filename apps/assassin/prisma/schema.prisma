@@ -12,11 +12,10 @@ model Comment {
   id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   songId    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content   String
-  writer    String
-  password  String
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt DateTime? @db.Timestamptz(6)
+  userId    String    @db.Uuid
   song      Song      @relation(fields: [songId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comments_song_id_fkey")
 
   @@map("comment")
@@ -58,11 +57,10 @@ model Song {
   description String
   youtubeUrl  String
   sortOrder   BigInt
-  writer      String
-  password    String
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt   DateTime? @db.Timestamptz(6)
+  userId      String    @db.Uuid
   comment     Comment[]
   player      Player[]
   season      Season    @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")

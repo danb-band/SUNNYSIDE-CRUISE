@@ -7,8 +7,8 @@ export const useUpdateComment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data, pw }: { id: string; data: CommentUpdatePayload; pw: string }) =>
-      updateCommentAction(id, data, pw),
+    mutationFn: ({ id, data }: { id: string; data: CommentUpdatePayload }) =>
+      updateCommentAction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: commentKeys.all });
     },

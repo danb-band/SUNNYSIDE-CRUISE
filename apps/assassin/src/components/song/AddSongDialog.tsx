@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Music, User, Link2, FileText, Lock, Loader2, Plus } from "lucide-react";
+import { Music, User, Link2, FileText, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
@@ -187,40 +187,6 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
                   작성자 정보
                 </span>
               </div>
-            </div>
-
-            {/* Author Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormField
-                label="작성자"
-                htmlFor="writer"
-                required
-                icon={<User className="h-3.5 w-3.5" />}
-              >
-                <Input
-                  id="writer"
-                  value={formData.writer}
-                  onChange={(e) => handleChangeField("writer", e.target.value)}
-                  placeholder="닉네임"
-                  className={inputClassName}
-                />
-              </FormField>
-
-              <FormField
-                label="삭제 비밀번호"
-                htmlFor="password"
-                required
-                icon={<Lock className="h-3.5 w-3.5" />}
-              >
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleChangeField("password", e.target.value)}
-                  placeholder="삭제 시 필요"
-                  className={inputClassName}
-                />
-              </FormField>
             </div>
           </div>
 

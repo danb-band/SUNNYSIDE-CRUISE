@@ -1,41 +1,41 @@
 import { useCallback, useState } from "react";
 import type { ZodError } from "zod";
 import {
-  CommentPayload,
   CommentUpdatePayload,
   createCommentSchema,
   updateCommentSchema,
 } from "../schema";
 
+export type CommentFormData = {
+  songId: string;
+  content: string;
+};
+
 export type UseCommentFormProps =
   | {
       mode: "create";
-      initialData: Partial<CommentPayload>;
-      onSubmit: (data: CommentPayload) => Promise<void>;
+      initialData: Partial<CommentFormData>;
+      onSubmit: (data: CommentFormData) => Promise<void>;
     }
   | {
       mode: "update";
       commentId: string;
-      initialData: Partial<CommentPayload>;
-      onSubmit: (id: string, data: CommentUpdatePayload, pw: string) => Promise<void>;
+      initialData: Partial<CommentFormData>;
+      onSubmit: (id: string, data: CommentUpdatePayload) => Promise<void>;
     };
 
 interface FormErrors {
   songId?: string;
   content?: string;
-  writer?: string;
-  password?: string;
   _root?: string;
 }
 
 export const useCommentForm = (props: UseCommentFormProps) => {
   const { mode, initialData } = props;
 
-  const [formData, setFormData] = useState<Partial<CommentPayload>>({
+  const [formData, setFormData] = useState<CommentFormData>({
     songId: initialData.songId || "",
     content: initialData.content || "",
-    writer: initialData.writer || "",
-    password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -43,7 +43,7 @@ export const useCommentForm = (props: UseCommentFormProps) => {
   const [isDirty, setIsDirty] = useState(false);
 
   const validateField = useCallback(
-    (field: keyof CommentPayload, value: unknown): string | undefined => {
+    (field: keyof CommentFormData, value: unknown): string | undefined => {
       try {
         const schema = mode === "create" ? createCommentSchema : updateCommentSchema;
         const fieldSchema = schema.shape[field as keyof typeof schema.shape];
@@ -64,8 +64,19 @@ export const useCommentForm = (props: UseCommentFormProps) => {
 
   const validateForm = useCallback((): { isValid: boolean; errors: FormErrors } => {
     try {
-      const schema = mode === "create" ? createCommentSchema : updateCommentSchema;
-      schema.parse(formData);
+      if (mode === "create") {
+        // Validate without userId (it's added server-side)
+        const { userId: _u, ...schemaShape } = createCommentSchema.shape;
+        const formSchema = createCommentSchema.pick(
+          Object.fromEntries(Object.keys(schemaShape).map((k) => [k, true])) as Record<
+            string,
+            true
+          >,
+        );
+        formSchema.parse(formData);
+      } else {
+        updateCommentSchema.parse(formData);
+      }
       return { isValid: true, errors: {} };
     } catch (error) {
       const zodError = error as ZodError;
@@ -83,7 +94,7 @@ export const useCommentForm = (props: UseCommentFormProps) => {
   }, [formData, mode]);
 
   const updateField = useCallback(
-    <K extends keyof CommentPayload>(field: K, value: CommentPayload[K]) => {
+    <K extends keyof CommentFormData>(field: K, value: CommentFormData[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
       setIsDirty(true);
 
@@ -97,12 +108,10 @@ export const useCommentForm = (props: UseCommentFormProps) => {
     setFormData({
       songId: initialData.songId || "",
       content: initialData.content || "",
-      writer: initialData.writer || "",
-      password: mode === "create" ? initialData.password || "" : initialData.password || undefined,
     });
     setErrors({});
     setIsDirty(false);
-  }, [initialData, mode]);
+  }, [initialData]);
 
   const submitForm = useCallback(async () => {
     const { isValid, errors: validationErrors } = validateForm();
@@ -117,13 +126,9 @@ export const useCommentForm = (props: UseCommentFormProps) => {
 
     try {
       if (props.mode === "update") {
-        await props.onSubmit(
-          props.commentId,
-          formData as CommentUpdatePayload,
-          formData.password || "",
-        );
+        await props.onSubmit(props.commentId, formData as CommentUpdatePayload);
       } else {
-        await props.onSubmit(formData as CommentPayload);
+        await props.onSubmit(formData);
       }
       setIsDirty(false);
       return true;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeasonBoard } from "./SeasonBoard";
+import { LogoutButton } from "@/components/common/LogoutButton";
 import type { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 
@@ -53,6 +54,7 @@ export function SeasonPageClient({
                 </>
               )}
             </Button>
+            <LogoutButton />
           </div>
           <div className="flex-1 min-h-0">
             <SeasonBoard

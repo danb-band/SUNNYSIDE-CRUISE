@@ -35,8 +35,7 @@ async function createComment(input: CommentPayload): Promise<Comment> {
   const comment = await prisma.comment.create({
     data: {
       content: input.content,
-      writer: input.writer,
-      password: input.password,
+      userId: input.userId,
       songId: input.songId,
     },
   });
@@ -48,7 +47,6 @@ async function updateComment(id: string, input: CommentUpdatePayload): Promise<C
     where: { id },
     data: {
       content: input.content,
-      writer: input.writer,
       songId: input.songId,
     },
   });
