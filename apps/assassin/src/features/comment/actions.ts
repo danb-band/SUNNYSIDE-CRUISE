@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@libs/supabase/auth";
 import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
@@ -16,21 +16,20 @@ export const getCommentsBySongAction = async (songId: string) => {
 export const createCommentAction = async (data: { songId: string; content: string }) => {
   const user = await getCurrentUser();
   const result = await CommentService.createComment({ ...data, userId: user.id });
-  revalidateTag("comments", "max");
-  revalidateTag(`comments:${data.songId}`, "max");
+  revalidatePath(`/songs/${data.songId}`);
   return result;
 };
 
 export const updateCommentAction = async (id: string, data: CommentUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await CommentService.updateComment(id, data, user.id);
-  revalidateTag("comments", "max");
+  revalidatePath(`/songs/${data.songId}`);
   return result;
 };
 
-export const deleteCommentAction = async (id: string) => {
+export const deleteCommentAction = async (id: string, songId: string) => {
   const user = await getCurrentUser();
   const result = await CommentService.deleteComment(id, user.id);
-  revalidateTag("comments", "max");
+  revalidatePath(`/songs/${songId}`);
   return result;
 };

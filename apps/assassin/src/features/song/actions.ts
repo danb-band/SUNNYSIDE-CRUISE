@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@libs/supabase/auth";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
@@ -23,21 +23,21 @@ export const createSongAction = async (data: {
 }) => {
   const user = await getCurrentUser();
   const result = await SongService.createSong({ ...data, userId: user.id });
-  revalidateTag("songs", "max");
-  revalidateTag(`songs:${data.seasonId}`, "max");
+  revalidatePath("/");
   return result;
 };
 
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await SongService.updateSong(id, data, user.id);
-  revalidateTag("songs", "max");
+  revalidatePath("/");
+  revalidatePath(`/songs/${id}`);
   return result;
 };
 
 export const deleteSongAction = async (id: string) => {
   const user = await getCurrentUser();
   const result = await SongService.deleteSong(id, user.id);
-  revalidateTag("songs", "max");
+  revalidatePath("/");
   return result;
 };
