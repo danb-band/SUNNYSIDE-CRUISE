@@ -8,4 +8,3 @@ export const useSeason = (id: string) => {
     queryFn: () => getSeasonAction(id),
   });
 };
-

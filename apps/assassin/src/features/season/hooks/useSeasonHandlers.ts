@@ -23,25 +23,27 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
   const createSeasonMutation = useCreateSeason();
   const updateSeasonMutation = useUpdateSeason();
 
-  const form =
+  const formConfig =
     props.mode === "create"
-      ? useSeasonForm({
-          mode: "create",
+      ? {
+          mode: "create" as const,
           initialData: props.initialData ?? {},
           onSubmit: async (data: SeasonPayload) => {
             await createSeasonMutation.mutateAsync(data);
             props.onSuccess?.("Season created successfully");
           },
-        })
-      : useSeasonForm({
-          mode: "update",
+        }
+      : {
+          mode: "update" as const,
           seasonId: props.seasonId,
           initialData: props.initialData,
           onSubmit: async (id: string, data: SeasonUpdatePayload) => {
             await updateSeasonMutation.mutateAsync({ id, data });
             props.onSuccess?.("Season updated successfully");
           },
-        });
+        };
+
+  const form = useSeasonForm(formConfig);
 
   const { state: formState } = form;
   const { actions: formActions } = form;
