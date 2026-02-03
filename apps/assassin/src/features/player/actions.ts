@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import PlayerService from "./service";
 import { PlayerPayload, PlayerUpdatePayload } from "./schema";
 
@@ -12,13 +13,20 @@ export const getPlayersBySongAction = async (songId: string) => {
 };
 
 export const createPlayerAction = async (data: PlayerPayload) => {
-  return await PlayerService.createPlayer(data);
+  const result = await PlayerService.createPlayer(data);
+  revalidateTag("players", "max");
+  revalidateTag(`players:${data.songId}`, "max");
+  return result;
 };
 
 export const updatePlayerAction = async (id: string, data: PlayerUpdatePayload) => {
-  return await PlayerService.updatePlayer(id, data);
+  const result = await PlayerService.updatePlayer(id, data);
+  revalidateTag("players", "max");
+  return result;
 };
 
 export const deletePlayerAction = async (id: string) => {
-  return await PlayerService.deletePlayer(id);
+  const result = await PlayerService.deletePlayer(id);
+  revalidateTag("players", "max");
+  return result;
 };
