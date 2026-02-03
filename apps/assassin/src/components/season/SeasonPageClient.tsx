@@ -36,7 +36,7 @@ export function SeasonPageClient({
     <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 h-full">
         <div className="bg-white dark:bg-slate-900 rounded-lg p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col min-h-0">
-          <div className="mb-4 sm:mb-6 flex items-center justify-start flex-shrink-0">
+          <div className="mb-4 sm:mb-6 flex items-center justify-between flex-shrink-0">
             <Button
               size="sm"
               onClick={() => setShowArchived(!showArchived)}

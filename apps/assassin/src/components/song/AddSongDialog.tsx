@@ -117,7 +117,6 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
                   className={inputClassName}
                 />
               </FormField>
-
               <FormField
                 label="아티스트"
                 htmlFor="artist"
@@ -133,7 +132,6 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
                 />
               </FormField>
             </div>
-
             <FormField
               label="유튜브 URL"
               htmlFor="youtubeUrl"
@@ -149,8 +147,6 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
                 className={inputClassName}
               />
             </FormField>
-
-            {/* YouTube Preview */}
             {youtubeId && (
               <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-900">
                 <iframe
@@ -176,21 +172,7 @@ export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: Ad
                 className={cn(inputClassName, "min-h-[80px] resize-none")}
               />
             </FormField>
-
-            {/* Divider */}
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-slate-700" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-slate-50 dark:bg-slate-800 px-2 text-xs text-slate-400">
-                  작성자 정보
-                </span>
-              </div>
-            </div>
           </div>
-
-          {/* Footer */}
           <div className="px-4 sm:px-5 py-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
               type="button"
