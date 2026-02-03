@@ -92,7 +92,7 @@ export function SeasonColumn({
   return (
     <div
       className={`min-w-0 flex-shrink-0 ${
-        variant === "carousel" ? "w-[78vw] max-w-xs snap-start" : "w-full"
+        variant === "carousel" ? "w-full snap-center" : "w-full"
       }`}
     >
       <Card

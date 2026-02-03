@@ -27,7 +27,7 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
         </div>
       ) : (
         <div className="h-full min-h-0">
-          <div className="flex h-full gap-4 overflow-x-auto pb-2 snap-x snap-mandatory sm:hidden">
+          <div className="flex h-full overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth sm:hidden">
             {sortedSeasons.map((season) => (
               <SeasonColumn
                 key={season.id}
