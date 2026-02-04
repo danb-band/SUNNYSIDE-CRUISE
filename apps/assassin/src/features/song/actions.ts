@@ -25,11 +25,9 @@ export const createSongAction = async (data: {
 };
 
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
-  const user = await getCurrentUser();
-  return await SongService.updateSong(id, data, user.id);
+  return await SongService.updateSong(id, data);
 };
 
 export const deleteSongAction = async (id: string) => {
-  const user = await getCurrentUser();
-  return await SongService.deleteSong(id, user.id);
+  return await SongService.deleteSong(id);
 };
