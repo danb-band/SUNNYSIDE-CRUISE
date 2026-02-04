@@ -1,15 +1,11 @@
 import { Season } from "@features/season/schema";
 import { SeasonColumn } from "./SeasonColumn";
-import type { Song } from "@features/song/schema";
 
 interface SeasonBoardProps {
   seasons: Season[];
-  songsBySeason: Record<string, Song[]>;
-  onArchive: (season: Season) => void;
-  onRestore: (season: Season) => void;
 }
 
-export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: SeasonBoardProps) {
+export function SeasonBoard({ seasons }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return (
@@ -29,25 +25,12 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
         <div className="h-full min-h-0">
           <div className="flex h-full overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth sm:hidden">
             {sortedSeasons.map((season) => (
-              <SeasonColumn
-                key={season.id}
-                season={season}
-                initialSongs={songsBySeason[season.id] ?? []}
-                onArchive={onArchive}
-                onRestore={onRestore}
-                variant="carousel"
-              />
+              <SeasonColumn key={season.id} season={season} variant="carousel" />
             ))}
           </div>
           <div className="hidden h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 auto-rows-fr sm:grid">
             {sortedSeasons.map((season) => (
-              <SeasonColumn
-                key={season.id}
-                season={season}
-                initialSongs={songsBySeason[season.id] ?? []}
-                onArchive={onArchive}
-                onRestore={onRestore}
-              />
+              <SeasonColumn key={season.id} season={season} />
             ))}
           </div>
         </div>

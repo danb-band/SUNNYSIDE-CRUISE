@@ -55,7 +55,7 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
 }
 
 export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: AddSongDialogProps) {
-  const { validateSongData, getNextSortOrder } = useSongLogic(seasonId, initialSongs);
+  const { validateSongData, getNextSortOrder } = useSongLogic(seasonId);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
     mode: "create",

@@ -3,8 +3,8 @@ import type { Song } from "../schema";
 import type { SongFormData } from "./useSongForm";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 
-export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
-  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
+export const useSongLogic = (seasonId: string) => {
+  const { data: songs = [] } = useSongsBySeason(seasonId);
 
   const isNameExists = useCallback(
     (name: string, excludeId?: string): boolean => {
