@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { getCurrentUser } from "@libs/supabase/auth";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
@@ -21,7 +22,10 @@ export const createSongAction = async (data: {
   sortOrder: number;
 }) => {
   const user = await getCurrentUser();
-  return await SongService.createSong({ ...data, userId: user.id });
+  const result = await SongService.createSong({ ...data, userId: user.id });
+  revalidateTag("songs", "max");
+  revalidateTag(`songs:${data.seasonId}`, "max");
+  return result;
 };
 
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
