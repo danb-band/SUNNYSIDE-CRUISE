@@ -1,12 +1,16 @@
 import { Season } from "@features/season/schema";
+import type { Song } from "@features/song/schema";
 import { SeasonColumn } from "./SeasonColumn";
+import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 
 interface SeasonBoardProps {
   seasons: Season[];
+  songsBySeason: Record<string, Song[]>;
 }
 
-export function SeasonBoard({ seasons }: SeasonBoardProps) {
+export function SeasonBoard({ seasons, songsBySeason }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  useRealtimeSongSync();
 
   return (
     <div className="h-full min-h-0 overflow-hidden">
@@ -25,12 +29,21 @@ export function SeasonBoard({ seasons }: SeasonBoardProps) {
         <div className="h-full min-h-0">
           <div className="flex h-full overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth sm:hidden">
             {sortedSeasons.map((season) => (
-              <SeasonColumn key={season.id} season={season} variant="carousel" />
+              <SeasonColumn
+                key={season.id}
+                season={season}
+                initialSongs={songsBySeason[season.id] ?? []}
+                variant="carousel"
+              />
             ))}
           </div>
           <div className="hidden h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 auto-rows-fr sm:grid">
             {sortedSeasons.map((season) => (
-              <SeasonColumn key={season.id} season={season} />
+              <SeasonColumn
+                key={season.id}
+                season={season}
+                initialSongs={songsBySeason[season.id] ?? []}
+              />
             ))}
           </div>
         </div>

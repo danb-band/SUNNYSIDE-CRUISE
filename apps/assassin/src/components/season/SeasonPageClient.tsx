@@ -7,10 +7,21 @@ import { SeasonBoard } from "./SeasonBoard";
 import { LogoutButton } from "@/components/common/LogoutButton";
 import { useSeasons } from "@/features/season/queries/useSeasons";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
+import type { Season } from "@/features/season/schema";
+import type { Song } from "@/features/song/schema";
 
-export function SeasonPageClient() {
+interface SeasonPageClientProps {
+  seasons: Season[];
+  songsBySeason: Record<string, Song[]>;
+}
+
+export function SeasonPageClient({
+  seasons: initialSeasons,
+  songsBySeason,
+}: SeasonPageClientProps) {
   const [showArchived, setShowArchived] = useState(false);
-  const seasons = useSeasons().data ?? [];
+  const seasonsQuery = useSeasons(initialSeasons);
+  const seasons = seasonsQuery.data ?? [];
   useRealtimeSeasonSync();
 
   const activeSeasons = seasons.filter((s) => !s.isArchived);
@@ -42,7 +53,13 @@ export function SeasonPageClient() {
             <LogoutButton />
           </div>
           <div className="flex-1 min-h-0">
-            <SeasonBoard seasons={displayedSeasons} />
+            {seasonsQuery.isLoading ? (
+              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+                Loading...
+              </div>
+            ) : (
+              <SeasonBoard seasons={displayedSeasons} songsBySeason={songsBySeason} />
+            )}
           </div>
         </div>
       </div>

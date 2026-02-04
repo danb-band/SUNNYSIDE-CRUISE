@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Season } from "@features/season/schema";
+import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,17 +15,18 @@ import { AddSongDialog } from "../song/AddSongDialog";
 
 interface SeasonColumnProps {
   season: Season;
+  initialSongs: Song[];
   variant?: "carousel" | "grid";
 }
 
-export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
+export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
 
-  const { songs } = useSongLogic(season.id);
+  const { songs } = useSongLogic(season.id, initialSongs, { disableFetch: true });
   const songCount = songs.length;
 
   const handleSave = async () => {
@@ -212,7 +214,6 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
 
       <AddSongDialog
         seasonId={season.id}
-        initialSongs={songs}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />

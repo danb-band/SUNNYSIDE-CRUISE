@@ -8,11 +8,9 @@ import { Music, User, Link2, FileText, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
-import type { Song } from "@features/song/schema";
 
 interface AddSongDialogProps {
   seasonId: string;
-  initialSongs: Song[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -54,7 +52,7 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
   );
 }
 
-export function AddSongDialog({ seasonId, initialSongs, open, onOpenChange }: AddSongDialogProps) {
+export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
   const { validateSongData, getNextSortOrder } = useSongLogic(seasonId);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
