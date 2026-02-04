@@ -3,6 +3,10 @@ import SeasonService from "@features/season/service";
 import SongService from "@features/song/service";
 import type { Song } from "@features/song/schema";
 
+const dynamic = "force-dynamic";
+
+export const revalidate = 60;
+
 export default async function Home() {
   const seasons = await SeasonService.getAllSeasons();
   const songsBySeasonEntries = await Promise.all(
