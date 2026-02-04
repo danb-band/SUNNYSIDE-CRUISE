@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Song } from "@features/song/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Music } from "lucide-react";
@@ -9,8 +10,13 @@ interface SongItemProps {
 }
 
 export function SongItem({ song }: SongItemProps) {
+  const router = useRouter();
+
   return (
-    <Card className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 py-3 sm:py-4 hover:cursor-pointer">
+    <Card
+      className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 py-3 sm:py-4 hover:cursor-pointer"
+      onClick={() => router.push(`/song/${song.id}`)}
+    >
       <CardContent className="px-3 sm:px-4">
         <div className="flex items-start gap-3">
           <div className="flex h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
