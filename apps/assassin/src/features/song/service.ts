@@ -55,7 +55,7 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload, _userId: string) => {
+const updateSong = async (id: string, song: SongUpdatePayload) => {
   const existed = await getSongById(id);
 
   const parsedInput = updateSongSchema.safeParse(song);
@@ -77,7 +77,7 @@ const updateSong = async (id: string, song: SongUpdatePayload, _userId: string) 
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, _userId: string) => {
+const deleteSong = async (id: string) => {
   const song = await SongRepository.getSongById(id);
 
   if (!song) {
