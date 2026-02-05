@@ -2,12 +2,12 @@ import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import SeasonService from "@features/season/service";
 import SongService from "@features/song/service";
 import type { Song } from "@features/song/schema";
-
-const dynamic = "force-dynamic";
-
-export const revalidate = 60;
+import { cacheLife } from "next/cache";
 
 export default async function Home() {
+  "use cache";
+  cacheLife("max");
+
   const seasons = await SeasonService.getAllSeasons();
   const songsBySeasonEntries = await Promise.all(
     seasons.map(async (season) => {
