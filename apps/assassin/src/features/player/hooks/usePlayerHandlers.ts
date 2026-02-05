@@ -74,9 +74,9 @@ export const usePlayerHandlers = (props: UsePlayerHandlersProps) => {
   );
 
   const handleDeletePlayer = useCallback(
-    async (id: string) => {
+    async (id: string, songId: string) => {
       try {
-        await deletePlayerMutation.mutateAsync(id);
+        await deletePlayerMutation.mutateAsync({ id, songId });
         onSuccess?.("Player removed successfully");
         return { success: true };
       } catch (error) {
@@ -89,9 +89,9 @@ export const usePlayerHandlers = (props: UsePlayerHandlersProps) => {
   );
 
   const handleBatchDeletePlayers = useCallback(
-    async (ids: string[]) => {
+    async (ids: string[], songId: string) => {
       try {
-        await Promise.all(ids.map((id) => deletePlayerMutation.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deletePlayerMutation.mutateAsync({ id, songId })));
         onSuccess?.(`${ids.length} players removed successfully`);
         return { success: true };
       } catch (error) {

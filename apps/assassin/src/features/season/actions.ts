@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import SeasonService from "./service";
 import { SeasonPayload, SeasonUpdatePayload } from "./schema";
 
@@ -14,12 +14,12 @@ export const getSeasonAction = async (id: string) => {
 
 export const createSeasonAction = async (data: SeasonPayload) => {
   const result = await SeasonService.createSeason(data);
-  revalidateTag("seasons", "max");
+  revalidatePath("/");
   return result;
 };
 
 export const updateSeasonAction = async (id: string, data: SeasonUpdatePayload) => {
   const result = await SeasonService.updateSeason(id, data);
-  revalidateTag("seasons", "max");
+  revalidatePath("/");
   return result;
 };

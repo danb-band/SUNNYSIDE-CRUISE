@@ -69,9 +69,9 @@ export const useCommentHandlers = (props: UseCommentHandlersProps) => {
   );
 
   const handleDeleteComment = useCallback(
-    async (id: string) => {
+    async (id: string, songId: string) => {
       try {
-        await deleteCommentMutation.mutateAsync({ id });
+        await deleteCommentMutation.mutateAsync({ id, songId });
         props.onSuccess?.("Comment deleted successfully");
         return { success: true };
       } catch (error) {

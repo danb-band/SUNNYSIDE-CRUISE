@@ -1,16 +1,16 @@
 import { Season } from "@features/season/schema";
-import { SeasonColumn } from "./SeasonColumn";
 import type { Song } from "@features/song/schema";
+import { SeasonColumn } from "./SeasonColumn";
+import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 
 interface SeasonBoardProps {
   seasons: Season[];
   songsBySeason: Record<string, Song[]>;
-  onArchive: (season: Season) => void;
-  onRestore: (season: Season) => void;
 }
 
-export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: SeasonBoardProps) {
+export function SeasonBoard({ seasons, songsBySeason }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  useRealtimeSongSync();
 
   return (
     <div className="h-full min-h-0 overflow-hidden">
@@ -33,8 +33,6 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
                 key={season.id}
                 season={season}
                 initialSongs={songsBySeason[season.id] ?? []}
-                onArchive={onArchive}
-                onRestore={onRestore}
                 variant="carousel"
               />
             ))}
@@ -45,8 +43,6 @@ export function SeasonBoard({ seasons, songsBySeason, onArchive, onRestore }: Se
                 key={season.id}
                 season={season}
                 initialSongs={songsBySeason[season.id] ?? []}
-                onArchive={onArchive}
-                onRestore={onRestore}
               />
             ))}
           </div>

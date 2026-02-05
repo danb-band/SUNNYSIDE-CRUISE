@@ -5,8 +5,10 @@ import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeasonBoard } from "./SeasonBoard";
 import { LogoutButton } from "@/components/common/LogoutButton";
-import type { Season } from "@features/season/schema";
-import type { Song } from "@features/song/schema";
+import { useSeasons } from "@/features/season/queries/useSeasons";
+import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
+import type { Season } from "@/features/season/schema";
+import type { Song } from "@/features/song/schema";
 
 interface SeasonPageClientProps {
   seasons: Season[];
@@ -18,19 +20,13 @@ export function SeasonPageClient({
   songsBySeason,
 }: SeasonPageClientProps) {
   const [showArchived, setShowArchived] = useState(false);
-  const [seasons, setSeasons] = useState(initialSeasons);
+  const seasonsQuery = useSeasons(initialSeasons);
+  const seasons = seasonsQuery.data ?? [];
+  useRealtimeSeasonSync();
 
   const activeSeasons = seasons.filter((s) => !s.isArchived);
   const archivedSeasons = seasons.filter((s) => s.isArchived);
   const displayedSeasons = showArchived ? archivedSeasons : activeSeasons;
-
-  const handleArchive = (season: Season) => {
-    setSeasons((prev) => prev.map((s) => (s.id === season.id ? { ...s, isArchived: true } : s)));
-  };
-
-  const handleRestore = (season: Season) => {
-    setSeasons((prev) => prev.map((s) => (s.id === season.id ? { ...s, isArchived: false } : s)));
-  };
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
@@ -57,12 +53,7 @@ export function SeasonPageClient({
             <LogoutButton />
           </div>
           <div className="flex-1 min-h-0">
-            <SeasonBoard
-              seasons={displayedSeasons}
-              songsBySeason={songsBySeason}
-              onArchive={handleArchive}
-              onRestore={handleRestore}
-            />
+            <SeasonBoard seasons={displayedSeasons} songsBySeason={songsBySeason} />
           </div>
         </div>
       </div>

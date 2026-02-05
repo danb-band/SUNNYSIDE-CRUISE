@@ -16,18 +16,10 @@ import { AddSongDialog } from "../song/AddSongDialog";
 interface SeasonColumnProps {
   season: Season;
   initialSongs: Song[];
-  onArchive: (season: Season) => void;
-  onRestore: (season: Season) => void;
   variant?: "carousel" | "grid";
 }
 
-export function SeasonColumn({
-  season,
-  initialSongs,
-  onArchive,
-  onRestore,
-  variant = "grid",
-}: SeasonColumnProps) {
+export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonColumnProps) {
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
@@ -79,11 +71,6 @@ export function SeasonColumn({
           isArchived: !isArchived,
         },
       });
-      if (isArchived) {
-        onRestore(season);
-      } else {
-        onArchive(season);
-      }
     } catch (error) {
       console.error("Failed to toggle archive status:", error);
     }
@@ -227,7 +214,6 @@ export function SeasonColumn({
 
       <AddSongDialog
         seasonId={season.id}
-        initialSongs={initialSongs}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
