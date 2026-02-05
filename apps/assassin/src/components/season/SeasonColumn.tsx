@@ -26,7 +26,7 @@ export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonC
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
 
-  const { songs } = useSongLogic(season.id, initialSongs, { disableFetch: true });
+  const { songs } = useSongLogic(season.id, initialSongs);
   const songCount = songs.length;
 
   const handleSave = async () => {

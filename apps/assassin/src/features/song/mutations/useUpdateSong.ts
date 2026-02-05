@@ -24,12 +24,15 @@ export const useUpdateSong = () => {
         queryClient.setQueryData(key, next);
       });
 
-      queryClient.setQueryData(songKeys.bySeason(updatedSong.seasonId), (prev: Song[] | undefined) => {
-        if (!prev) return [updatedSong];
-        const exists = prev.some((song) => song.id === updatedSong.id);
-        if (!exists) return [...prev, updatedSong];
-        return prev.map((song) => (song.id === updatedSong.id ? updatedSong : song));
-      });
+      queryClient.setQueryData(
+        songKeys.bySeason(updatedSong.seasonId),
+        (prev: Song[] | undefined) => {
+          if (!prev) return [updatedSong];
+          const exists = prev.some((song) => song.id === updatedSong.id);
+          if (!exists) return [...prev, updatedSong];
+          return prev.map((song) => (song.id === updatedSong.id ? updatedSong : song));
+        },
+      );
     },
   });
 };

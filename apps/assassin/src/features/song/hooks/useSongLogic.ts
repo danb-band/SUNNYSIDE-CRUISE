@@ -3,14 +3,8 @@ import type { Song } from "../schema";
 import type { SongFormData } from "./useSongForm";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 
-export const useSongLogic = (
-  seasonId: string,
-  initialSongs: Song[] = [],
-  options?: { disableFetch?: boolean },
-) => {
-  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs, {
-    enabled: !options?.disableFetch,
-  });
+export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
+  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
 
   const isNameExists = useCallback(
     (name: string, excludeId?: string): boolean => {
