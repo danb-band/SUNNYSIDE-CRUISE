@@ -1,4 +1,4 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSongsBySeasonAction } from "../actions";
 import { songKeys } from "./keys";
 import type { Song } from "../schema";
