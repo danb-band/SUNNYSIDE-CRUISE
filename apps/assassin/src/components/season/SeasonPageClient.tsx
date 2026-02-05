@@ -53,13 +53,7 @@ export function SeasonPageClient({
             <LogoutButton />
           </div>
           <div className="flex-1 min-h-0">
-            {seasonsQuery.isLoading ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                Loading...
-              </div>
-            ) : (
-              <SeasonBoard seasons={displayedSeasons} songsBySeason={songsBySeason} />
-            )}
+            <SeasonBoard seasons={displayedSeasons} songsBySeason={songsBySeason} />
           </div>
         </div>
       </div>
