@@ -13,6 +13,14 @@ export const getCommentsBySongAction = async (songId: string) => {
   return await CommentService.getCommentsBySongId(songId);
 };
 
+export const getCommentsBySongPaginatedAction = async (
+  songId: string,
+  limit: number,
+  cursor?: string,
+) => {
+  return await CommentService.getCommentsBySongIdPaginated(songId, limit, cursor);
+};
+
 export const createCommentAction = async (data: { songId: string; content: string }) => {
   const user = await getCurrentUser();
   const result = await CommentService.createComment({ ...data, userId: user.id });

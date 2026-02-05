@@ -58,6 +58,29 @@ const getCommentsBySongId = async (songId: string): Promise<Array<Comment>> => {
   return parsed.data;
 };
 
+const getCommentsBySongIdPaginated = async (
+  songId: string,
+  limit: number,
+  cursor?: string,
+): Promise<{ comments: Comment[]; nextCursor: string | null }> => {
+  await SongService.assertSongExists(songId);
+
+  const result = await CommentRepository.getCommentsBySongIdPaginated(songId, limit, cursor);
+
+  const parsed = commentSchema.array().safeParse(result);
+
+  if (!parsed.success) {
+    throw new Error("Invalid paginated comments response from DB");
+  }
+
+  const hasMore = parsed.data.length > limit;
+  // 초과 1개를 잘라내고 실제 limit 개수만 반환
+  const comments = hasMore ? parsed.data.slice(0, limit) : parsed.data;
+  const nextCursor = hasMore ? comments[comments.length - 1].id : null;
+
+  return { comments, nextCursor };
+};
+
 const updateComment = async (id: string, comment: CommentUpdatePayload, userId: string) => {
   const existed = await getCommentById(id);
 
@@ -103,6 +126,7 @@ const CommentService = {
   createComment,
   getCommentById,
   getCommentsBySongId,
+  getCommentsBySongIdPaginated,
   updateComment,
   deleteComment,
 };
