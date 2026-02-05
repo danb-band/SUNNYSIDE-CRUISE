@@ -55,12 +55,8 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload, userId: string) => {
+const updateSong = async (id: string, song: SongUpdatePayload) => {
   const existed = await getSongById(id);
-
-  if (existed.userId !== userId) {
-    throw new Error("Unauthorized: you can only edit your own songs");
-  }
 
   const parsedInput = updateSongSchema.safeParse(song);
 
@@ -81,15 +77,11 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, userId: string) => {
+const deleteSong = async (id: string) => {
   const song = await SongRepository.getSongById(id);
 
   if (!song) {
     throw new Error(`Song with ID ${id} does not exist.`);
-  }
-
-  if (song.userId !== userId) {
-    throw new Error("Unauthorized: you can only delete your own songs");
   }
 
   try {
