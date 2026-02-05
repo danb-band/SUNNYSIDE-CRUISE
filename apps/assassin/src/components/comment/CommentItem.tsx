@@ -66,8 +66,8 @@ export function CommentItem({ comment, isOwner }: CommentItemProps) {
 
   const handleDelete = useCallback(async () => {
     if (!window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) return;
-    await handleDeleteComment(comment.id);
-  }, [handleDeleteComment, comment.id]);
+    await handleDeleteComment(comment.id, comment.songId);
+  }, [handleDeleteComment, comment.id, comment.songId]);
 
   if (isEditing) {
     return (
