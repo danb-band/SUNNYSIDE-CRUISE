@@ -5,6 +5,11 @@ import { getCurrentUser } from "@libs/supabase/auth";
 import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
 
+export const getCurrentUserIdAction = async (): Promise<string> => {
+  const user = await getCurrentUser();
+  return user.id;
+};
+
 export const getCommentAction = async (id: string) => {
   return await CommentService.getCommentById(id);
 };

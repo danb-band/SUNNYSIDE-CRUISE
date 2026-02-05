@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { createBrowserSupabaseClient } from "@libs/supabase/client";
+import { getCurrentUserIdAction } from "@/features/comment/actions";
 
 export const useCurrentUserId = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createBrowserSupabaseClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
-    });
+    getCurrentUserIdAction().then(setUserId);
   }, []);
 
   return userId;
