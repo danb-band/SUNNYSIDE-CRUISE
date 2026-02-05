@@ -11,6 +11,8 @@ export const useCreateSong = () => {
     mutationFn: (data: SongFormData) => createSongAction(data),
     onSuccess: (createdSong) => {
       if (!createdSong) return;
+      queryClient.setQueryData(songKeys.detail(createdSong.id), createdSong);
+
       queryClient.setQueryData(
         songKeys.bySeason(createdSong.seasonId),
         (prev: Song[] | undefined) => {

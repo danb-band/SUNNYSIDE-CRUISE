@@ -12,17 +12,7 @@ export const useUpdateSong = () => {
     onSuccess: (updatedSong) => {
       if (!updatedSong) return;
 
-      const seasonQueries = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
-      seasonQueries.forEach(([key, data]) => {
-        if (!Array.isArray(key) || !data) return;
-        const [, scope, seasonId] = key as unknown as [string, string, string];
-        if (scope !== "bySeason" || !seasonId) return;
-
-        const next = data
-          .filter((song) => song.id !== updatedSong.id || seasonId === updatedSong.seasonId)
-          .map((song) => (song.id === updatedSong.id ? updatedSong : song));
-        queryClient.setQueryData(key, next);
-      });
+      queryClient.setQueryData(songKeys.detail(updatedSong.id), updatedSong);
 
       queryClient.setQueryData(
         songKeys.bySeason(updatedSong.seasonId),

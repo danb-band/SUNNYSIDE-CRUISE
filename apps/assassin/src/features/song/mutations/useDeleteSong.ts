@@ -9,6 +9,8 @@ export const useDeleteSong = () => {
   return useMutation({
     mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id),
     onSuccess: (_result, variables) => {
+      queryClient.removeQueries({ queryKey: songKeys.detail(variables.id) });
+
       if (variables.seasonId) {
         queryClient.setQueryData(
           songKeys.bySeason(variables.seasonId),

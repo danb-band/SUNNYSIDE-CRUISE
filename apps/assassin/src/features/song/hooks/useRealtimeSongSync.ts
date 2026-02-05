@@ -18,10 +18,14 @@ export const useRealtimeSongSync = () => {
     };
 
     const removeSeasonSongs = (seasonId: string, songId: string) => {
+      queryClient.removeQueries({ queryKey: songKeys.detail(songId) });
+
       updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
     };
 
     const upsertSeasonSong = (seasonId: string, song: Song) => {
+      queryClient.setQueryData(songKeys.detail(song.id), song);
+
       updateSeasonSongs(seasonId, (prev) => {
         const index = prev.findIndex((item) => item.id === song.id);
         if (index === -1) return [...prev, song];
