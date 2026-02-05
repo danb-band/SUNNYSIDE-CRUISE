@@ -5,12 +5,25 @@ import { getCurrentUser } from "@libs/supabase/auth";
 import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
 
+export const getCurrentUserIdAction = async (): Promise<string> => {
+  const user = await getCurrentUser();
+  return user.id;
+};
+
 export const getCommentAction = async (id: string) => {
   return await CommentService.getCommentById(id);
 };
 
 export const getCommentsBySongAction = async (songId: string) => {
   return await CommentService.getCommentsBySongId(songId);
+};
+
+export const getCommentsBySongPaginatedAction = async (
+  songId: string,
+  limit: number,
+  cursor?: string,
+) => {
+  return await CommentService.getCommentsBySongIdPaginated(songId, limit, cursor);
 };
 
 export const createCommentAction = async (data: { songId: string; content: string }) => {

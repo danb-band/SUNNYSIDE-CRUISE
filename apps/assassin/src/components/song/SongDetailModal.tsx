@@ -1,9 +1,11 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { Music } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { SongDetailContent } from "./SongDetailContent";
+import { CommentSection } from "@/components/comment/CommentSection";
 import type { Song } from "@features/song/schema";
 
 interface SongDetailModalProps {
@@ -33,8 +35,12 @@ export function SongDetailModal({ song, open, onOpenChange }: SongDetailModalPro
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col max-h-[75vh] overflow-y-auto">
-          <SongDetailContent song={song} onClose={() => onOpenChange(false)} />
+        <div className="flex flex-col h-[75vh]">
+          <div className="shrink-0">
+            <SongDetailContent song={song} onClose={() => onOpenChange(false)} />
+          </div>
+          <Separator className="shrink-0" />
+          <CommentSection songId={song.id} />
         </div>
       </DialogContent>
     </Dialog>

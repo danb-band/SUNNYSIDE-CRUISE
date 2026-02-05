@@ -61,6 +61,29 @@ async function deleteComment(id: string, tx?: TransactionClient) {
   });
 }
 
+async function getCommentsBySongIdPaginated(
+  songId: string,
+  limit: number,
+  cursor?: string,
+): Promise<Comment[]> {
+  return await prisma.comment.findMany({
+    where: {
+      songId,
+      deletedAt: null,
+    },
+    orderBy: { createdAt: "desc" },
+    // 1개 더 조회해서 다음 페이지 존재 여부를 서비스에서 판단할 수 있게 함
+    take: limit + 1,
+    ...(cursor
+      ? {
+          // cursor 항목은 이전 페이지 마지막이므로 건너뜀
+          cursor: { id: cursor },
+          skip: 1,
+        }
+      : {}),
+  });
+}
+
 async function deleteCommentsBySongId(songId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.comment.updateMany({
@@ -73,6 +96,7 @@ const CommentRepository = {
   getAllComments,
   getCommentById,
   getCommentsBySongId,
+  getCommentsBySongIdPaginated,
   deleteCommentsBySongId,
   createComment,
   updateComment,

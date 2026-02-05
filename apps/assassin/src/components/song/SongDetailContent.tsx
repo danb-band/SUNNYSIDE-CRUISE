@@ -84,7 +84,7 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
     <>
       {/* YouTube Embed */}
       {youtubeId && (
-        <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-slate-900">
           <iframe
             src={`https://www.youtube.com/embed/${youtubeId}`}
             title="YouTube video"
