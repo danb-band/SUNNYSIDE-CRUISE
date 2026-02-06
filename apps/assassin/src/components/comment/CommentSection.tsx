@@ -17,7 +17,6 @@ export function CommentSection({ songId }: CommentSectionProps) {
     useInfiniteCommentsBySong(songId);
   useRealtimeCommentSync();
   const currentUserId = useCurrentUserId();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const handleIntersect = useCallback(
@@ -31,11 +30,10 @@ export function CommentSection({ songId }: CommentSectionProps) {
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    const scrollContainer = scrollRef.current;
-    if (!sentinel || !scrollContainer) return;
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver(handleIntersect, {
-      root: scrollContainer,
+      root: null, // Viewport 기준 (모바일/데스크탑 모두 호환)
       threshold: 0,
     });
 
@@ -46,7 +44,7 @@ export function CommentSection({ songId }: CommentSectionProps) {
   const comments = data?.pages.flatMap((page) => page.comments) ?? [];
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 px-4 sm:px-5 py-4">
+    <div className="flex flex-col md:h-full min-h-0 px-4 sm:px-5 py-4">
       <div className="flex items-center gap-2 mb-3 shrink-0">
         <MessageSquare className="h-4 w-4 text-slate-400" />
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">댓글</h3>
@@ -56,7 +54,7 @@ export function CommentSection({ songId }: CommentSectionProps) {
         <CommentInput songId={songId} />
       </div>
 
-      <div ref={scrollRef} className="mt-4 min-h-0 flex-1 overflow-y-auto space-y-3">
+      <div className="mt-4 min-h-0 flex-1 md:overflow-y-auto space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
