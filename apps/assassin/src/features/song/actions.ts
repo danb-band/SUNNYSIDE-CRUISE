@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
@@ -23,19 +24,19 @@ export const createSongAction = async (data: {
 }) => {
   const user = await getCurrentUser();
   const result = await SongService.createSong({ ...data, userId: user.id });
-  revalidatePath("/");
+  revalidateSeasonBoard();
   return result;
 };
 
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
   const result = await SongService.updateSong(id, data);
-  revalidatePath("/");
-  revalidatePath(`/songs/${id}`);
+  revalidateSeasonBoard();
+  revalidatePath(`/song/${id}`);
   return result;
 };
 
 export const deleteSongAction = async (id: string) => {
   const result = await SongService.deleteSong(id);
-  revalidatePath("/");
+  revalidateSeasonBoard();
   return result;
 };

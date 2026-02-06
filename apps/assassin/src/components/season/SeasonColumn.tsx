@@ -216,6 +216,7 @@ export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonC
         seasonId={season.id}
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+        onSubmit={() => setIsAddDialogOpen(false)}
       />
     </div>
   );

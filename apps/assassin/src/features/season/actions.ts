@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import SeasonService from "./service";
 import { SeasonPayload, SeasonUpdatePayload } from "./schema";
 
@@ -14,12 +14,14 @@ export const getSeasonAction = async (id: string) => {
 
 export const createSeasonAction = async (data: SeasonPayload) => {
   const result = await SeasonService.createSeason(data);
-  revalidatePath("/");
+  revalidateSeasonBoard();
+
   return result;
 };
 
 export const updateSeasonAction = async (id: string, data: SeasonUpdatePayload) => {
   const result = await SeasonService.updateSeason(id, data);
-  revalidatePath("/");
+  revalidateSeasonBoard();
+
   return result;
 };
