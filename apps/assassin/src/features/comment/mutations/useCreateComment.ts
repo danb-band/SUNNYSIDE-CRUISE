@@ -8,8 +8,8 @@ export const useCreateComment = () => {
 
   return useMutation({
     mutationFn: (data: CommentFormData) => createCommentAction(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.all });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(data.songId) });
     },
   });
 };
