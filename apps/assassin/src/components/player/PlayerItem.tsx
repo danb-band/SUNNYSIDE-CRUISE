@@ -53,8 +53,8 @@ export function PlayerItem({ player }: PlayerItemProps) {
 
   const handleDelete = useCallback(async () => {
     if (!window.confirm("정말로 이 연주자를 삭제하시겠습니까?")) return;
-    await handleDeletePlayer(player.id);
-  }, [handleDeletePlayer, player.id]);
+    await handleDeletePlayer(player.id, player.songId);
+  }, [handleDeletePlayer, player.id, player.songId]);
 
   const inputClassName =
     "h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
