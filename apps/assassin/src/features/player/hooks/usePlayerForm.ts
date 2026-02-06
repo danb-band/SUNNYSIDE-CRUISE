@@ -5,7 +5,6 @@ import {
   PlayerPayload,
   PlayerUpdatePayload,
 } from "../schema";
-import type { ZodError } from "zod";
 
 export type UsePlayerFormProps =
   | {
@@ -41,42 +40,31 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
 
   const validateField = useCallback(
     (field: keyof PlayerPayload, value: unknown): string | undefined => {
-      try {
-        const schema = mode === "create" ? createPlayerSchema : updatePlayerSchema;
-        const fieldSchema = schema.shape[field as keyof typeof schema.shape];
+      const schema = mode === "create" ? createPlayerSchema : updatePlayerSchema;
+      const fieldSchema = schema.shape[field as keyof typeof schema.shape];
+      if (!fieldSchema) return undefined;
 
-        if (fieldSchema) {
-          fieldSchema.parse(value);
-        }
-        return undefined;
-      } catch (error) {
-        if (error instanceof Error) {
-          return error.message;
-        }
-        return "Validation error";
-      }
+      const result = fieldSchema.safeParse(value);
+      return result.success ? undefined : result.error.issues[0]?.message;
     },
     [mode],
   );
 
   const validateForm = useCallback((): { isValid: boolean; errors: FormErrors } => {
-    try {
-      const schema = mode === "create" ? createPlayerSchema : updatePlayerSchema;
-      schema.parse(formData);
-      return { isValid: true, errors: {} };
-    } catch (error) {
-      const zodError = error as ZodError;
-      const formErrors: FormErrors = {};
+    const schema = mode === "create" ? createPlayerSchema : updatePlayerSchema;
+    const result = schema.safeParse(formData);
 
-      zodError.issues.forEach((err) => {
-        const field = err.path[0] as keyof FormErrors;
-        if (field && typeof field === "string") {
-          formErrors[field] = err.message;
-        }
-      });
+    if (result.success) return { isValid: true, errors: {} };
 
-      return { isValid: false, errors: formErrors };
-    }
+    const formErrors: FormErrors = {};
+    result.error.issues.forEach((err) => {
+      const field = err.path[0] as keyof FormErrors;
+      if (field && typeof field === "string") {
+        formErrors[field] = err.message;
+      }
+    });
+
+    return { isValid: false, errors: formErrors };
   }, [formData, mode]);
 
   const updateField = useCallback(

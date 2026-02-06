@@ -1,10 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ZodError } from "zod";
-import {
-  CommentUpdatePayload,
-  createCommentSchema,
-  updateCommentSchema,
-} from "../schema";
+import { CommentUpdatePayload, createCommentSchema, updateCommentSchema } from "../schema";
 
 export type CommentFormData = {
   songId: string;
@@ -44,53 +39,40 @@ export const useCommentForm = (props: UseCommentFormProps) => {
 
   const validateField = useCallback(
     (field: keyof CommentFormData, value: unknown): string | undefined => {
-      try {
-        const schema = mode === "create" ? createCommentSchema : updateCommentSchema;
-        const fieldSchema = schema.shape[field as keyof typeof schema.shape];
+      const schema = mode === "create" ? createCommentSchema : updateCommentSchema;
+      const fieldSchema = schema.shape[field as keyof typeof schema.shape];
+      if (!fieldSchema) return undefined;
 
-        if (fieldSchema) {
-          fieldSchema.parse(value);
-        }
-        return undefined;
-      } catch (error) {
-        if (error instanceof Error) {
-          return error.message;
-        }
-        return "Validation error";
-      }
+      const result = fieldSchema.safeParse(value);
+      return result.success ? undefined : result.error.issues[0]?.message;
     },
     [mode],
   );
 
   const validateForm = useCallback((): { isValid: boolean; errors: FormErrors } => {
-    try {
-      if (mode === "create") {
-        // Validate without userId (it's added server-side)
-        const { userId: _u, ...schemaShape } = createCommentSchema.shape;
-        const formSchema = createCommentSchema.pick(
-          Object.fromEntries(Object.keys(schemaShape).map((k) => [k, true])) as Record<
-            string,
-            true
-          >,
-        );
-        formSchema.parse(formData);
-      } else {
-        updateCommentSchema.parse(formData);
-      }
-      return { isValid: true, errors: {} };
-    } catch (error) {
-      const zodError = error as ZodError;
-      const formErrors: FormErrors = {};
-
-      zodError.issues.forEach((err) => {
-        const field = err.path[0] as keyof FormErrors;
-        if (field && typeof field === "string") {
-          formErrors[field] = err.message;
-        }
-      });
-
-      return { isValid: false, errors: formErrors };
+    let result;
+    if (mode === "create") {
+      // Validate without userId (it's added server-side)
+      const { userId: _u, ...schemaShape } = createCommentSchema.shape;
+      const formSchema = createCommentSchema.pick(
+        Object.fromEntries(Object.keys(schemaShape).map((k) => [k, true])) as Record<string, true>,
+      );
+      result = formSchema.safeParse(formData);
+    } else {
+      result = updateCommentSchema.safeParse(formData);
     }
+
+    if (result.success) return { isValid: true, errors: {} };
+
+    const formErrors: FormErrors = {};
+    result.error.issues.forEach((err) => {
+      const field = err.path[0] as keyof FormErrors;
+      if (field && typeof field === "string") {
+        formErrors[field] = err.message;
+      }
+    });
+
+    return { isValid: false, errors: formErrors };
   }, [formData, mode]);
 
   const updateField = useCallback(

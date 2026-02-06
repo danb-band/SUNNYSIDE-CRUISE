@@ -27,6 +27,7 @@ async function getPlayersBySongId(songId: string): Promise<Player[]> {
       songId: songId,
       deletedAt: null,
     },
+    orderBy: { createdAt: "asc" },
   });
   return players;
 }
