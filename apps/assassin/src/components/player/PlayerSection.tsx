@@ -7,6 +7,7 @@ import { usePlayerLogic } from "@/features/player/hooks/usePlayerLogic";
 import { PlayerInput } from "./PlayerInput";
 import { PlayerItem } from "./PlayerItem";
 import type { Player } from "@/features/player/schema";
+import { useRealtimePlayerSync } from "@/features/player/hooks/useRealtimePlayerSync";
 
 interface PlayerSectionProps {
   songId: string;
@@ -16,6 +17,7 @@ interface PlayerSectionProps {
 export function PlayerSection({ songId, initialPlayers }: PlayerSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const { players } = usePlayerLogic(songId, initialPlayers);
+  useRealtimePlayerSync();
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
