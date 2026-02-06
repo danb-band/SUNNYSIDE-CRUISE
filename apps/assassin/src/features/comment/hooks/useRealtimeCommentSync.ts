@@ -5,6 +5,8 @@ import type { Comment } from "@features/comment/schema";
 import { commentKeys } from "@features/comment/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 
+type RawComment = Omit<Comment, "profile"> & { profile?: Comment["profile"] };
+
 export const useRealtimeCommentSync = () => {
   const queryClient = useQueryClient();
 
@@ -58,40 +60,52 @@ export const useRealtimeCommentSync = () => {
       });
     };
 
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("id, name").eq("id", userId).single();
+      return data;
+    };
+
     const commentsChannel = supabase
       .channel("realtime:comment")
-      .on("postgres_changes", { event: "*", schema: "public", table: "comment" }, (payload) => {
-        const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
-        const nextComment = payload.new as Comment | undefined;
-        const prevComment = payload.old as Comment | undefined;
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comment" },
+        async (payload) => {
+          const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
+          const nextComment = payload.new as RawComment | undefined;
+          const prevComment = payload.old as RawComment | undefined;
 
-        if (eventType === "DELETE") {
-          if (prevComment?.songId && prevComment?.id) {
-            removeSongComment(prevComment.songId, prevComment.id);
+          if (eventType === "DELETE") {
+            if (prevComment?.songId && prevComment?.id) {
+              removeSongComment(prevComment.songId, prevComment.id);
+            }
+            return;
           }
-          return;
-        }
 
-        if (!nextComment?.songId || !nextComment?.id) return;
+          if (!nextComment?.songId || !nextComment?.id) return;
 
-        if (nextComment.deletedAt) {
-          removeSongComment(nextComment.songId, nextComment.id);
-          return;
-        }
-
-        if (eventType === "UPDATE") {
-          if (
-            prevComment?.songId &&
-            nextComment.songId &&
-            prevComment.songId !== nextComment.songId &&
-            prevComment.id
-          ) {
-            removeSongComment(prevComment.songId, prevComment.id);
+          if (nextComment.deletedAt) {
+            removeSongComment(nextComment.songId, nextComment.id);
+            return;
           }
-        }
 
-        upsertSongComment(nextComment.songId, nextComment);
-      })
+          if (eventType === "UPDATE") {
+            if (
+              prevComment?.songId &&
+              nextComment.songId &&
+              prevComment.songId !== nextComment.songId &&
+              prevComment.id
+            ) {
+              removeSongComment(prevComment.songId, prevComment.id);
+            }
+          }
+
+          const profile = await fetchProfile(nextComment.userId);
+          if (!profile) return;
+
+          upsertSongComment(nextComment.songId, { ...nextComment, profile });
+        },
+      )
       .subscribe();
 
     return () => {
