@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Music, User, Link2, FileText, Loader2, Pencil, Trash2, Save, X } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
 import type { Song } from "@features/song/schema";
 
@@ -29,6 +30,7 @@ export function extractYoutubeId(url: string): string | null {
 
 export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { formState, isProcessing, handleSubmit, handleChangeField, handleDeleteSong } =
     useSongHandlers({
@@ -67,9 +69,13 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
     setIsEditing(false);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("정말로 이 곡을 삭제하시겠습니까?")) return;
+  const handleRequestDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     const result = await handleDeleteSong(song.id);
+    setIsDeleteDialogOpen(false);
     if (result.success) {
       onClose();
     }
@@ -227,7 +233,7 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-                  onClick={handleDelete}
+                  onClick={handleRequestDelete}
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
@@ -241,6 +247,17 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="곡 삭제"
+        description="이 곡을 삭제하면 되돌릴 수 없습니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        onConfirm={handleConfirmDelete}
+        isConfirming={isProcessing}
+        icon={<Trash2 className="h-4 w-4" />}
+      />
     </>
   );
 }
