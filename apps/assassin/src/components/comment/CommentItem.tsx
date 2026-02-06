@@ -134,7 +134,10 @@ export function CommentItem({ comment, isOwner }: CommentItemProps) {
     <>
       <div className="group flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words">
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+            {comment.profile.name}
+          </span>
+          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words mt-0.5">
             {comment.content}
           </p>
           <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 block">
