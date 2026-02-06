@@ -59,7 +59,7 @@ export function PlayerInput({ songId, onComplete }: PlayerInputProps) {
         <Input
           value={formData.name ?? ""}
           onChange={(e) => handleChangeField("name", e.target.value)}
-          placeholder="이름 (ex. 김철수)"
+          placeholder="이름"
           className={cn(inputClassName, "flex-1")}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.nativeEvent.isComposing) {
