@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f172a" />
+  <rect x="64" y="64" width="384" height="384" rx="88" fill="#0f172a" />
+  <text
+    x="50%"
+    y="52%"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-size="140"
+    font-weight="700"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fill="#ffffff"
+  >
+    합주
+  </text>
+</svg>
