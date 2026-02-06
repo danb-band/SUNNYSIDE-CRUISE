@@ -39,7 +39,7 @@ export function CommentInput({ songId }: CommentInputProps) {
   );
 
   return (
-    <div className="flex gap-2 items-end">
+    <div className="flex gap-2 items-center">
       <Textarea
         value={formData.content}
         onChange={(e) => handleChangeField("content", e.target.value)}

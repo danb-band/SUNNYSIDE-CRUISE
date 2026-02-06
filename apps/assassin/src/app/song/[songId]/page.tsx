@@ -2,6 +2,7 @@ import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import { SongDetailPage } from "@/components/song/SongDetailPage";
 import SeasonService from "@features/season/service";
 import SongService from "@features/song/service";
+import PlayerService from "@features/player/service";
 import type { Song } from "@features/song/schema";
 
 interface Props {
@@ -11,9 +12,10 @@ interface Props {
 export default async function SongPage({ params }: Props) {
   const { songId } = await params;
 
-  const [song, seasons] = await Promise.all([
+  const [song, seasons, players] = await Promise.all([
     SongService.getSongById(songId),
     SeasonService.getAllSeasons(),
+    PlayerService.getPlayersBySongId(songId),
   ]);
 
   const songsBySeasonEntries = await Promise.all(
@@ -27,7 +29,7 @@ export default async function SongPage({ params }: Props) {
   return (
     <>
       <SeasonPageClient seasons={seasons} songsBySeason={songsBySeason} />
-      <SongDetailPage song={song} />
+      <SongDetailPage song={song} initialPlayers={players} />
     </>
   );
 }
