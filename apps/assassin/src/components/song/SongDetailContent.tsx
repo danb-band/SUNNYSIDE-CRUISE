@@ -47,8 +47,6 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
   const { formData, errors } = formState;
   const savedDataRef = useRef(formData);
 
-  const youtubeId = extractYoutubeId(formData.youtubeUrl);
-
   const handleStartEditing = () => {
     savedDataRef.current = { ...formData };
     setIsEditing(true);
@@ -82,20 +80,6 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
 
   return (
     <>
-      {/* YouTube Embed */}
-      {youtubeId && (
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-slate-900">
-          <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}`}
-            title="YouTube video"
-            className="absolute inset-0 h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      )}
-
-      {/* Content */}
       <div className="px-4 sm:px-5 py-4">
         {isEditing ? (
           <div className="space-y-4">

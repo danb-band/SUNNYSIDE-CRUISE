@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { usePlayersBySong } from "../queries/usePlayersBySong";
 import type { Player } from "../schema";
 
-export const usePlayerLogic = (songId: string) => {
-  const { data: players = [] } = usePlayersBySong(songId);
+export const usePlayerLogic = (songId: string, initialPlayers?: Player[]) => {
+  const { data: players = [] } = usePlayersBySong(songId, initialPlayers);
 
   const playersByInstrument = useCallback((): Record<string, Player[]> => {
     return players.reduce(
