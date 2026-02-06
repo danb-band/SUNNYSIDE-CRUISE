@@ -6,6 +6,7 @@ import { useInfiniteCommentsBySong } from "@/features/comment/queries/useInfinit
 import { useCurrentUserId } from "@/features/comment/hooks/useCurrentUserId";
 import { CommentInput } from "./CommentInput";
 import { CommentItem } from "./CommentItem";
+import { useRealtimeCommentSync } from "@/features/comment/hooks/useRealtimeCommentSync";
 
 interface CommentSectionProps {
   songId: string;
@@ -14,6 +15,7 @@ interface CommentSectionProps {
 export function CommentSection({ songId }: CommentSectionProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteCommentsBySong(songId);
+  useRealtimeCommentSync();
   const currentUserId = useCurrentUserId();
   const sentinelRef = useRef<HTMLDivElement>(null);
 

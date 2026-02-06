@@ -13,6 +13,7 @@ interface AddSongDialogProps {
   seasonId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmit: () => void;
 }
 
 function extractYoutubeId(url: string): string | null {
@@ -52,7 +53,7 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
   );
 }
 
-export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogProps) {
+export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSongDialogProps) {
   const { validateSongData, getNextSortOrder } = useSongLogic(seasonId);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
@@ -69,6 +70,12 @@ export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogPro
 
   const inputClassName =
     "h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
+
+  const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit();
+    onSubmit();
+  };
 
   return (
     <Dialog
@@ -96,7 +103,7 @@ export function AddSongDialog({ seasonId, open, onOpenChange }: AddSongDialogPro
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col">
+        <form onSubmit={handleSubmitForm} className="flex flex-col">
           {/* Form Content */}
           <div className="px-4 sm:px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
             {/* Song Info */}

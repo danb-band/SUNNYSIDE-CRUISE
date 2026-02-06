@@ -12,12 +12,13 @@ export const useCreateSong = () => {
     onSuccess: (createdSong) => {
       if (!createdSong) return;
       queryClient.setQueryData(songKeys.detail(createdSong.id), createdSong);
-
       queryClient.setQueryData(
         songKeys.bySeason(createdSong.seasonId),
         (prev: Song[] | undefined) => {
           if (!prev) return [createdSong];
-          return [...prev, createdSong];
+          const exists = prev.some((song) => song.id === createdSong.id);
+          const next = exists ? prev : [...prev, createdSong];
+          return [...next].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
         },
       );
     },

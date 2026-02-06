@@ -14,18 +14,18 @@ export const getPlayersBySongAction = async (songId: string) => {
 
 export const createPlayerAction = async (data: PlayerPayload) => {
   const result = await PlayerService.createPlayer(data);
-  revalidatePath(`/songs/${data.songId}`);
+  revalidatePath(`/song/${data.songId}`);
   return result;
 };
 
 export const updatePlayerAction = async (id: string, data: PlayerUpdatePayload) => {
   const result = await PlayerService.updatePlayer(id, data);
-  revalidatePath(`/songs/${data.songId}`);
+  revalidatePath(`/song/${data.songId}`);
   return result;
 };
 
 export const deletePlayerAction = async (id: string, songId: string) => {
   const result = await PlayerService.deletePlayer(id);
-  revalidatePath(`/songs/${songId}`);
+  revalidatePath(`/song/${songId}`);
   return result;
 };

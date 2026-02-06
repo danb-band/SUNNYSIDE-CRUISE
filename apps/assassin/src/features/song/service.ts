@@ -8,10 +8,14 @@ import CommentRepository from "@features/comment/repository";
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
 
+  if (!song) {
+    throw new Error(`Song with ID ${songId} does not exist.`);
+  }
+
   const parsed = songSchema.safeParse(song);
 
   if (!parsed.success) {
-    throw new Error(`Song with ID ${songId} does not exist.`);
+    throw new Error(`Invalid song response from DB for ID ${songId}.`);
   }
 };
 
@@ -29,8 +33,10 @@ const createSong = async (song: SongPayload) => {
   return parsed.data;
 };
 
-const getSongById = async (id: string): Promise<Song> => {
+const getSongById = async (id: string): Promise<Song | null> => {
   const song = await SongRepository.getSongById(id);
+
+  if (!song) return null;
 
   const parsed = songSchema.safeParse(song);
 
@@ -57,6 +63,10 @@ const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
 
 const updateSong = async (id: string, song: SongUpdatePayload) => {
   const existed = await getSongById(id);
+
+  if (!existed) {
+    throw new Error(`Song with ID ${id} does not exist.`);
+  }
 
   const parsedInput = updateSongSchema.safeParse(song);
 

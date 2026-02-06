@@ -9,8 +9,10 @@ export const useUpdateComment = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: CommentUpdatePayload }) =>
       updateCommentAction(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.all });
+    onSuccess: (data) => {
+      if (!data) return;
+
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(data.songId) });
     },
   });
 };

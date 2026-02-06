@@ -4,6 +4,7 @@ import SeasonService from "@features/season/service";
 import SongService from "@features/song/service";
 import PlayerService from "@features/player/service";
 import type { Song } from "@features/song/schema";
+import { notFound } from "next/navigation";
 
 interface Props {
   params: Promise<{ songId: string }>;
@@ -17,6 +18,10 @@ export default async function SongPage({ params }: Props) {
     SeasonService.getAllSeasons(),
     PlayerService.getPlayersBySongId(songId),
   ]);
+
+  if (!song) {
+    notFound();
+  }
 
   const songsBySeasonEntries = await Promise.all(
     seasons.map(async (season) => {
