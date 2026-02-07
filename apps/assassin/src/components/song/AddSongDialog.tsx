@@ -8,6 +8,7 @@ import { Music, User, Link2, FileText, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
+import { useEffect } from "react";
 
 interface AddSongDialogProps {
   seasonId: string;
@@ -63,6 +64,17 @@ export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSon
       sortOrder: getNextSortOrder(),
     },
   });
+
+  useEffect(() => {
+    return () => {
+      if (!open) {
+        handleChangeField("name", "");
+        handleChangeField("artist", "");
+        handleChangeField("youtubeUrl", "");
+        handleChangeField("description", "");
+      }
+    };
+  }, [handleChangeField, open]);
 
   const { formData } = formState;
 
