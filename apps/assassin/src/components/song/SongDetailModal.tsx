@@ -36,12 +36,12 @@ export function SongDetailModal({
           "border-slate-200 dark:border-slate-700",
         )}
       >
-        <DialogHeader className="px-4 sm:px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="px-4 sm:px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-500">
               <Music className="h-4 w-4 text-white" />
             </div>
-            <DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-50">
+            <DialogTitle className="text-base font-semibold text-slate-900 text-start dark:text-slate-50 truncate min-w-0 flex-1">
               {song.name}
             </DialogTitle>
           </div>

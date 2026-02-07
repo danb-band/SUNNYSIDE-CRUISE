@@ -213,7 +213,7 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
                 {formData.description && (
                   <div className="flex items-start gap-2">
                     <FileText className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-wrap">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3 break-words">
                       {formData.description}
                     </p>
                   </div>
