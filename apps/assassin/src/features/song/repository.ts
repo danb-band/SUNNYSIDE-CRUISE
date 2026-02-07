@@ -31,8 +31,37 @@ async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
   return songs;
 }
 
-async function createSong(input: SongPayload): Promise<Song> {
-  const song = await prisma.song.create({
+async function getMaxSortOrderBySeasonId(
+  seasonId: string,
+  tx?: TransactionClient,
+): Promise<bigint | number | null> {
+  const prismaClient = tx || prisma;
+  const result = await prismaClient.song.aggregate({
+    where: {
+      seasonId,
+      deletedAt: null,
+    },
+    _max: {
+      sortOrder: true,
+    },
+  });
+
+  return result._max.sortOrder ?? null;
+}
+
+async function lockSeasonSongsForUpdate(seasonId: string, tx?: TransactionClient): Promise<void> {
+  const prismaClient = tx || prisma;
+  await prismaClient.$queryRaw`
+    SELECT id
+    FROM season
+    WHERE id = ${seasonId}
+    FOR UPDATE
+  `;
+}
+
+async function createSong(input: SongPayload, tx?: TransactionClient): Promise<Song> {
+  const prismaClient = tx || prisma;
+  const song = await prismaClient.song.create({
     data: {
       name: input.name,
       artist: input.artist,
@@ -73,6 +102,8 @@ const SongRepository = {
   getAllSongs,
   getSongById,
   getSongsBySeasonId,
+  getMaxSortOrderBySeasonId,
+  lockSeasonForUpdate: lockSeasonSongsForUpdate,
   createSong,
   updateSong,
   deleteSong,
