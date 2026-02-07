@@ -8,7 +8,6 @@ import { Music, User, Link2, FileText, Loader2, Plus } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
-import { useEffect } from "react";
 
 interface AddSongDialogProps {
   seasonId: string;
