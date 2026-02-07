@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { usePathname } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Music } from "lucide-react";
@@ -26,6 +27,9 @@ export function SongDetailModal({
   initialPlayers,
 }: SongDetailModalProps) {
   const youtubeId = extractYoutubeId(song.youtubeUrl);
+  const pathname = usePathname();
+  const isActiveRoute = pathname === `/song/${song.id}`;
+  const shouldRenderIframe = Boolean(youtubeId && isActiveRoute);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,12 +40,12 @@ export function SongDetailModal({
           "border-slate-200 dark:border-slate-700",
         )}
       >
-        <DialogHeader className="px-4 sm:px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="px-4 sm:px-5 py-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-500">
               <Music className="h-4 w-4 text-white" />
             </div>
-            <DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-50">
+            <DialogTitle className="text-base font-semibold text-slate-900 text-start dark:text-slate-50 truncate min-w-0 flex-1">
               {song.name}
             </DialogTitle>
           </div>
@@ -55,7 +59,7 @@ export function SongDetailModal({
           )}
         >
           {/* YouTube - 왼쪽 상단 */}
-          {youtubeId && (
+          {shouldRenderIframe && (
             <div className="shrink-0 md:col-start-1 md:row-start-1">
               <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
                 <iframe

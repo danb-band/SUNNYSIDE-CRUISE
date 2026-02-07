@@ -22,7 +22,30 @@ const assertSongExists = async (songId: string): Promise<void> => {
 const createSong = async (song: SongPayload) => {
   await SeasonService.assertSeasonExists(song.seasonId);
 
-  const result = await SongRepository.createSong(song);
+  let result;
+  try {
+    result = await prisma.$transaction(async (tx) => {
+      await SongRepository.lockSeasonForUpdate(song.seasonId, tx);
+
+      const maxSortOrder = await SongRepository.getMaxSortOrderBySeasonId(song.seasonId, tx);
+      const nextSortOrder = (maxSortOrder ? Number(maxSortOrder) : 0) + 1;
+
+      return await SongRepository.createSong(
+        {
+          ...song,
+          sortOrder: nextSortOrder,
+        },
+        tx,
+      );
+    });
+  } catch (error) {
+    console.error("Failed to create song:", error);
+    throw new Error("Song creation failed");
+  }
+
+  if (!result) {
+    throw new Error("Song creation failed");
+  }
 
   const parsed = songSchema.safeParse(result);
 

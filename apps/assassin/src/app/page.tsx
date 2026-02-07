@@ -2,10 +2,12 @@ import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import SeasonService from "@features/season/service";
 import SongService from "@features/song/service";
 import type { Song } from "@features/song/schema";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
 
 export default async function Home() {
   "use cache";
+  cacheTag(SEASON_BOARD_CACHE_TAG);
   cacheLife("max");
 
   const seasons = await SeasonService.getAllSeasons();
