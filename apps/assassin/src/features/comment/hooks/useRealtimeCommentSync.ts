@@ -13,7 +13,7 @@ export const useRealtimeCommentSync = () => {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const updateSongComments = (
+    const updateQuery = (
       songId: string,
       updater: (
         prev: InfiniteData<{ comments: Comment[]; nextCursor: string | null }>,
@@ -27,7 +27,7 @@ export const useRealtimeCommentSync = () => {
     };
 
     const removeSongComment = (songId: string, commentId: string) => {
-      updateSongComments(songId, (prev) => ({
+      updateQuery(songId, (prev) => ({
         ...prev,
         pages: prev.pages.map((page) => ({
           ...page,
@@ -36,18 +36,25 @@ export const useRealtimeCommentSync = () => {
       }));
     };
 
-    const upsertSongComment = (songId: string, comment: Comment) => {
-      updateSongComments(songId, (prev) => {
-        const pages = prev.pages.map((page) => ({
+    const updateSongComments = (songId: string, commentId: string) => {
+      updateQuery(songId, (prev) => ({
+        ...prev,
+        pages: prev.pages.map((page) => ({
           ...page,
-          comments: page.comments.filter((item) => item.id !== comment.id),
-        }));
+          comments: page.comments.map((comment) =>
+            comment.id === commentId ? { ...comment, ...comment } : comment,
+          ),
+        })),
+      }));
+    };
 
-        if (pages.length === 0) {
+    const insertSongComment = (songId: string, comment: Comment) => {
+      updateQuery(songId, (prev) => {
+        if (prev.pages.length === 0) {
           return prev;
         }
 
-        const firstPage = pages[0];
+        const firstPage = prev.pages[0];
         const nextFirstPage = {
           ...firstPage,
           comments: [comment, ...firstPage.comments],
@@ -55,7 +62,7 @@ export const useRealtimeCommentSync = () => {
 
         return {
           ...prev,
-          pages: [nextFirstPage, ...pages.slice(1)],
+          pages: [nextFirstPage, ...prev.pages.slice(1)],
         };
       });
     };
@@ -89,21 +96,16 @@ export const useRealtimeCommentSync = () => {
             return;
           }
 
-          if (eventType === "UPDATE") {
-            if (
-              prevComment?.songId &&
-              nextComment.songId &&
-              prevComment.songId !== nextComment.songId &&
-              prevComment.id
-            ) {
-              removeSongComment(prevComment.songId, prevComment.id);
-            }
-          }
-
           const profile = await fetchProfile(nextComment.userId);
           if (!profile) return;
 
-          upsertSongComment(nextComment.songId, { ...nextComment, profile });
+          if (eventType === "UPDATE") {
+            updateSongComments(nextComment.songId, nextComment.id);
+            return;
+          }
+
+          // INSERT
+          insertSongComment(nextComment.songId, { ...nextComment, profile });
         },
       )
       .subscribe();
