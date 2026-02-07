@@ -65,17 +65,6 @@ export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSon
     },
   });
 
-  useEffect(() => {
-    return () => {
-      if (!open) {
-        handleChangeField("name", "");
-        handleChangeField("artist", "");
-        handleChangeField("youtubeUrl", "");
-        handleChangeField("description", "");
-      }
-    };
-  }, [handleChangeField, open]);
-
   const { formData } = formState;
 
   const youtubeId = extractYoutubeId(formData.youtubeUrl);

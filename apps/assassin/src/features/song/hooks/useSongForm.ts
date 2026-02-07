@@ -137,8 +137,9 @@ export const useSongForm = (props: UseSongFormProps) => {
       return false;
     } finally {
       setIsSubmitting(false);
+      resetForm();
     }
-  }, [formData, validateForm, props]);
+  }, [validateForm, props, formData, resetForm]);
 
   const isValid = validateForm().isValid;
 
