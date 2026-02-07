@@ -1,10 +1,56 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Song } from "../schema";
 import type { SongFormData } from "./useSongForm";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 
+export const createSongSortOrderHelpers = (songs: Song[]) => {
+  const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+
+  const getNextSortOrder = (): number => {
+    if (songs.length === 0) return 1;
+
+    const maxSortOrder = Math.max(...songs.map((song) => Number(song.sortOrder)));
+    return maxSortOrder + 1;
+  };
+
+  const getSortOrderBetween = (beforeId: string | null, afterId: string | null): number => {
+    if (!beforeId && !afterId) {
+      return getNextSortOrder();
+    }
+
+    if (!beforeId) {
+      const firstSong = sortedSongs[0];
+      return firstSong ? Number(firstSong.sortOrder) - 1 : 1;
+    }
+
+    if (!afterId) {
+      return getNextSortOrder();
+    }
+
+    const beforeSong = songs.find((s) => s.id === beforeId);
+    const afterSong = songs.find((s) => s.id === afterId);
+
+    if (!beforeSong || !afterSong) {
+      return getNextSortOrder();
+    }
+
+    return Math.floor((Number(beforeSong.sortOrder) + Number(afterSong.sortOrder)) / 2);
+  };
+
+  return {
+    sortedSongs,
+    getNextSortOrder,
+    getSortOrderBetween,
+  };
+};
+
 export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
   const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
+
+  const { sortedSongs, getNextSortOrder, getSortOrderBetween } = useMemo(
+    () => createSongSortOrderHelpers(songs),
+    [songs],
+  );
 
   const isNameExists = useCallback(
     (name: string, excludeId?: string): boolean => {
@@ -13,45 +59,6 @@ export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
       );
     },
     [songs],
-  );
-
-  const getNextSortOrder = useCallback((): number => {
-    if (songs.length === 0) return 1;
-
-    const maxSortOrder = Math.max(...songs.map((song) => Number(song.sortOrder)));
-    return maxSortOrder + 1;
-  }, [songs]);
-
-  const getSortOrderBetween = useCallback(
-    (beforeId: string | null, afterId: string | null): number => {
-      const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
-
-      if (!beforeId && !afterId) {
-        return getNextSortOrder();
-      }
-
-      if (!beforeId) {
-        // Insert at beginning
-        const firstSong = sortedSongs[0];
-        return firstSong ? Number(firstSong.sortOrder) - 1 : 1;
-      }
-
-      if (!afterId) {
-        // Insert at end
-        return getNextSortOrder();
-      }
-
-      // Insert between two songs
-      const beforeSong = songs.find((s) => s.id === beforeId);
-      const afterSong = songs.find((s) => s.id === afterId);
-
-      if (!beforeSong || !afterSong) {
-        return getNextSortOrder();
-      }
-
-      return Math.floor((Number(beforeSong.sortOrder) + Number(afterSong.sortOrder)) / 2);
-    },
-    [songs, getNextSortOrder],
   );
 
   const validateSongData = useCallback(
@@ -115,8 +122,6 @@ export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
     },
     [songs],
   );
-
-  const sortedSongs = [...songs].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
 
   return {
     isNameExists,
