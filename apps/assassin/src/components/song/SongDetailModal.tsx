@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { usePathname } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Music } from "lucide-react";
@@ -26,6 +27,9 @@ export function SongDetailModal({
   initialPlayers,
 }: SongDetailModalProps) {
   const youtubeId = extractYoutubeId(song.youtubeUrl);
+  const pathname = usePathname();
+  const isActiveRoute = pathname === `/song/${song.id}`;
+  const shouldRenderIframe = Boolean(youtubeId && isActiveRoute);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,7 +59,7 @@ export function SongDetailModal({
           )}
         >
           {/* YouTube - 왼쪽 상단 */}
-          {youtubeId && (
+          {shouldRenderIframe && (
             <div className="shrink-0 md:col-start-1 md:row-start-1">
               <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
                 <iframe
