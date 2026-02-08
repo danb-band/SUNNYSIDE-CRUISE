@@ -54,7 +54,7 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
 }
 
 export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSongDialogProps) {
-  const { validateSongData, getNextSortOrder } = useSongLogic(seasonId);
+  const { validateSongData } = useSongLogic(seasonId);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
     mode: "create",
@@ -212,4 +212,7 @@ export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSon
       </DialogContent>
     </Dialog>
   );
+}
+function getNextSortOrder(): number | undefined {
+  throw new Error("Function not implemented.");
 }

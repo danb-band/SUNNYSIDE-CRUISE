@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Song } from "../schema";
 import { songKeys } from "../queries/keys";
 import { useUpdateSong } from "../mutations/useUpdateSong";
-import { createSongSortOrderHelpers } from "./useSongLogic";
+import { createSongSortOrderHelpers } from "../utils/songSortOrderHelpers";
 
 const SEASON_DROPPABLE_PREFIX = "season:";
 
