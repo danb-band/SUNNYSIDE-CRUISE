@@ -12,6 +12,7 @@ import { PlayerSection } from "@/components/player/PlayerSection";
 import { PlayerSectionSkeleton } from "@/components/player/PlayerSectionSkeleton";
 import type { Song } from "@features/song/schema";
 import type { Player } from "@/features/player/schema";
+import { useSong } from "@/features/song/queries/useSong";
 
 interface SongDetailModalProps {
   song: Song;
@@ -21,11 +22,13 @@ interface SongDetailModalProps {
 }
 
 export function SongDetailModal({
-  song,
+  song: initSong,
   open,
   onOpenChange,
   initialPlayers,
 }: SongDetailModalProps) {
+  const song = useSong(initSong.id, initSong).data ?? initSong;
+
   const youtubeId = extractYoutubeId(song.youtubeUrl);
   const pathname = usePathname();
   const isActiveRoute = pathname === `/song/${song.id}`;
