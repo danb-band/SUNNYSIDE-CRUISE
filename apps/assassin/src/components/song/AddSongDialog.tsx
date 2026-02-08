@@ -60,7 +60,6 @@ export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSon
     mode: "create",
     initialData: {
       seasonId,
-      sortOrder: getNextSortOrder(),
     },
   });
 
@@ -212,7 +211,4 @@ export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSon
       </DialogContent>
     </Dialog>
   );
-}
-function getNextSortOrder(): number | undefined {
-  throw new Error("Function not implemented.");
 }
