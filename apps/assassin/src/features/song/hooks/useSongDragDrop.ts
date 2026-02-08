@@ -26,6 +26,7 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
   const queryClient = useQueryClient();
   const updateSong = useUpdateSong();
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const sortOrderGap = 100;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -95,6 +96,44 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
     [queryClient],
   );
 
+  const normalizeSeasonSortOrders = useCallback(
+    async (seasonId: string, orderedSongs: Song[], overrides?: Record<string, Partial<Song>>) => {
+      const normalized = orderedSongs.map((song, index) => ({
+        ...song,
+        sortOrder: (index + 1) * sortOrderGap,
+        ...overrides?.[song.id],
+      }));
+
+      updateSeasonSongs(seasonId, () => normalized);
+
+      await Promise.all(
+        normalized.map((song) =>
+          updateSong.mutateAsync({
+            id: song.id,
+            data: {
+              sortOrder: song.sortOrder,
+              ...(overrides?.[song.id] ?? {}),
+            },
+          }),
+        ),
+      );
+
+      return normalized;
+    },
+    [sortOrderGap, updateSeasonSongs, updateSong],
+  );
+
+  const needsRebalance = useCallback(
+    (songs: Song[], proposedSortOrder: number, activeId: string) => {
+      const existingOrders = new Set(
+        songs.filter((song) => song.id !== activeId).map((song) => Number(song.sortOrder)),
+      );
+
+      return existingOrders.has(proposedSortOrder);
+    },
+    [],
+  );
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveSongId(String(event.active.id));
   }, []);
@@ -142,7 +181,13 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
         const newIndex = nextOrder.findIndex((song) => song.id === activeId);
         const beforeId = nextOrder[newIndex - 1]?.id ?? null;
         const afterId = nextOrder[newIndex + 1]?.id ?? null;
-        const newSortOrder = getSortOrderBetween(beforeId, afterId);
+        let newSortOrder = getSortOrderBetween(beforeId, afterId);
+
+        if (needsRebalance(sortedSongs, newSortOrder, activeId)) {
+          const normalized = await normalizeSeasonSortOrders(fromSeasonId, nextOrder);
+          const normalizedIndex = normalized.findIndex((song) => song.id === activeId);
+          newSortOrder = normalized[normalizedIndex]?.sortOrder ?? newSortOrder;
+        }
 
         updateSeasonSongs(fromSeasonId, (songs) =>
           songs.map((song) =>
@@ -168,6 +213,10 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
       const { sortedSongs: targetSortedSongs, getSortOrderBetween } =
         createSongSortOrderHelpers(targetSongs);
 
+      const activeSongData = findSongById(activeId);
+
+      if (!activeSongData) return;
+
       const [beforeId, afterId] = (() => {
         if (isSeasonDroppableId(overId)) {
           return [targetSortedSongs[targetSortedSongs.length - 1]?.id ?? null, null] as const;
@@ -179,10 +228,32 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
         return [targetSortedSongs[overIndex - 1]?.id ?? null, targetSortedSongs[overIndex]?.id];
       })();
 
-      const newSortOrder = getSortOrderBetween(beforeId, afterId);
-      const activeSongData = findSongById(activeId);
+      let newSortOrder = getSortOrderBetween(beforeId, afterId);
+      const movedSongForOrder: Song = {
+        ...activeSongData,
+        seasonId: targetSeasonId,
+        sortOrder: newSortOrder,
+      };
+      const nextTargetOrder = (() => {
+        if (isSeasonDroppableId(overId)) {
+          return [...targetSortedSongs, movedSongForOrder];
+        }
 
-      if (!activeSongData) return;
+        const overIndex = targetSortedSongs.findIndex((song) => song.id === overId);
+        if (overIndex === -1) return [...targetSortedSongs, movedSongForOrder];
+
+        const next = [...targetSortedSongs];
+        next.splice(overIndex, 0, movedSongForOrder);
+        return next;
+      })();
+
+      if (needsRebalance(targetSortedSongs, newSortOrder, activeId)) {
+        const normalized = await normalizeSeasonSortOrders(targetSeasonId, nextTargetOrder, {
+          [activeId]: { seasonId: targetSeasonId },
+        });
+        const normalizedIndex = normalized.findIndex((song) => song.id === activeId);
+        newSortOrder = normalized[normalizedIndex]?.sortOrder ?? newSortOrder;
+      }
 
       const movedSong: Song = {
         ...activeSongData,
@@ -209,6 +280,8 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
       findSeasonIdBySongId,
       findSongById,
       getSeasonSongs,
+      needsRebalance,
+      normalizeSeasonSortOrders,
       updateSeasonSongs,
       updateSongDetail,
       updateSong,
