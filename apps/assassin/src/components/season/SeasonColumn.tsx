@@ -9,9 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
+import { SortableSongItem } from "../song/SortableSongItem";
 import { SongItem } from "../song/SongItem";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 import { AddSongDialog } from "../song/AddSongDialog";
+import { cn } from "@/libs/shadcn/utils";
+import { getSeasonDroppableId } from "@/features/song/hooks/useSongDragDrop";
 
 interface SeasonColumnProps {
   season: Season;
@@ -20,6 +25,7 @@ interface SeasonColumnProps {
 }
 
 export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonColumnProps) {
+  const dragEnabled = variant !== "carousel";
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
@@ -174,30 +180,20 @@ export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonC
         </CardHeader>
         <CardContent className="space-y-3 flex flex-col flex-1 min-h-0">
           {/* Songs Container */}
-          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4 space-y-2">
-            {songCount === 0 ? (
-              <div className="flex items-center justify-center">
-                <div className="text-center">
-                  <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
-                  <Button
-                    size="sm"
-                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white"
-                    onClick={() => setIsAddDialogOpen(true)}
-                  >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Add song
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {songs.map((song) => (
-                  <SongItem key={song.id} song={song} />
-                ))}
-              </div>
-            )}
-          </div>
+          {dragEnabled ? (
+            <SeasonSongListDrag
+              seasonId={season.id}
+              songs={songs}
+              songCount={songCount}
+              onAdd={() => setIsAddDialogOpen(true)}
+            />
+          ) : (
+            <SeasonSongListStatic
+              songs={songs}
+              songCount={songCount}
+              onAdd={() => setIsAddDialogOpen(true)}
+            />
+          )}
 
           {/* Add Song Button */}
           <Button
@@ -218,6 +214,77 @@ export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonC
         onOpenChange={setIsAddDialogOpen}
         onSubmit={() => setIsAddDialogOpen(false)}
       />
+    </div>
+  );
+}
+
+interface SeasonSongListProps {
+  songs: Song[];
+  songCount: number;
+  onAdd: () => void;
+}
+
+interface SeasonSongListDragProps extends SeasonSongListProps {
+  seasonId: string;
+}
+
+function SeasonSongListDrag({ seasonId, songs, songCount, onAdd }: SeasonSongListDragProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: getSeasonDroppableId(seasonId) });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4",
+        isOver && "ring-2 ring-blue-200/80 dark:ring-blue-500/40",
+      )}
+    >
+      <SortableContext items={songs.map((song) => song.id)} strategy={verticalListSortingStrategy}>
+        {songCount === 0 ? (
+          <EmptySongState onAdd={onAdd} />
+        ) : (
+          <div className="space-y-2">
+            {songs.map((song) => (
+              <SortableSongItem key={song.id} song={song} />
+            ))}
+          </div>
+        )}
+      </SortableContext>
+    </div>
+  );
+}
+
+function SeasonSongListStatic({ songs, songCount, onAdd }: SeasonSongListProps) {
+  return (
+    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4">
+      {songCount === 0 ? (
+        <EmptySongState onAdd={onAdd} />
+      ) : (
+        <div className="space-y-2">
+          {songs.map((song) => (
+            <SongItem key={song.id} song={song} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmptySongState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex items-center justify-center">
+      <div className="text-center">
+        <Music className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">No songs yet</p>
+        <Button
+          size="sm"
+          className="text-xs bg-blue-500 hover:bg-blue-600 text-white"
+          onClick={onAdd}
+        >
+          <Plus className="mr-1 h-3 w-3" />
+          Add song
+        </Button>
+      </div>
     </div>
   );
 }

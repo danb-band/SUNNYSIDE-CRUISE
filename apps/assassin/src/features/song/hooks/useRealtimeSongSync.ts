@@ -23,6 +23,20 @@ export const useRealtimeSongSync = () => {
       updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
     };
 
+    const removeSongFromAllSeasons = (songId: string, excludeSeasonId?: string) => {
+      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
+
+      cachedLists.forEach(([key, data]) => {
+        if (!data) return;
+        if (!Array.isArray(key) || key[1] !== "bySeason") return;
+        const seasonId = key[2] as string | undefined;
+        if (!seasonId) return;
+        if (excludeSeasonId && seasonId === excludeSeasonId) return;
+
+        updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
+      });
+    };
+
     const upsertSeasonSong = (seasonId: string, song: Song) => {
       queryClient.setQueryData(songKeys.detail(song.id), song);
 
@@ -57,6 +71,10 @@ export const useRealtimeSongSync = () => {
         }
 
         if (eventType === "UPDATE") {
+          if (nextSong.id) {
+            removeSongFromAllSeasons(nextSong.id, nextSong.seasonId);
+          }
+
           if (
             prevSong?.seasonId &&
             nextSong.seasonId &&
