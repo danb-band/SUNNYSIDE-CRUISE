@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createSongSchema, updateSongSchema, SongUpdatePayload } from "../schema";
 
 export type SongFormData = {
@@ -48,6 +48,31 @@ export const useSongForm = (props: UseSongFormProps) => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (mode !== "update") return;
+    if (isDirty || isSubmitting) return;
+
+    setFormData({
+      seasonId: initialData.seasonId || "",
+      name: initialData.name || "",
+      artist: initialData.artist || "",
+      description: initialData.description || "",
+      youtubeUrl: initialData.youtubeUrl || "",
+      sortOrder: initialData.sortOrder || 0,
+    });
+    setErrors({});
+  }, [
+    initialData.seasonId,
+    initialData.name,
+    initialData.artist,
+    initialData.description,
+    initialData.youtubeUrl,
+    initialData.sortOrder,
+    isDirty,
+    isSubmitting,
+    mode,
+  ]);
 
   const validateField = useCallback(
     (field: keyof SongFormData, value: unknown): string | undefined => {
@@ -129,6 +154,9 @@ export const useSongForm = (props: UseSongFormProps) => {
         await props.onSubmit(formData);
       }
       setIsDirty(false);
+      if (props.mode === "create") {
+        resetForm();
+      }
       return true;
     } catch (error) {
       setErrors({
@@ -137,7 +165,6 @@ export const useSongForm = (props: UseSongFormProps) => {
       return false;
     } finally {
       setIsSubmitting(false);
-      resetForm();
     }
   }, [validateForm, props, formData, resetForm]);
 
