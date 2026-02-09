@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DragEndEvent, DragStartEvent, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Song } from "../schema";
@@ -29,7 +29,7 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
   const sortOrderGap = 100;
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 4,
       },
