@@ -54,13 +54,12 @@ function FormField({ label, htmlFor, required, icon, children }: FormFieldProps)
 }
 
 export function AddSongDialog({ seasonId, open, onOpenChange, onSubmit }: AddSongDialogProps) {
-  const { validateSongData, getNextSortOrder } = useSongLogic(seasonId);
+  const { validateSongData } = useSongLogic(seasonId);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useSongHandlers({
     mode: "create",
     initialData: {
       seasonId,
-      sortOrder: getNextSortOrder(),
     },
   });
 
