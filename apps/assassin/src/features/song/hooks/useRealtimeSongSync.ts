@@ -52,7 +52,6 @@ export const useRealtimeSongSync = () => {
     const songsChannel = supabase
       .channel("realtime:song")
       .on("postgres_changes", { event: "*", schema: "public", table: "song" }, (payload) => {
-        console.log("Song payload:", payload);
         const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
         const nextSong = payload.new as Song | undefined;
         const prevSong = payload.old as Song | undefined;
