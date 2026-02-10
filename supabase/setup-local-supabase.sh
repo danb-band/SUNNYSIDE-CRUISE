@@ -22,7 +22,17 @@ supabase start
 status_json=$(supabase status --output json)
 
 # Create demo auth user (idempotent)
-STATUS_JSON="$status_json" python - <<'PY'
+python_cmd=""
+if command -v python3 >/dev/null 2>&1; then
+  python_cmd="python3"
+elif command -v python >/dev/null 2>&1; then
+  python_cmd="python"
+else
+  echo "Python not found. Install with: brew install python" >&2
+  exit 1
+fi
+
+STATUS_JSON="$status_json" "$python_cmd" - <<'PY'
 import json
 import os
 import subprocess
@@ -55,6 +65,48 @@ PY
 
 # Apply Prisma schema
 pnpm assassin exec prisma db push
+
+# Ensure realtime publication + replica identity for core tables
+cat <<'SQL' | docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'season' AND relnamespace = 'public'::regnamespace) THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.season;
+    EXCEPTION WHEN duplicate_object THEN
+      NULL;
+    END;
+    ALTER TABLE public.season REPLICA IDENTITY FULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'song' AND relnamespace = 'public'::regnamespace) THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.song;
+    EXCEPTION WHEN duplicate_object THEN
+      NULL;
+    END;
+    ALTER TABLE public.song REPLICA IDENTITY FULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'comment' AND relnamespace = 'public'::regnamespace) THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.comment;
+    EXCEPTION WHEN duplicate_object THEN
+      NULL;
+    END;
+    ALTER TABLE public.comment REPLICA IDENTITY FULL;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'player' AND relnamespace = 'public'::regnamespace) THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.player;
+    EXCEPTION WHEN duplicate_object THEN
+      NULL;
+    END;
+    ALTER TABLE public.player REPLICA IDENTITY FULL;
+  END IF;
+END $$;
+SQL
 
 # Seed demo data
 cat <<'SQL' | docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres
