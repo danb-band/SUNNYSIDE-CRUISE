@@ -2,26 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { SongDetailModal } from "./SongDetailModal";
-import type { Song } from "@features/song/schema";
-import type { Player } from "@/features/player/schema";
 
 export function SongModalRoute({
-  song,
-  initialPlayers,
+  songId,
 }: {
-  song: Song;
-  initialPlayers?: Player[];
+  songId: string;
 }) {
   const router = useRouter();
 
   return (
     <SongDetailModal
-      song={song}
+      songId={songId}
       open={true}
       onOpenChange={(isOpen) => {
         if (!isOpen) router.back();
       }}
-      initialPlayers={initialPlayers}
     />
   );
 }

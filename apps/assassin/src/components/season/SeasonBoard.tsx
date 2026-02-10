@@ -1,5 +1,4 @@
 import { Season } from "@features/season/schema";
-import type { Song } from "@features/song/schema";
 import { SeasonColumn } from "./SeasonColumn";
 import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
@@ -8,10 +7,9 @@ import { SongItem } from "../song/SongItem";
 
 interface SeasonBoardProps {
   seasons: Season[];
-  songsBySeason: Record<string, Song[]>;
 }
 
-export function SeasonBoard({ seasons, songsBySeason }: SeasonBoardProps) {
+export function SeasonBoard({ seasons }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
   useRealtimeSongSync();
   const { sensors, activeSong, handleDragStart, handleDragCancel, handleDragEnd } = useSongDragDrop(
@@ -42,21 +40,12 @@ export function SeasonBoard({ seasons, songsBySeason }: SeasonBoardProps) {
           <div className="h-full min-h-0">
             <div className="flex h-full overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth sm:hidden">
               {sortedSeasons.map((season) => (
-                <SeasonColumn
-                  key={season.id}
-                  season={season}
-                  initialSongs={songsBySeason[season.id] ?? []}
-                  variant="carousel"
-                />
+                <SeasonColumn key={season.id} season={season} variant="carousel" />
               ))}
             </div>
             <div className="hidden h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 auto-rows-fr sm:grid">
               {sortedSeasons.map((season) => (
-                <SeasonColumn
-                  key={season.id}
-                  season={season}
-                  initialSongs={songsBySeason[season.id] ?? []}
-                />
+                <SeasonColumn key={season.id} season={season} />
               ))}
             </div>
           </div>

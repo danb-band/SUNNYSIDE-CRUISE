@@ -7,20 +7,9 @@ import { SeasonBoard } from "./SeasonBoard";
 import { LogoutButton } from "@/components/common/LogoutButton";
 import { useSeasons } from "@/features/season/queries/useSeasons";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
-import type { Season } from "@/features/season/schema";
-import type { Song } from "@/features/song/schema";
-
-interface SeasonPageClientProps {
-  seasons: Season[];
-  songsBySeason: Record<string, Song[]>;
-}
-
-export function SeasonPageClient({
-  seasons: initialSeasons,
-  songsBySeason,
-}: SeasonPageClientProps) {
+export function SeasonPageClient() {
   const [showArchived, setShowArchived] = useState(false);
-  const seasonsQuery = useSeasons(initialSeasons);
+  const seasonsQuery = useSeasons();
   const seasons = seasonsQuery.data ?? [];
   useRealtimeSeasonSync();
 
@@ -53,7 +42,7 @@ export function SeasonPageClient({
             <LogoutButton />
           </div>
           <div className="flex-1 min-h-0">
-            <SeasonBoard seasons={displayedSeasons} songsBySeason={songsBySeason} />
+            <SeasonBoard seasons={displayedSeasons} />
           </div>
         </div>
       </div>

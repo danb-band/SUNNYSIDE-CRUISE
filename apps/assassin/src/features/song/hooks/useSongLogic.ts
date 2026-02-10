@@ -4,8 +4,8 @@ import type { SongFormData } from "./useSongForm";
 import { useSongsBySeason } from "../queries/useSongsBySeason";
 import { createSongSortOrderHelpers } from "../utils/songSortOrderHelpers";
 
-export const useSongLogic = (seasonId: string, initialSongs: Song[] = []) => {
-  const { data: songs = initialSongs } = useSongsBySeason(seasonId, initialSongs);
+export const useSongLogic = (seasonId: string) => {
+  const { data: songs = [] } = useSongsBySeason(seasonId);
 
   const { sortedSongs } = useMemo(() => createSongSortOrderHelpers(songs), [songs]);
 

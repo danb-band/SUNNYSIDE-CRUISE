@@ -6,17 +6,15 @@ import { Users, Plus } from "lucide-react";
 import { usePlayerLogic } from "@/features/player/hooks/usePlayerLogic";
 import { PlayerInput } from "./PlayerInput";
 import { PlayerItem } from "./PlayerItem";
-import type { Player } from "@/features/player/schema";
 import { useRealtimePlayerSync } from "@/features/player/hooks/useRealtimePlayerSync";
 
 interface PlayerSectionProps {
   songId: string;
-  initialPlayers?: Player[];
 }
 
-export function PlayerSection({ songId, initialPlayers }: PlayerSectionProps) {
+export function PlayerSection({ songId }: PlayerSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const { players } = usePlayerLogic(songId, initialPlayers);
+  const { players } = usePlayerLogic(songId);
   useRealtimePlayerSync();
 
   return (

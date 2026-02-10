@@ -1,9 +1,13 @@
 import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import { SongDetailPage } from "@/components/song/SongDetailPage";
-import SeasonService from "@features/season/service";
-import SongService from "@features/song/service";
-import PlayerService from "@features/player/service";
-import type { Song } from "@features/song/schema";
+import { getSeasonsAction } from "@features/season/actions";
+import { seasonKeys } from "@features/season/queries/keys";
+import { getSongAction, getSongsBySeasonAction } from "@features/song/actions";
+import { songKeys } from "@features/song/queries/keys";
+import { getPlayersBySongAction } from "@features/player/actions";
+import { playerKeys } from "@features/player/queries/keys";
+import { getQueryClient } from "@libs/react-query/getQueryClient";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 
 interface Props {
@@ -13,28 +17,40 @@ interface Props {
 export default async function SongPage({ params }: Props) {
   const { songId } = await params;
 
-  const [song, seasons, players] = await Promise.all([
-    SongService.getSongById(songId),
-    SeasonService.getAllSeasons(),
-    PlayerService.getPlayersBySongId(songId),
-  ]);
+  const queryClient = getQueryClient();
+
+  const song = await queryClient.fetchQuery({
+    queryKey: songKeys.detail(songId),
+    queryFn: () => getSongAction(songId),
+  });
 
   if (!song) {
     notFound();
   }
 
-  const songsBySeasonEntries = await Promise.all(
-    seasons.map(async (season) => {
-      const songs = await SongService.getSongsBySeasonId(season.id);
-      return [season.id, songs] as const;
-    }),
+  const seasons = await queryClient.fetchQuery({
+    queryKey: seasonKeys.lists(),
+    queryFn: getSeasonsAction,
+  });
+
+  await Promise.all(
+    seasons.map((season) =>
+      queryClient.prefetchQuery({
+        queryKey: songKeys.bySeason(season.id),
+        queryFn: () => getSongsBySeasonAction(season.id),
+      }),
+    ),
   );
-  const songsBySeason = Object.fromEntries(songsBySeasonEntries) as Record<string, Song[]>;
+
+  await queryClient.prefetchQuery({
+    queryKey: playerKeys.bySong(songId),
+    queryFn: () => getPlayersBySongAction(songId),
+  });
 
   return (
-    <>
-      <SeasonPageClient seasons={seasons} songsBySeason={songsBySeason} />
-      <SongDetailPage song={song} initialPlayers={players} />
-    </>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <SeasonPageClient />
+      <SongDetailPage songId={songId} />
+    </HydrationBoundary>
   );
 }

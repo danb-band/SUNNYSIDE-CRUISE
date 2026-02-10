@@ -1,23 +1,36 @@
 import { SeasonPageClient } from "@/components/season/SeasonPageClient";
-import SeasonService from "@features/season/service";
-import SongService from "@features/song/service";
-import type { Song } from "@features/song/schema";
+import { getSeasonsAction } from "@features/season/actions";
+import { getSongsBySeasonAction } from "@features/song/actions";
+import { seasonKeys } from "@features/season/queries/keys";
+import { songKeys } from "@features/song/queries/keys";
+import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { cacheLife, cacheTag } from "next/cache";
 import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 export default async function Home() {
   "use cache";
   cacheTag(SEASON_BOARD_CACHE_TAG);
   cacheLife("max");
 
-  const seasons = await SeasonService.getAllSeasons();
-  const songsBySeasonEntries = await Promise.all(
-    seasons.map(async (season) => {
-      const songs = await SongService.getSongsBySeasonId(season.id);
-      return [season.id, songs] as const;
-    }),
-  );
-  const songsBySeason = Object.fromEntries(songsBySeasonEntries) as Record<string, Song[]>;
+  const queryClient = getQueryClient();
+  const seasons = await queryClient.fetchQuery({
+    queryKey: seasonKeys.lists(),
+    queryFn: getSeasonsAction,
+  });
 
-  return <SeasonPageClient seasons={seasons} songsBySeason={songsBySeason} />;
+  await Promise.all(
+    seasons.map((season) =>
+      queryClient.prefetchQuery({
+        queryKey: songKeys.bySeason(season.id),
+        queryFn: () => getSongsBySeasonAction(season.id),
+      }),
+    ),
+  );
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <SeasonPageClient />
+    </HydrationBoundary>
+  );
 }
