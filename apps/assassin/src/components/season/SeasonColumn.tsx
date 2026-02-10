@@ -21,11 +21,10 @@ import { getSeasonDroppableId } from "@/features/song/hooks/useSongDragDrop";
 
 interface SeasonColumnProps {
   season: Season;
-  initialSongs: Song[];
   variant?: "carousel" | "grid";
 }
 
-export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonColumnProps) {
+export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
   const dragEnabled = variant !== "carousel";
   const isArchived = season.isArchived;
   const [isEditing, setIsEditing] = useState(false);
@@ -33,7 +32,7 @@ export function SeasonColumn({ season, initialSongs, variant = "grid" }: SeasonC
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
 
-  const { songs } = useSongLogic(season.id, initialSongs);
+  const { songs } = useSongLogic(season.id);
   const songCount = songs.length;
 
   const handleSave = async () => {

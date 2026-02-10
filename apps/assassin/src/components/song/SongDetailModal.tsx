@@ -10,27 +10,24 @@ import { SongDetailContent, extractYoutubeId } from "./SongDetailContent";
 import { CommentSection } from "@/components/comment/CommentSection";
 import { PlayerSection } from "@/components/player/PlayerSection";
 import { PlayerSectionSkeleton } from "@/components/player/PlayerSectionSkeleton";
-import type { Song } from "@features/song/schema";
-import type { Player } from "@/features/player/schema";
 import { useSong } from "@/features/song/queries/useSong";
 
 interface SongDetailModalProps {
-  song: Song;
+  songId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialPlayers?: Player[];
 }
 
-export function SongDetailModal({
-  song: initSong,
-  open,
-  onOpenChange,
-  initialPlayers,
-}: SongDetailModalProps) {
-  const song = useSong(initSong.id, initSong).data ?? initSong;
+export function SongDetailModal({ songId, open, onOpenChange }: SongDetailModalProps) {
+  const pathname = usePathname();
+
+  const song = useSong(songId).data;
+
+  if (!song) {
+    return null;
+  }
 
   const youtubeId = extractYoutubeId(song.youtubeUrl);
-  const pathname = usePathname();
   const isActiveRoute = pathname === `/song/${song.id}`;
   const shouldRenderIframe = Boolean(youtubeId && isActiveRoute);
 
@@ -95,7 +92,7 @@ export function SongDetailModal({
               {/* 스크롤 영역 (연주자 목록) */}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <Suspense fallback={<PlayerSectionSkeleton />}>
-                  <PlayerSection songId={song.id} initialPlayers={initialPlayers} />
+                  <PlayerSection songId={song.id} />
                 </Suspense>
               </div>
             </div>
