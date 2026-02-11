@@ -39,16 +39,25 @@ jobs:
       - name: Build
         run: pnpm assassin build
 
-      - name: Deploy to EC2
+      - name: Package build artifacts
+        run: |
+          cd apps/assassin
+          mkdir -p deploy
+          cp -r .next/standalone/* deploy/
+          cp -r .next/static deploy/.next
+          cp -r public deploy/public
+          tar -czf assassin.tar.gz -C deploy .
+
+      - name: Upload bundle to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "apps/assassin/.next/standalone,apps/assassin/.next/static,apps/assassin/public"
+          source: "apps/assassin/assassin.tar.gz"
           target: ~/SUNNYSIDE-CRUISE
 
-      - name: Restart PM2
+      - name: Deploy & Run
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -56,6 +65,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/SUNNYSIDE-CRUISE
+            rm -rf assassin
+            mkdir assassin
+            tar -xzf assassin.tar.gz -C assassin
+            cd assassin
             pm2 describe assassin > /dev/null \
               && pm2 restart assassin \
-              || pm2 start standalone/apps/assassin/server.js --name assassin
+              || pm2 start server.js --name assassin
+
