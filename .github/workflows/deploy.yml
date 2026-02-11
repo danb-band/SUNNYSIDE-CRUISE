@@ -67,9 +67,9 @@ jobs:
             cd ~/SUNNYSIDE-CRUISE
             rm -rf assassin
             mkdir assassin
-            tar -xzf assassin.tar.gz -C assassin
+            tar -xzf apps/assassin/assassin.tar.gz -C assassin
             cd assassin
             pm2 describe assassin > /dev/null \
               && pm2 restart assassin \
-              || pm2 start server.js --name assassin
+              || pm2 start apps/assassin/server.js --name assassin
 
