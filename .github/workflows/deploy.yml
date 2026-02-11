@@ -1,3 +1,5 @@
+name: Build and Deploy
+
 on:
   push:
     branches: [main]
@@ -5,47 +7,51 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      
+
       - name: Install pnpm
         run: npm install -g pnpm
-      
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Create .env
         run: |
           cd apps/assassin
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env
-      
+          cat << EOF > .env
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DIRECT_URL=${{ secrets.DIRECT_URL }}
+          EOF
+
       - name: Generate Prisma Client
-        run: |
-          pnpm assassin db:generate
-      
+        run: pnpm assassin db:generate
+
       - name: Build
-        run: |
-          pnpm assassin build 
-      
+        run: pnpm assassin build
+
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "apps/assassin/.next/standalone,apps/assassin/.next/static,apps/assassin/public"
-          target: "~/SUNNYSIDE-CRUISE"
-      
+          source: |
+            apps/assassin/.next/standalone/*
+            apps/assassin/.next/static
+            apps/assassin/public
+          target: ~/SUNNYSIDE-CRUISE/assassin
+          strip_components: 3
+
       - name: Restart PM2
         uses: appleboy/ssh-action@master
         with:
@@ -53,5 +59,5 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            cd ~/SUNNYSIDE-CRUISE/assassin/standalone
             pm2 restart assassin
-            node .next/standalone/server.js
