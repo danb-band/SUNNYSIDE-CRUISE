@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "apps/assassin/.next/standalone,apps/assassin/.next/static,apps/assassin/public"
-          target: ~/SUNNYSIDE-CRUISE/assassin
+          target: ~/SUNNYSIDE-CRUISE
 
       - name: Restart PM2
         uses: appleboy/ssh-action@master
@@ -55,7 +55,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/SUNNYSIDE-CRUISE/assassin
+            cd ~/SUNNYSIDE-CRUISE
             pm2 describe assassin > /dev/null \
               && pm2 restart assassin \
-              || pm2 start .next/standalone/server.js --name assassin
+              || pm2 start standalone/apps/assassin/server.js --name assassin
