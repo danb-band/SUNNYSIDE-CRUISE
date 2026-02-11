@@ -27,11 +27,11 @@ jobs:
       
       - name: Generate Prisma Client
         run: |
-          cd apps/assassin
-          pnpm db:generate
+          pnpm assassin db:generate
       
       - name: Build
-        run: pnpm build 
+        run: |
+          pnpm assassin build 
       
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
