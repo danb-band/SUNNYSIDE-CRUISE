@@ -39,21 +39,6 @@ jobs:
       - name: Build
         run: pnpm assassin build
 
-      - name: Debug build output
-        run: |
-          echo "=== apps/assassin ==="
-          ls -al apps/assassin || true
-
-          echo "=== .next ==="
-          ls -al apps/assassin/.next || true
-
-          echo "=== standalone ==="
-          ls -al apps/assassin/.next/standalone || true
-
-          echo "=== static ==="
-          ls -al apps/assassin/.next/static || true
-
-
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
         with:
@@ -62,7 +47,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "apps/assassin/.next/standalone,apps/assassin/.next/static,apps/assassin/public"
           target: ~/SUNNYSIDE-CRUISE/assassin
-          strip_components: 3
 
       - name: Restart PM2
         uses: appleboy/ssh-action@master
@@ -71,5 +55,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/SUNNYSIDE-CRUISE/assassin/standalone
-            pm2 restart assassin
+            cd ~/SUNNYSIDE-CRUISE/assassin
+            pm2 describe assassin > /dev/null \
+              && pm2 restart assassin \
+              || pm2 start .next/standalone/server.js --name assassin
