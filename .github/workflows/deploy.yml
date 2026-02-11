@@ -60,10 +60,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            apps/assassin/.next/standalone
-            apps/assassin/.next/static
-            apps/assassin/public
+          source: "apps/assassin/.next/standalone,apps/assassin/.next/static,apps/assassin/public"
           target: ~/SUNNYSIDE-CRUISE/assassin
           strip_components: 3
 
