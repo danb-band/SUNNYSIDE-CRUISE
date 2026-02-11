@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   turbopack: {},
+  output: "standalone",
 };
 
 export default withPWA({
