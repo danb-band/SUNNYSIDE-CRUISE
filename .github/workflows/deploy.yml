@@ -42,9 +42,12 @@ jobs:
         run: |
           cd apps/assassin
           mkdir -p deploy
+          
           cp -r .next/standalone/. deploy/
-          mkdir -p deploy/.next/static
-          cp -r .next/static/. deploy/.next/static/
+
+          mkdir -p deploy/.next/build/static
+          cp -r .next/build/static/. deploy/.next/build/static/
+
           mkdir -p deploy/public
           cp -r public/. deploy/public/
           tar -czf ../../assassin.tar.gz -C deploy .
