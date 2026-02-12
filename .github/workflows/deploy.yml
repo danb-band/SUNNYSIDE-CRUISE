@@ -56,6 +56,10 @@ jobs:
 
           mkdir -p deploy/public
           cp -r public/. deploy/public/
+
+          echo "=== Deploy folder structure ==="
+          ls -la deploy/.next/
+          ls -la deploy/.next/static/ || echo "static not copied"
           tar -czf ../../assassin.tar.gz -C deploy .
 
       - name: Upload bundle to EC2
