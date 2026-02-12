@@ -38,15 +38,21 @@ jobs:
       - name: Build
         run: pnpm assassin build
 
+      - name: Debug - Check static folder
+        run: |
+          cd apps/assassin
+          ls -la .next/
+          ls -la .next/static/ || echo "static folder not found"
+
       - name: Package build artifacts
         run: |
           cd apps/assassin
           mkdir -p deploy
-          
+
           cp -r .next/standalone/. deploy/
 
           mkdir -p deploy/.next/build/static
-          cp -r .next/build/static/. deploy/.next/build/static/
+          cp -r .next/static/. deploy/.next/static/
 
           mkdir -p deploy/public
           cp -r public/. deploy/public/
