@@ -38,12 +38,6 @@ jobs:
       - name: Build
         run: pnpm assassin build
 
-      - name: Debug - Check static folder
-        run: |
-          cd apps/assassin
-          ls -la .next/
-          ls -la .next/static/ || echo "static folder not found"
-
       - name: Package build artifacts
         run: |
           cd apps/assassin
@@ -51,15 +45,10 @@ jobs:
 
           cp -r .next/standalone/. deploy/
 
-          mkdir -p deploy/.next/build/static
-          cp -r .next/static/. deploy/.next/static/
-
-          mkdir -p deploy/public
-          cp -r public/. deploy/public/
-
-          echo "=== Deploy folder structure ==="
-          ls -la deploy/.next/
-          ls -la deploy/.next/static/ || echo "static not copied"
+          mkdir -p deploy/apps/assassin/.next/static
+          cp -r .next/static/. deploy/apps/assassin/.next/static/
+          mkdir -p deploy/apps/assassin/public
+          cp -r public/. deploy/apps/assassin/public/
           tar -czf ../../assassin.tar.gz -C deploy .
 
       - name: Upload bundle to EC2
