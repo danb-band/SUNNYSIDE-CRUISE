@@ -23,11 +23,11 @@ export function LikeButton({ song }: LikeButtonProps) {
     <Button
       type="button"
       variant="ghost"
-      size="icon"
+      size="sm"
       onClick={() => toggleLike()}
       disabled={isPending}
       className={cn(
-        "h-8 w-auto px-2 gap-1.5 text-sm transition-colors",
+        "w-auto px-2 text-sm transition-colors",
         liked ? "text-red-500 hover:text-red-600" : "text-slate-400 hover:text-red-500",
       )}
       aria-label={liked ? "좋아요 취소" : "좋아요"}
