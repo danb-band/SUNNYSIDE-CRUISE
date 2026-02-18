@@ -1,5 +1,5 @@
+import { getCurrentUserIdAction } from "@/features/user/actions";
 import { useEffect, useState } from "react";
-import { getCurrentUserIdAction } from "@/features/comment/actions";
 
 export const useCurrentUserId = () => {
   const [userId, setUserId] = useState<string | null>(null);
