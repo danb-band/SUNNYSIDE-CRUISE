@@ -5,6 +5,7 @@ import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeasonBoard } from "./SeasonBoard";
 import { LogoutButton } from "@/components/common/LogoutButton";
+import { TabNav } from "@/components/common/TabNav";
 import { useSeasons } from "@/features/season/queries/useSeasons";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
 export function SeasonPageClient() {
@@ -21,6 +22,7 @@ export function SeasonPageClient() {
     <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 h-full">
         <div className="bg-white dark:bg-slate-900 rounded-lg p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col min-h-0">
+          <TabNav />
           <div className="mb-4 sm:mb-6 flex items-center justify-between flex-shrink-0">
             <Button
               size="sm"
