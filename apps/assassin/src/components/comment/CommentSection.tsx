@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { MessageSquare, Loader2 } from "lucide-react";
 import { useInfiniteCommentsBySong } from "@/features/comment/queries/useInfiniteCommentsBySong";
-import { useCurrentUserId } from "@/features/comment/hooks/useCurrentUserId";
+import { useCurrentUserId } from "@/features/user/hooks/useCurrentUserId";
 import { CommentInput } from "./CommentInput";
 import { CommentItem } from "./CommentItem";
 import { useRealtimeCommentSync } from "@/features/comment/hooks/useRealtimeCommentSync";

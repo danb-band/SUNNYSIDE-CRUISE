@@ -17,7 +17,10 @@ export const createSongSchema = z.object({
 export const updateSongSchema = createSongSchema.partial().omit({ userId: true });
 
 // DB에서 받은 응답 스키마
-export const songSchema = createSongSchema.extend(dbSchema.shape);
+export const songSchema = createSongSchema.extend({
+  ...dbSchema.shape,
+  likeCount: z.number().int().min(0).default(0),
+});
 
 export type SongPayload = z.infer<typeof createSongSchema>;
 export type SongUpdatePayload = z.infer<typeof updateSongSchema>;
