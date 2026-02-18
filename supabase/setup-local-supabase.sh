@@ -21,6 +21,18 @@ supabase start
 
 status_json=$(supabase status --output json)
 
+# Derive local DB URL and container name from supabase status
+local_db_url=$(echo "$status_json" | python3 -c "import json,sys; s=json.load(sys.stdin); print(s['DB_URL'])")
+db_container=$(docker ps --filter "name=supabase_db_" --format "{{.Names}}" | head -1)
+
+if [ -z "$db_container" ]; then
+  echo "Could not find supabase_db container. Is Supabase running?" >&2
+  exit 1
+fi
+
+echo "Using DB container: $db_container"
+echo "Using DB URL: $local_db_url"
+
 # Create demo auth user (idempotent)
 python_cmd=""
 if command -v python3 >/dev/null 2>&1; then
@@ -63,11 +75,15 @@ subprocess.run(
 )
 PY
 
-# Apply Prisma schema
-pnpm assassin exec prisma db push
+# Drop cross-schema FK before Prisma introspects (Prisma cannot manage auth schema)
+docker exec -i "$db_container" psql -U postgres -d postgres \
+  -c "ALTER TABLE IF EXISTS public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;"
+
+# Apply Prisma schema (explicitly use local DB URL so prisma.config.ts doesn't fall back to remote)
+DATABASE_URL="$local_db_url" DIRECT_URL="$local_db_url" pnpm assassin exec prisma db push
 
 # Ensure realtime publication + replica identity for core tables
-cat <<'SQL' | docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres
+cat <<'SQL' | docker exec -i "$db_container" psql -U postgres -d postgres
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'season' AND relnamespace = 'public'::regnamespace) THEN
@@ -113,11 +129,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for migration in "$SCRIPT_DIR/migrations"/*.sql; do
   [ -f "$migration" ] || continue
   echo "Applying migration: $(basename "$migration")"
-  docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres < "$migration"
+  docker exec -i "$db_container" psql -U postgres -d postgres < "$migration"
 done
 
 # Seed demo data
-cat <<'SQL' | docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres
+cat <<'SQL' | docker exec -i "$db_container" psql -U postgres -d postgres
 BEGIN;
 
 -- Profile
@@ -158,6 +174,15 @@ FROM
   (SELECT id FROM auth.users WHERE email = 'demo@local.test' LIMIT 1) u,
   (SELECT id FROM song ORDER BY "createdAt" ASC LIMIT 1) s
 WHERE NOT EXISTS (SELECT 1 FROM comment WHERE content = 'Demo comment');
+
+-- Calendar events
+INSERT INTO calendar_event (id, title, location, "startDate", "endDate")
+SELECT gen_random_uuid(), v.title, v.location, v.start_date::timestamptz, v.end_date::timestamptz
+FROM (VALUES
+  ('합주', '합주실 A', now() + interval '2 days', now() + interval '2 days' + interval '2 hours'),
+  ('공연', '대공연장', now() + interval '7 days', now() + interval '7 days' + interval '3 hours')
+) AS v(title, location, start_date, end_date)
+WHERE NOT EXISTS (SELECT 1 FROM calendar_event WHERE title = v.title);
 
 COMMIT;
 SQL
