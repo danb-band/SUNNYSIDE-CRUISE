@@ -36,13 +36,26 @@ ALTER TABLE public.song
   ADD COLUMN IF NOT EXISTS "likeCount" integer NOT NULL DEFAULT 0;
 
 -- 3. Realtime
-ALTER TABLE public.song_like REPLICA IDENTITY FULL;
-
 DO $$
 BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.song_like;
-EXCEPTION WHEN duplicate_object THEN
-  NULL;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_class
+    WHERE relname = 'song_like'
+      AND relnamespace = 'public'::regnamespace
+  ) THEN
+    ALTER TABLE public.song_like REPLICA IDENTITY FULL;
+
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime'
+        AND schemaname = 'public'
+        AND tablename = 'song_like'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.song_like;
+    END IF;
+  END IF;
 END $$;
 
 -- 4. RLS
