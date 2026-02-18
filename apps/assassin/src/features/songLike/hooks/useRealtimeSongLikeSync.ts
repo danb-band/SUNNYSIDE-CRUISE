@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Song } from "@features/song/schema";
-import { songKeys } from "@features/song/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
-import { getCurrentUserIdAction } from "../actions";
 import { songLikeKeys } from "../queries/keys";
+import { useCurrentUserId } from "@/features/user/hooks/useCurrentUserId";
 
 type SongLikeRow = {
   id?: string;
@@ -14,12 +12,9 @@ type SongLikeRow = {
 
 export const useRealtimeSongLikeSync = (songId: string) => {
   const queryClient = useQueryClient();
-  const [userId, setUserId] = useState<string | null>(null);
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
-  useEffect(() => {
-    getCurrentUserIdAction().then(setUserId);
-  }, []);
+  const userId = useCurrentUserId();
 
   useEffect(() => {
     if (!userId) return;

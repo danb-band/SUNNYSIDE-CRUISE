@@ -1,10 +1,10 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/libs/shadcn/utils";
 import { useSongLiked } from "@/features/songLike/queries/useSongLiked";
 import { useToggleLike } from "@/features/songLike/mutations/useToggleLike";
+import { useRealtimeSongLikeSync } from "@/features/songLike/hooks/useRealtimeSongLikeSync";
 import type { Song } from "@features/song/schema";
 
 interface LikeButtonProps {
@@ -12,8 +12,11 @@ interface LikeButtonProps {
 }
 
 export function LikeButton({ song }: LikeButtonProps) {
-  const { data: liked = false } = useSongLiked(song.id);
+  const { data: likeId = null } = useSongLiked(song.id);
   const { mutate: toggleLike, isPending } = useToggleLike(song.id);
+  const liked = Boolean(likeId);
+
+  useRealtimeSongLikeSync(song.id);
 
   return (
     <button
