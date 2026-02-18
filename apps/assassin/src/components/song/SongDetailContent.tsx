@@ -8,6 +8,7 @@ import { Music, User, Link2, FileText, Loader2, Pencil, Trash2, Save, X } from "
 import { cn } from "@/libs/shadcn/utils";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useSongHandlers } from "@/features/song/hooks/useSongHandlers";
+import { LikeButton } from "./LikeButton";
 import type { Song } from "@features/song/schema";
 
 interface SongDetailContentProps {
@@ -221,6 +222,7 @@ export function SongDetailContent({ song, onClose }: SongDetailContentProps) {
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
+                <LikeButton song={song} />
                 <Button
                   variant="ghost"
                   size="icon"
