@@ -87,7 +87,7 @@ export const useCalendarEventHandlers = (props: UseCalendarEventHandlersProps) =
     [formActions],
   );
 
-  const handleDelete = useCallback(
+  const handleDeleteCalendarEvent = useCallback(
     async (id: string) => {
       try {
         await deleteCalendarEventMutation.mutateAsync(id);
@@ -113,7 +113,7 @@ export const useCalendarEventHandlers = (props: UseCalendarEventHandlersProps) =
     handleChangeField,
     handleChangeStartValue,
     handleChangeEndValue,
-    handleDelete,
+    handleDeleteCalendarEvent,
     isProcessing,
   };
 };
