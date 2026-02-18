@@ -108,43 +108,57 @@ BEGIN
 END $$;
 SQL
 
+# Apply SQL migrations
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for migration in "$SCRIPT_DIR/migrations"/*.sql; do
+  [ -f "$migration" ] || continue
+  echo "Applying migration: $(basename "$migration")"
+  docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres < "$migration"
+done
+
 # Seed demo data
 cat <<'SQL' | docker exec -i supabase_db_SUNNYSIDE-CRUISE psql -U postgres -d postgres
 BEGIN;
-WITH demo_profile AS (
-  INSERT INTO profiles (id, name)
-  SELECT id, 'Demo User'
-  FROM auth.users
-  WHERE email = 'demo@local.test'
-  ON CONFLICT (id) DO NOTHING
-  RETURNING id
-), seasons AS (
-  INSERT INTO season (id, name, "sortOrder", "isArchived")
-  VALUES
-    (gen_random_uuid(), 'Season 1', 1, false),
-    (gen_random_uuid(), 'Season 2', 2, false)
-  RETURNING id, name
-)
-INSERT INTO song (id, "seasonId", name, artist, description, "youtubeUrl", "sortOrder", "userId")
-SELECT gen_random_uuid(), seasons.id, song_data.name, song_data.artist, song_data.description,
-       song_data.youtube_url, song_data.sort_order, (SELECT id FROM demo_profile LIMIT 1)
-FROM seasons
-JOIN (
-  VALUES
-    ('Season 1', 'Song A', 'Artist A', 'Demo song A', 'https://youtu.be/dQw4w9WgXcQ', 100),
-    ('Season 1', 'Song B', 'Artist B', 'Demo song B', 'https://youtu.be/3GwjfUFyY6M', 200),
-    ('Season 2', 'Song C', 'Artist C', 'Demo song C', 'https://youtu.be/oHg5SJYRHA0', 100)
-) AS song_data(season_name, name, artist, description, youtube_url, sort_order)
-  ON song_data.season_name = seasons.name;
 
-WITH u AS (
-  SELECT id FROM auth.users WHERE email = 'demo@local.test' LIMIT 1
-), s AS (
-  SELECT id FROM song ORDER BY "createdAt" ASC LIMIT 1
-)
+-- Profile
+INSERT INTO profiles (id, name)
+SELECT id, 'Demo User' FROM auth.users WHERE email = 'demo@local.test'
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+
+-- Seasons
+INSERT INTO season (id, name, "sortOrder", "isArchived")
+SELECT gen_random_uuid(), v.name, v.sort_order, false
+FROM (VALUES ('Season 1', 1), ('Season 2', 2)) AS v(name, sort_order)
+WHERE NOT EXISTS (SELECT 1 FROM season WHERE name = v.name);
+
+-- Songs
+INSERT INTO song (id, "seasonId", name, artist, description, "youtubeUrl", "sortOrder", "userId")
+SELECT
+  gen_random_uuid(),
+  s.id,
+  v.song_name,
+  v.artist,
+  v.description,
+  v.youtube_url,
+  v.sort_order,
+  (SELECT id FROM auth.users WHERE email = 'demo@local.test' LIMIT 1)
+FROM season s
+JOIN (VALUES
+  ('Season 1', 'Song A', 'Artist A', 'Demo song A', 'https://youtu.be/dQw4w9WgXcQ', 100),
+  ('Season 1', 'Song B', 'Artist B', 'Demo song B', 'https://youtu.be/3GwjfUFyY6M', 200),
+  ('Season 2', 'Song C', 'Artist C', 'Demo song C', 'https://youtu.be/oHg5SJYRHA0', 100)
+) AS v(season_name, song_name, artist, description, youtube_url, sort_order)
+  ON v.season_name = s.name
+WHERE NOT EXISTS (SELECT 1 FROM song WHERE name = v.song_name AND "seasonId" = s.id);
+
+-- Comment
 INSERT INTO comment (id, "songId", content, "userId")
 SELECT gen_random_uuid(), s.id, 'Demo comment', u.id
-FROM u, s;
+FROM
+  (SELECT id FROM auth.users WHERE email = 'demo@local.test' LIMIT 1) u,
+  (SELECT id FROM song ORDER BY "createdAt" ASC LIMIT 1) s
+WHERE NOT EXISTS (SELECT 1 FROM comment WHERE content = 'Demo comment');
+
 COMMIT;
 SQL
 
