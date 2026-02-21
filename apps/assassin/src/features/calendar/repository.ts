@@ -7,6 +7,16 @@ async function getAllCalendarEvents() {
   });
 }
 
+async function getCalendarEventsByDateRange(startDate: Date, endDate: Date) {
+  return await prisma.calendarEvent.findMany({
+    where: {
+      startDate: { lte: endDate },
+      endDate: { gte: startDate },
+    },
+    orderBy: { startDate: "asc" },
+  });
+}
+
 async function getCalendarEventById(id: string) {
   return await prisma.calendarEvent.findUnique({ where: { id } });
 }
@@ -25,6 +35,7 @@ async function deleteCalendarEvent(id: string) {
 
 const CalendarEventRepository = {
   getAllCalendarEvents,
+  getCalendarEventsByDateRange,
   getCalendarEventById,
   createCalendarEvent,
   updateCalendarEvent,

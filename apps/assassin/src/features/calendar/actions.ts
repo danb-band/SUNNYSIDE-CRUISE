@@ -8,6 +8,10 @@ export const getCalendarEventsAction = async () => {
   return await CalendarEventService.getAllCalendarEvents();
 };
 
+export const getCalendarEventsByMonthAction = async (year: number, month: number) => {
+  return await CalendarEventService.getCalendarEventsByMonth(year, month);
+};
+
 export const createCalendarEventAction = async (data: CalendarEventPayload) => {
   const result = await CalendarEventService.createCalendarEvent(data);
   revalidateCalendar();

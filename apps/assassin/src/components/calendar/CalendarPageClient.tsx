@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, startTransition } from "react";
 import { ko } from "date-fns/locale";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { CalendarIcon, MapPin, Clock, Plus, Pencil, Trash2 } from "lucide-react";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
@@ -23,18 +24,71 @@ type DialogState =
   | { type: "delete"; event: CalendarEvent };
 
 export function CalendarPageClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // 항상 ?date= 파라미터가 있어야 함. 없으면 오늘 날짜로 맞춤
+  const urlDate = useMemo(() => {
+    const dateParam = searchParams?.get("date");
+    const d = dateParam ? new Date(dateParam) : new Date();
+    return isNaN(d.getTime()) ? new Date() : d;
+  }, [searchParams]);
+
+  const year = urlDate.getFullYear();
+  const month = urlDate.getMonth() + 1;
+
   useRealtimeCalendarEventSync();
-  const { getEventsForDay } = useCalendarEventLogic();
+  const { getEventsForDay } = useCalendarEventLogic(year, month);
   const deleteMutation = useDeleteCalendarEvent();
 
-  const [selected, setSelected] = useState<Date | undefined>(undefined);
+  const [selected, setSelected] = useState<Date | undefined>(urlDate);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(urlDate);
   const [dialogState, setDialogState] = useState<DialogState>({ type: "none" });
 
-  // 클라이언트에서만 오늘 날짜로 초기화 (hydration mismatch 방지)
-  // startTransition: non-urgent 업데이트임을 명시
+  // searchParams나 pathname이 바뀌어 urlDate가 갱신될 때 상태 동기화
   useEffect(() => {
-    startTransition(() => setSelected(new Date()));
+    startTransition(() => {
+      setSelected(urlDate);
+      setCalendarMonth(urlDate);
+    });
+  }, [urlDate]);
+
+  const updateUrlParamQuietly = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    params.set("date", `${y}-${m}-${d}`);
+    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+  };
+
+  // 최초 로드 시 ?date= 파라미터가 없으면 url에 강제로 넣고 시작
+  useEffect(() => {
+    if (!searchParams?.has("date")) {
+      updateUrlParamQuietly(new Date());
+    }
   }, []);
+
+  const handleMonthChange = (newMonth: Date) => {
+    setCalendarMonth(newMonth);
+    // 달 이동 시 1일로 설정
+    const y = newMonth.getFullYear();
+    const m = String(newMonth.getMonth() + 1).padStart(2, "0");
+    
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    params.set("date", `${y}-${m}-01`);
+    
+    // 월이 바뀌면 새로운 데이터를 가져와야 하므로 router.replace
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleSelectDate = (newDate: Date | undefined) => {
+    if (!newDate) return;
+    setSelected(newDate);
+    updateUrlParamQuietly(newDate);
+  };
 
   const selectedEvents = useMemo(
     () => (selected ? getEventsForDay(selected) : []),
@@ -77,8 +131,11 @@ export function CalendarPageClient() {
             <div className="flex-shrink-0">
               <Calendar
                 mode="single"
+                required
+                month={calendarMonth}
+                onMonthChange={handleMonthChange}
                 selected={selected}
-                onSelect={setSelected}
+                onSelect={handleSelectDate}
                 locale={ko}
                 components={{
                   DayButton: ({ day, modifiers, children, ...props }) => {
