@@ -8,9 +8,10 @@ datasource db {
 }
 
 model Profile {
-  id      String    @id @db.Uuid
-  name    String
-  comment Comment[]
+  id        String     @id @db.Uuid
+  name      String
+  comment   Comment[]
+  song_like SongLike[]
 
   @@map("profiles")
 }
@@ -59,20 +60,47 @@ model Season {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Song {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  seasonId    String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seasonId    String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   artist      String
   description String
   youtubeUrl  String
   sortOrder   BigInt
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime  @default(now()) @db.Timestamptz(6)
-  deletedAt   DateTime? @db.Timestamptz(6)
-  userId      String    @db.Uuid
+  createdAt   DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime   @default(now()) @db.Timestamptz(6)
+  deletedAt   DateTime?  @db.Timestamptz(6)
+  userId      String     @db.Uuid
+  likeCount   Int        @default(0)
   comment     Comment[]
   player      Player[]
-  season      Season    @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")
+  season      Season     @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")
+  songLike    SongLike[]
 
   @@map("song")
+}
+
+model CalendarEvent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  location  String
+  startDate DateTime @db.Timestamptz(6)
+  endDate   DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("calendar_event")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SongLike {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId    String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  profiles  Profile  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([songId, userId])
+  @@map("song_like")
 }

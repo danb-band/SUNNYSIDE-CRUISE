@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@libs/react-query/provider";
-import { SeasonBoardSkeleton } from "@/components/season/SeasonBoardSkeleton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,12 +46,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Suspense fallback={<SeasonBoardSkeleton />}>
-          <Providers>
-            {children}
-            {modal}
-          </Providers>
-        </Suspense>
+        <Providers>
+          {children}
+          {modal}
+        </Providers>
       </body>
     </html>
   );
