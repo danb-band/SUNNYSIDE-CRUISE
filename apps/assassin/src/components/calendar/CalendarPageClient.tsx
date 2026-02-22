@@ -58,7 +58,7 @@ export function CalendarPageClient() {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
     const d = String(date.getDate()).padStart(2, "0");
-    
+
     const params = new URLSearchParams(searchParams?.toString() || "");
     params.set("date", `${y}-${m}-${d}`);
     window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
@@ -76,10 +76,10 @@ export function CalendarPageClient() {
     // 달 이동 시 1일로 설정
     const y = newMonth.getFullYear();
     const m = String(newMonth.getMonth() + 1).padStart(2, "0");
-    
+
     const params = new URLSearchParams(searchParams?.toString() || "");
     params.set("date", `${y}-${m}-01`);
-    
+
     // 월이 바뀌면 새로운 데이터를 가져와야 하므로 router.replace
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
@@ -204,7 +204,7 @@ export function CalendarPageClient() {
 
               {/* 이벤트 목록 */}
               <div className="flex-1 min-h-0 overflow-y-auto">
-                {selectedEvents.length === 0 ? (
+                {!selected || selectedEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <CalendarIcon className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
                     <p className="text-sm text-slate-500 dark:text-slate-400">일정이 없습니다.</p>
@@ -215,6 +215,7 @@ export function CalendarPageClient() {
                       <EventCard
                         key={event.id}
                         event={event}
+                        selectedDate={selected}
                         onEdit={() => openEdit(event)}
                         onDelete={() => openDelete(event)}
                       />
@@ -262,18 +263,40 @@ export function CalendarPageClient() {
   );
 }
 
+function getTimeLabel(event: CalendarEvent, selectedDate: Date): string {
+  const fmt = (d: Date) =>
+    d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false });
+
+  const start = new Date(event.startDate);
+  const end = new Date(event.endDate);
+  const startDay = new Date(start.toDateString());
+  const endDay = new Date(end.toDateString());
+  const thisDay = new Date(selectedDate.toDateString());
+
+  const startsToday = startDay.getTime() === thisDay.getTime();
+  const endsToday = endDay.getTime() === thisDay.getTime();
+
+  const startOfDay = new Date(thisDay);
+  const endOfDay = new Date(thisDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+
+  if (startsToday && endsToday) return `${fmt(start)} ~ ${fmt(end)}`;
+  if (startsToday) return `${fmt(start)} ~ ${fmt(endOfDay)}`;
+  if (endsToday) return `${fmt(startOfDay)} ~ ${fmt(end)}`;
+  return "종일";
+}
+
 function EventCard({
   event,
+  selectedDate,
   onEdit,
   onDelete,
 }: {
   event: CalendarEvent;
+  selectedDate: Date;
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const start = new Date(event.startDate);
-  const end = new Date(event.endDate);
-
   return (
     <li className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 flex gap-3">
       <div className="w-0.5 rounded-full bg-blue-500 self-stretch flex-shrink-0" />
@@ -312,9 +335,7 @@ function EventCard({
         <div className="flex items-center gap-1 mt-0.5">
           <Clock className="h-3 w-3 text-slate-400 flex-shrink-0" />
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {start.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-            {" ~ "}
-            {end.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+            {getTimeLabel(event, selectedDate)}
           </p>
         </div>
       </div>
