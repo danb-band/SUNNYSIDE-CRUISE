@@ -80,6 +80,18 @@ model Song {
   @@map("song")
 }
 
+model CalendarEvent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  location  String
+  startDate DateTime @db.Timestamptz(6)
+  endDate   DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("calendar_event")
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model SongLike {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
