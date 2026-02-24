@@ -79,7 +79,7 @@ export function ConfirmDialog({
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isConfirming}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto hover:cursor-pointer"
             >
               {cancelLabel}
             </Button>
@@ -91,6 +91,7 @@ export function ConfirmDialog({
               disabled={isConfirming}
               className={cn(
                 "w-full sm:w-auto",
+                "hover:cursor-pointer",
                 tone === "destructive" && "bg-red-500 hover:bg-red-600 text-white",
               )}
             >
