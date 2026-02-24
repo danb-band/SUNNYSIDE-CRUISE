@@ -6,8 +6,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { CalendarIcon, MapPin, Clock, Plus, Pencil, Trash2 } from "lucide-react";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { TabNav } from "@/components/common/TabNav";
-import { LogoutButton } from "@/components/common/LogoutButton";
+import { AppNav } from "@/components/navigation/AppNav";
 import { cn } from "@/libs/shadcn/utils";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -121,10 +120,7 @@ export function CalendarPageClient() {
     <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 h-full">
         <div className="bg-white dark:bg-slate-900 rounded-lg p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col min-h-0">
-          <TabNav />
-          <div className="mb-4 flex items-center justify-end flex-shrink-0">
-            <LogoutButton />
-          </div>
+          <AppNav />
 
           <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6 flex-1 min-h-0 overflow-hidden">
             {/* 달력 */}

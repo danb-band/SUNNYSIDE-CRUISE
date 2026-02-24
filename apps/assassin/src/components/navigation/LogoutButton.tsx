@@ -20,7 +20,7 @@ export function LogoutButton() {
       variant="ghost"
       size="sm"
       onClick={handleLogout}
-      className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-50 dark:hover:bg-slate-700"
+      className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:cursor-pointer dark:text-slate-400 dark:hover:text-slate-50 dark:hover:bg-slate-700"
     >
       <LogOut className="mr-2 h-4 w-4" />
       로그아웃
