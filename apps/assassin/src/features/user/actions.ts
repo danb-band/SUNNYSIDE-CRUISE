@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/libs/supabase/auth";
+import { getCurrentUser } from "@libs/supabase/auth";
 import UserService from "./service";
 import { UpdateProfilePayload } from "./schema";
 
