@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "assassin": "pnpm --filter assassin",
+    "ymm": "pnpm --filter ymm",
     "global-eslint": "pnpm --filter global-eslint",
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint ."
