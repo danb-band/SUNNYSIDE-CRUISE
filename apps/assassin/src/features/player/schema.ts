@@ -1,7 +1,14 @@
 import { dbSchema } from "@libs/prisma/types";
 import * as z from "zod";
 
-const instrumentEnum = z.enum(["VOCAL", "GUITAR", "DRUM", "BASS", "KEYBOARD"]);
+const instrumentEnum = z.enum([
+  "VOCAL",
+  "LEAD_GUITAR",
+  "RHYTHM_GUITAR",
+  "DRUM",
+  "BASS",
+  "KEYBOARD",
+]);
 
 // DB에 저장할 때 입력 스키마
 export const createPlayerSchema = z.object({

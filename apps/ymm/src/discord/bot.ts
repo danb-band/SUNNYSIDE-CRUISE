@@ -5,6 +5,13 @@ import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 
+const COMMANDS = [
+  { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
+  { name: '!stop',    desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
+  { name: '!session', desc: '현재 활성 세션 ID 확인' },
+  { name: '/help',    desc: '명령어 목록 보기' },
+]
+
 export const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -46,6 +53,13 @@ client.on('messageCreate', async (message: Message) => {
   if (text === '!session') {
     const sid = getSession(message.channelId)
     await message.reply(sid ? `현재 세션: \`${sid}\`` : '활성 세션 없음.')
+    return
+  }
+
+  // /help — 사용 가능한 명령어 목록
+  if (text === '/help') {
+    const lines = COMMANDS.map(c => `\`${c.name}\` — ${c.desc}`)
+    await message.reply('**Claude CLI 세션 명령어**\n' + lines.join('\n'))
     return
   }
 
