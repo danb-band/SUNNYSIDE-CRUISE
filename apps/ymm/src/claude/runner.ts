@@ -31,7 +31,7 @@ export function runClaudeCode(
   const args = sessionId
     ? ['--resume', sessionId, '-p', prompt]
     : ['-p', prompt]
-  args.push('--allowedTools', 'Read,Edit,Bash,Glob,Grep', '--output-format', 'stream-json', '--verbose')
+  args.push('--allowedTools', 'Read,Write,Edit,Bash,Glob,Grep', '--output-format', 'stream-json', '--verbose')
 
   const child = spawn('claude', args, {
     cwd: PROJECT_ROOT,
