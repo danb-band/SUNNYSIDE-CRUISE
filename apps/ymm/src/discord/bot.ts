@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Message } from 'discord.js'
 import { DISCORD_TOKEN, ASSASSIN_PATH, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
+import { getSession, setSession, clearSession } from './sessionStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 
 export const client = new Client({
@@ -21,17 +22,37 @@ client.on('messageCreate', async (message: Message) => {
   if (message.author.bot) return
   if (ALLOWED_CHANNEL_IDS.length > 0 && !ALLOWED_CHANNEL_IDS.includes(message.channelId)) return
 
-  const textPrompt = message.content.trim()
+  const text = message.content.trim()
+
+  // !done — 현재 채널의 세션 종료
+  if (text === '!done') {
+    clearSession(message.channelId)
+    await message.reply('🔄 세션이 초기화되었습니다. 다음 메시지부터 새 작업으로 시작합니다.')
+    return
+  }
+
+  // !session — 현재 세션 ID 확인
+  if (text === '!session') {
+    const sid = getSession(message.channelId)
+    await message.reply(sid ? `현재 세션: \`${sid}\`` : '활성 세션 없음.')
+    return
+  }
+
   const hasAttachments = message.attachments.size > 0
-  if (!textPrompt && !hasAttachments) return
+  if (!text && !hasAttachments) return
 
   const processingMsg = await message.reply('⏳ Claude Code가 작업 중입니다...')
+
+  const sessionId = getSession(message.channelId)
 
   const tempFiles: string[] = []
   try {
     const attachmentPaths = await downloadAttachments(message, tempFiles)
-    const prompt = buildPrompt(textPrompt, attachmentPaths)
-    runClaudeCode(prompt, message, processingMsg, tempFiles)
+    const prompt = buildPrompt(text, attachmentPaths)
+    runClaudeCode(prompt, message, processingMsg, tempFiles, {
+      sessionId,
+      onSessionId: (id) => setSession(message.channelId, id),
+    })
   } catch (err) {
     await processingMsg.edit(`❌ 첨부파일 다운로드 실패: ${(err as Error).message}`)
     await cleanup(tempFiles)

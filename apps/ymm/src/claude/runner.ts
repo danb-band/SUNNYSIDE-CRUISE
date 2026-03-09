@@ -7,27 +7,55 @@ import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { ASSASSIN_PATH } from '../config.js'
 
-export function runClaudeCode(prompt: string, message: Message, processingMsg: Message, tempFiles: string[]) {
+type RunOptions = {
+  sessionId?: string          // 이어갈 세션 ID (없으면 새 세션)
+  onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
+}
+
+export function runClaudeCode(
+  prompt: string,
+  message: Message,
+  processingMsg: Message,
+  tempFiles: string[],
+  { sessionId, onSessionId }: RunOptions = {}
+) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(message.channel as { send: (content: string) => Promise<unknown> })
 
   const promptPreview = prompt.slice(0, 100) + (prompt.length > 100 ? '...' : '')
-  console.log(`\n${ts()} ${c.bold}${c.cyan}══ 작업 시작 ══${c.reset}`)
+  const sessionLabel = sessionId ? ` (세션 재개: ${sessionId.slice(0, 8)}...)` : ' (새 세션)'
+  console.log(`\n${ts()} ${c.bold}${c.cyan}══ 작업 시작${sessionLabel} ══${c.reset}`)
   console.log(`${ts()} ${c.cyan}프롬프트:${c.reset} "${promptPreview}"`)
-  discordLogger.log(`\n══ 작업 시작 ══\n프롬프트: "${promptPreview}"`)
+  discordLogger.log(`\n══ 작업 시작${sessionLabel} ══\n프롬프트: "${promptPreview}"`)
 
-  const child = spawn(
-    'claude',
-    ['-p', prompt, '--allowedTools', 'Read,Edit,Bash,Glob,Grep', '--output-format', 'stream-json', '--verbose'],
-    { cwd: ASSASSIN_PATH, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] }
-  )
+  const args = sessionId
+    ? ['--resume', sessionId, '-p', prompt]
+    : ['-p', prompt]
+  args.push('--allowedTools', 'Read,Edit,Bash,Glob,Grep', '--output-format', 'stream-json', '--verbose')
+
+  const child = spawn('claude', args, {
+    cwd: ASSASSIN_PATH,
+    env: { ...process.env },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
 
   let decisionCount = 0
   const toolIdToNum = new Map<string, number>()
   const toolIdToName = new Map<string, string>()
 
   const rl = readline.createInterface({ input: child.stdout, crlfDelay: Infinity })
-  rl.on('line', (line) => handleStreamLine(line, { discordLogger, processingMsg, start, decisionCount, toolIdToNum, toolIdToName, onDecisionCount: (n) => { decisionCount = n } }))
+  rl.on('line', (line) =>
+    handleStreamLine(line, {
+      discordLogger,
+      processingMsg,
+      start,
+      decisionCount,
+      toolIdToNum,
+      toolIdToName,
+      onDecisionCount: (n) => { decisionCount = n },
+      onSessionId,
+    })
+  )
 
   child.stderr.on('data', (chunk: Buffer) => {
     const text = chunk.toString().trim()
@@ -67,6 +95,7 @@ type StreamContext = {
   toolIdToNum: Map<string, number>
   toolIdToName: Map<string, string>
   onDecisionCount: (n: number) => void
+  onSessionId?: (id: string) => void
 }
 
 function handleStreamLine(line: string, ctx: StreamContext) {
@@ -84,6 +113,7 @@ function handleStreamLine(line: string, ctx: StreamContext) {
       if (sid) {
         console.log(`${ts()} ${c.gray}세션: ${sid}${c.reset}`)
         ctx.discordLogger.log(`세션: ${sid}`)
+        ctx.onSessionId?.(sid)
       }
       break
     }
