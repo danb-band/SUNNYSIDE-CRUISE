@@ -10,6 +10,7 @@ import { PROJECT_ROOT } from '../config.js'
 type RunOptions = {
   sessionId?: string          // 이어갈 세션 ID (없으면 새 세션)
   onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
+  onDone?: () => void         // 프로세스 종료 시 콜백
 }
 
 export function runClaudeCode(
@@ -17,7 +18,7 @@ export function runClaudeCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { sessionId, onSessionId }: RunOptions = {}
+  { sessionId, onSessionId, onDone }: RunOptions = {}
 ) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(message.channel as { send: (content: string) => Promise<unknown> })
@@ -67,6 +68,7 @@ export function runClaudeCode(
   })
 
   child.on('close', async (code) => {
+    onDone?.()
     if (code !== 0 && code !== null) {
       console.log(`${ts()} ${c.red}프로세스 종료 코드: ${code}${c.reset}`)
       discordLogger.log(`프로세스 종료 코드: ${code}`)

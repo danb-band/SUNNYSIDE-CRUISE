@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Message } from 'discord.js'
 import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
+import { killProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 
 export const client = new Client({
@@ -23,6 +24,16 @@ client.on('messageCreate', async (message: Message) => {
   if (ALLOWED_CHANNEL_IDS.length > 0 && !ALLOWED_CHANNEL_IDS.includes(message.channelId)) return
 
   const text = message.content.trim()
+
+  // !stop — 실행 중인 Claude 프로세스 강제 종료 + 세션 초기화
+  if (text === '!stop') {
+    const killed = killProcess(message.channelId)
+    clearSession(message.channelId)
+    await message.reply(killed
+      ? '🛑 실행 중인 작업을 중단했습니다. 세션도 초기화되었습니다.'
+      : '실행 중인 작업이 없습니다.')
+    return
+  }
 
   // !done — 현재 채널의 세션 종료
   if (text === '!done') {
@@ -49,10 +60,12 @@ client.on('messageCreate', async (message: Message) => {
   try {
     const attachmentPaths = await downloadAttachments(message, tempFiles)
     const prompt = buildPrompt(text, attachmentPaths)
-    runClaudeCode(prompt, message, processingMsg, tempFiles, {
+    const child = runClaudeCode(prompt, message, processingMsg, tempFiles, {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
+      onDone: () => clearProcess(message.channelId),
     })
+    setProcess(message.channelId, child)
   } catch (err) {
     await processingMsg.edit(`❌ 첨부파일 다운로드 실패: ${(err as Error).message}`)
     await cleanup(tempFiles)
