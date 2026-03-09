@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const DISCORD_TOKEN = process.env.DISCORD_TOKEN
-export const ASSASSIN_PATH =
-  process.env.ASSASSIN_PATH ?? path.resolve(__dirname, '../../assassin')
+export const PROJECT_ROOT =
+  process.env.PROJECT_ROOT ?? path.resolve(__dirname, '../../..')
 export const ALLOWED_CHANNEL_IDS = process.env.ALLOWED_CHANNEL_IDS
   ? process.env.ALLOWED_CHANNEL_IDS.split(',').map((id) => id.trim())
   : []

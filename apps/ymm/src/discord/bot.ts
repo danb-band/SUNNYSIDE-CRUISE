@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Message } from 'discord.js'
-import { DISCORD_TOKEN, ASSASSIN_PATH, ALLOWED_CHANNEL_IDS } from '../config.js'
+import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
 import { runClaudeCode } from '../claude/runner.js'
@@ -14,7 +14,7 @@ export const client = new Client({
 
 client.once('ready', () => {
   console.log(`봇 로그인 완료: ${client.user?.tag}`)
-  console.log(`assassin 경로: ${ASSASSIN_PATH}`)
+  console.log(`프로젝트 루트: ${PROJECT_ROOT}`)
   console.log(`허용된 채널: ${ALLOWED_CHANNEL_IDS.length > 0 ? ALLOWED_CHANNEL_IDS.join(', ') : '모든 채널'}`)
 })
 
