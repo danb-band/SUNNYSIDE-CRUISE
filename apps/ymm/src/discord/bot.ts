@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, Message } from 'discord.js'
 import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
-import { killProcess, setProcess, clearProcess } from './processStore.js'
+import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 import { fetchIssue, buildIssuePrompt } from '../github/client.js'
 
@@ -64,6 +64,12 @@ client.on('messageCreate', async (message: Message) => {
   if (text === '/help') {
     const lines = COMMANDS.map(c => `\`${c.name}\` — ${c.desc}`)
     await message.reply('**Claude CLI 세션 명령어**\n' + lines.join('\n'))
+    return
+  }
+
+  // 작업 중 거부 — 이미 실행 중인 프로세스가 있으면 새 작업 차단
+  if (getProcess(message.channelId)) {
+    await message.reply('⚠️ 이미 작업이 진행 중입니다. `!stop`으로 중단 후 재시도하세요.')
     return
   }
 
