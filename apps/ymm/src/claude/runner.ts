@@ -7,6 +7,16 @@ import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { PROJECT_ROOT } from '../config.js'
 
+const COMMIT_INSTRUCTIONS = `
+
+---
+[커밋 규칙]
+- 작업이 끝나면 반드시 git commit을 생성하세요.
+- 작업이 여러 기능을 포함한다면 기능 단위로 나눠서 각각 커밋하세요.
+- 커밋 메시지는 "feat: ...", "fix: ...", "refactor: ..." 등 conventional commit 형식으로 한국어로 작성하세요.
+- 커밋 전 git status로 변경 파일을 확인하고, 관련 파일만 stage하세요.
+`
+
 type RunOptions = {
   sessionId?: string          // 이어갈 세션 ID (없으면 새 세션)
   onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
@@ -29,9 +39,11 @@ export function runClaudeCode(
   console.log(`${ts()} ${c.cyan}프롬프트:${c.reset} "${promptPreview}"`)
   discordLogger.log(`\n══ 작업 시작${sessionLabel} ══\n프롬프트: "${promptPreview}"`)
 
+  const fullPrompt = prompt + COMMIT_INSTRUCTIONS
+
   const args = sessionId
-    ? ['--resume', sessionId, '-p', prompt]
-    : ['-p', prompt]
+    ? ['--resume', sessionId, '-p', fullPrompt]
+    : ['-p', fullPrompt]
   args.push('--allowedTools', 'Read,Write,Edit,Bash,Glob,Grep', '--output-format', 'stream-json', '--verbose')
 
   const child = spawn('claude', args, {
