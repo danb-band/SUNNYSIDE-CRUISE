@@ -20,12 +20,13 @@ const COMMIT_INSTRUCTIONS = `
 type SendFn = (content: string) => Promise<unknown>
 
 type RunOptions = {
-  sessionId?: string                  // 이어갈 세션 ID (없으면 새 세션)
-  onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
-  onDone?: () => void                 // 프로세스 종료 시 콜백
-  onSuccess?: () => Promise<void>     // 작업 성공 시 콜백
-  logChannel?: { send: SendFn }       // 로그 전용 채널 (DISCORD_LOG_ID)
-  resultChannel?: { send: SendFn }    // 결과 전용 채널 (DISCORD_RESULT_ID)
+  sessionId?: string                   // 이어갈 세션 ID (없으면 새 세션)
+  onSessionId?: (id: string) => void   // 세션 ID 획득 시 콜백
+  onDone?: () => void                  // 프로세스 종료 시 콜백
+  onSuccess?: () => Promise<void>      // 작업 성공 시 콜백
+  logChannel?: { send: SendFn }        // 로그 전용 채널 (DISCORD_LOG_ID)
+  resultChannel?: { send: SendFn }     // 결과 전용 채널 (DISCORD_RESULT_ID)
+  commandChannel?: { send: SendFn }    // 명령/질의응답 채널 — 유저 확인/의사결정 필요 시 사용
 }
 
 export function runClaudeCode(
@@ -33,7 +34,7 @@ export function runClaudeCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { sessionId, onSessionId, onDone, onSuccess, logChannel, resultChannel }: RunOptions = {}
+  { sessionId, onSessionId, onDone, onSuccess, logChannel, resultChannel, commandChannel }: RunOptions = {}
 ) {
   const start = Date.now()
   // 로그는 logChannel 우선, 없으면 command 채널로 fallback
@@ -71,6 +72,7 @@ export function runClaudeCode(
       discordLogger,
       processingMsg,
       resultChannel,
+      commandChannel,
       start,
       decisionCount,
       toolIdToNum,
@@ -86,6 +88,7 @@ export function runClaudeCode(
     const text = chunk.toString().trim()
     if (text) {
       console.error(`${ts()} ${c.red}[stderr]${c.reset} ${text}`)
+      discordLogger.log(`⚠️ [stderr] ${text.slice(0, 300)}`)
     }
   })
 
@@ -112,12 +115,11 @@ export function runClaudeCode(
   return child
 }
 
-const PROGRESS_INTERVAL = 5  // N번 툴 호출마다 Discord에 진행상황 전송
-
 type StreamContext = {
   discordLogger: ReturnType<typeof createDiscordLogger>
   processingMsg: Message
   resultChannel?: { send: (content: string) => Promise<unknown> }
+  commandChannel?: { send: (content: string) => Promise<unknown> }
   start: number
   decisionCount: number
   toolIdToNum: Map<string, number>
@@ -142,6 +144,7 @@ function handleStreamLine(line: string, ctx: StreamContext) {
       const sid = (event as { session_id?: string }).session_id
       if (sid) {
         console.log(`${ts()} ${c.gray}세션: ${sid}${c.reset}`)
+        ctx.discordLogger.log(`🔑 세션 ID: ${sid.slice(0, 8)}...`)
         ctx.onSessionId?.(sid)
       }
       break
@@ -155,11 +158,19 @@ function handleStreamLine(line: string, ctx: StreamContext) {
 
       if (reasoning) {
         if (toolBlocks.length > 0) {
+          // 도구 사용과 함께 나온 판단 근거 → 로그 채널에 전송 (축약)
           const truncated = reasoning.slice(0, 300) + (reasoning.length > 300 ? '...' : '')
           console.log(`\n${ts()} ${c.blue}[판단 근거]${c.reset} ${truncated}`)
+          ctx.discordLogger.log(`🤔 [판단] ${truncated}`)
         } else {
+          // 도구 없이 나온 텍스트 → 유저 확인/의사결정 필요 → command 채널로 전송
           console.log(`\n${ts()} ${c.blue}[Claude]${c.reset} ${reasoning}`)
-          ctx.discordLogger.log(`💬 ${reasoning}`)
+          const target = ctx.commandChannel
+          if (target) {
+            target.send(`💬 **Claude**\n${truncate(reasoning, 1800)}`).catch(() => {})
+          } else {
+            ctx.discordLogger.log(`💬 ${reasoning}`)
+          }
         }
       }
 
@@ -171,12 +182,8 @@ function handleStreamLine(line: string, ctx: StreamContext) {
         ctx.toolStats.set(block.name!, (ctx.toolStats.get(block.name!) ?? 0) + 1)
         const inputStr = formatToolInput(block.name!, block.input as Record<string, unknown>)
         console.log(`${ts()} ${c.yellow}${c.bold}[결정 #${ctx.decisionCount}]${c.reset} ${c.yellow}${block.name}${c.reset}\n  ${c.cyan}${inputStr}${c.reset}`)
-
-        if (ctx.decisionCount % PROGRESS_INTERVAL === 0) {
-          const elapsed = ((Date.now() - ctx.start) / 1000).toFixed(0)
-          const statsStr = [...ctx.toolStats.entries()].map(([k, v]) => `${k}×${v}`).join(', ')
-          ctx.discordLogger.log(`🔄 작업 중... (${elapsed}s | ${statsStr})`)
-        }
+        // 모든 tool call을 로그 채널에 전송 (이전: 5번마다)
+        ctx.discordLogger.log(`🔧 [#${ctx.decisionCount}] ${block.name!}: ${inputStr}`)
       }
       break
     }
@@ -191,8 +198,13 @@ function handleStreamLine(line: string, ctx: StreamContext) {
         const summary = summarizeToolResult(name, block.content)
         console.log(`${ts()} ${c.green}[결과 #${num ?? '?'}]${c.reset} ${name} → ${summary}`)
 
+        const cleanSummary = stripAnsi(summary)
         if (summary.includes('실패') || summary.includes('error')) {
-          ctx.discordLogger.log(`⚠️ ${name} 오류: ${stripAnsi(summary)}`)
+          // 오류는 항상 로그
+          ctx.discordLogger.log(`❌ [#${num ?? '?'}] ${name} 오류: ${cleanSummary}`)
+        } else {
+          // 정상 결과도 로그에 기록
+          ctx.discordLogger.log(`✔️ [#${num ?? '?'}] ${name}: ${cleanSummary}`)
         }
       }
       break
