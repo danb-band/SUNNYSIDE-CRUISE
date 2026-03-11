@@ -11,9 +11,13 @@ const COMMANDS = [
   { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
   { name: '!stop',    desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
   { name: '!session', desc: '현재 활성 세션 ID 확인' },
-  { name: '#42',      desc: 'GitHub 이슈 번호로 Claude Code 작업 시작' },
+  { name: '!cost',    desc: '마지막 작업의 Claude Code 비용 및 턴 수 확인' },
+  { name: '#숫자',    desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
   { name: '/help',    desc: '명령어 목록 보기' },
 ]
+
+// 채널별 마지막 비용 정보 저장
+const lastCostStore = new Map<string, { costUsd: number; turns: number; at: Date }>()
 
 const ISSUE_PATTERN = /^#(\d+)$/
 
@@ -68,6 +72,18 @@ client.on('messageCreate', async (message: Message) => {
   if (text === '!session') {
     const sid = getSession(message.channelId)
     await message.reply(sid ? `현재 세션: \`${sid}\`` : '활성 세션 없음.')
+    return
+  }
+
+  // !cost — 마지막 작업 비용 확인
+  if (text === '!cost') {
+    const info = lastCostStore.get(message.channelId)
+    if (!info) {
+      await message.reply('이 채널에서 완료된 작업이 없습니다.')
+    } else {
+      const timeStr = info.at.toLocaleTimeString('ko-KR')
+      await message.reply(`💰 마지막 작업 비용 (${timeStr})\n비용: \`$${info.costUsd.toFixed(4)}\` | 턴 수: \`${info.turns}\``)
+    }
     return
   }
 
@@ -131,6 +147,7 @@ client.on('messageCreate', async (message: Message) => {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
+      onCost: (costUsd, turns) => lastCostStore.set(message.channelId, { costUsd, turns, at: new Date() }),
       logChannel,
       resultChannel,
       commandChannel,
@@ -163,6 +180,7 @@ client.on('messageCreate', async (message: Message) => {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
+      onCost: (costUsd, turns) => lastCostStore.set(message.channelId, { costUsd, turns, at: new Date() }),
       logChannel: getTextChannel(DISCORD_LOG_ID),
       resultChannel: getTextChannel(DISCORD_RESULT_ID),
       commandChannel: getTextChannel(DISCORD_COMMAND_ID),
