@@ -11,7 +11,7 @@ const COMMANDS = [
   { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
   { name: '!stop',    desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
   { name: '!session', desc: '현재 활성 세션 ID 확인' },
-  { name: '!cost',    desc: 'Claude Code 세션의 토큰 사용량 확인 (/cost)' },
+  { name: '!cost',    desc: 'Claude Code 세션의 토큰 사용량 확인' },
   { name: '#숫자',    desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
   { name: '/help',    desc: '명령어 목록 보기' },
 ]
@@ -72,12 +72,12 @@ client.on('messageCreate', async (message: Message) => {
     return
   }
 
-  // !cost — Claude Code /cost 출력
+  // !cost — Claude Code /context 출력
   if (text === '!cost') {
     const sid = getSession(message.channelId)
     try {
       const resumeFlag = sid ? `--resume ${sid} ` : ''
-      const output = execSync(`claude ${resumeFlag}-p "/cost"`, {
+      const output = execSync(`claude ${resumeFlag}-p "/context"`, {
         cwd: PROJECT_ROOT,
         encoding: 'utf8',
         timeout: 15000,
