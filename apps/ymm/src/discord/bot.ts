@@ -97,6 +97,15 @@ client.on('messageCreate', async (message: Message) => {
       return
     }
 
+    // dev 브랜치로 체크아웃 후 최신 코드 pull
+    try {
+      execSync(`git -C "${PROJECT_ROOT}" checkout dev`, { stdio: 'pipe' })
+      execSync(`git -C "${PROJECT_ROOT}" pull origin dev`, { stdio: 'pipe' })
+    } catch (err) {
+      await fetchingMsg.edit(`❌ dev 브랜치 동기화 실패: ${(err as Error).message}`)
+      return
+    }
+
     // feature 브랜치 생성
     const branchName = `feat/issue-${issue.number}`
     try {
