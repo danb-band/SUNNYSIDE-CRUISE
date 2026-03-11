@@ -24,6 +24,7 @@ type RunOptions = {
   onSessionId?: (id: string) => void   // 세션 ID 획득 시 콜백
   onDone?: () => void                  // 프로세스 종료 시 콜백
   onSuccess?: () => Promise<void>      // 작업 성공 시 콜백
+  onCost?: (costUsd: number, turns: number) => void  // 작업 비용 정보 콜백
   logChannel?: { send: SendFn }        // 로그 전용 채널 (DISCORD_LOG_ID)
   resultChannel?: { send: SendFn }     // 결과 전용 채널 (DISCORD_RESULT_ID)
   commandChannel?: { send: SendFn }    // 명령/질의응답 채널 — 유저 확인/의사결정 필요 시 사용
@@ -34,7 +35,7 @@ export function runClaudeCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { sessionId, onSessionId, onDone, onSuccess, logChannel, resultChannel, commandChannel }: RunOptions = {}
+  { sessionId, onSessionId, onDone, onSuccess, onCost, logChannel, resultChannel, commandChannel }: RunOptions = {}
 ) {
   const start = Date.now()
   // 로그는 logChannel 우선, 없으면 command 채널로 fallback
@@ -81,6 +82,7 @@ export function runClaudeCode(
       onDecisionCount: (n) => { decisionCount = n },
       onSessionId,
       onSuccess,
+      onCost,
     })
   )
 
@@ -128,6 +130,7 @@ type StreamContext = {
   onDecisionCount: (n: number) => void
   onSessionId?: (id: string) => void
   onSuccess?: () => Promise<void>
+  onCost?: (costUsd: number, turns: number) => void
 }
 
 function handleStreamLine(line: string, ctx: StreamContext) {
@@ -217,6 +220,7 @@ function handleStreamLine(line: string, ctx: StreamContext) {
       const turns = res.num_turns != null ? ` | 턴 수: ${res.num_turns}` : ''
 
       if (res.subtype === 'success') {
+        if (res.cost_usd != null) ctx.onCost?.(res.cost_usd, res.num_turns ?? 0)
         console.log(`\n${ts()} ${c.bold}${c.green}══ 작업 완료 (${elapsed}s${cost}${turns}) ══${c.reset}`)
         if (res.result?.trim()) {
           console.log(`${c.green}최종 결과:${c.reset}\n${res.result.slice(0, 500)}${res.result.length > 500 ? '\n...(생략)' : ''}`)
