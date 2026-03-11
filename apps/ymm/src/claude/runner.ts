@@ -17,11 +17,15 @@ const COMMIT_INSTRUCTIONS = `
 - 커밋 전 git status로 변경 파일을 확인하고, 관련 파일만 stage하세요.
 `
 
+type SendFn = (content: string) => Promise<unknown>
+
 type RunOptions = {
-  sessionId?: string          // 이어갈 세션 ID (없으면 새 세션)
+  sessionId?: string                  // 이어갈 세션 ID (없으면 새 세션)
   onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
-  onDone?: () => void         // 프로세스 종료 시 콜백
+  onDone?: () => void                 // 프로세스 종료 시 콜백
   onSuccess?: () => Promise<void>     // 작업 성공 시 콜백
+  logChannel?: { send: SendFn }       // 로그 전용 채널 (DISCORD_LOG_ID)
+  resultChannel?: { send: SendFn }    // 결과 전용 채널 (DISCORD_RESULT_ID)
 }
 
 export function runClaudeCode(
@@ -29,10 +33,13 @@ export function runClaudeCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { sessionId, onSessionId, onDone, onSuccess }: RunOptions = {}
+  { sessionId, onSessionId, onDone, onSuccess, logChannel, resultChannel }: RunOptions = {}
 ) {
   const start = Date.now()
-  const discordLogger = createDiscordLogger(message.channel as { send: (content: string) => Promise<unknown> })
+  // 로그는 logChannel 우선, 없으면 command 채널로 fallback
+  const discordLogger = createDiscordLogger(
+    logChannel ?? (message.channel as { send: (content: string) => Promise<unknown> })
+  )
 
   const promptPreview = prompt.slice(0, 100) + (prompt.length > 100 ? '...' : '')
   const sessionLabel = sessionId ? ` (세션 재개: ${sessionId.slice(0, 8)}...)` : ' (새 세션)'
@@ -63,6 +70,7 @@ export function runClaudeCode(
     handleStreamLine(line, {
       discordLogger,
       processingMsg,
+      resultChannel,
       start,
       decisionCount,
       toolIdToNum,
@@ -109,6 +117,7 @@ const PROGRESS_INTERVAL = 5  // N번 툴 호출마다 Discord에 진행상황 �
 type StreamContext = {
   discordLogger: ReturnType<typeof createDiscordLogger>
   processingMsg: Message
+  resultChannel?: { send: (content: string) => Promise<unknown> }
   start: number
   decisionCount: number
   toolIdToNum: Map<string, number>
@@ -203,10 +212,15 @@ function handleStreamLine(line: string, ctx: StreamContext) {
         const statsStr = ctx.toolStats.size > 0
           ? `\n도구 사용: ${[...ctx.toolStats.entries()].map(([k, v]) => `${k}×${v}`).join(', ')}`
           : ''
+        // 로그 채널: 완료 요약
         ctx.discordLogger.log(`✅ 작업 완료 (${elapsed}s${cost}${turns})${statsStr}`)
         ctx.discordLogger.forceFlush()
+        // 커맨드 채널: 진행 메시지를 "완료" 표시로 업데이트
+        ctx.processingMsg.edit('✅ 작업이 완료되었습니다.').catch(() => {})
+        // 결과 채널: 최종 결과 전송
         const finalText = res.result?.trim() ? truncate(res.result, 1800) : '✅ 작업이 완료되었습니다.'
-        ctx.processingMsg.edit(finalText).catch(() => {})
+        const resultTarget = ctx.resultChannel ?? (ctx.processingMsg.channel as { send: (content: string) => Promise<unknown> })
+        resultTarget.send(finalText).catch(() => {})
         ctx.onSuccess?.().catch((err: Error) => {
           ctx.discordLogger.log(`❌ PR 생성 실패: ${err.message}`)
           ctx.discordLogger.forceFlush()
@@ -215,7 +229,11 @@ function handleStreamLine(line: string, ctx: StreamContext) {
         console.log(`\n${ts()} ${c.bold}${c.red}══ 작업 실패 (${elapsed}s) ══${c.reset}`)
         ctx.discordLogger.log(`❌ 작업 실패 (${elapsed}s)`)
         ctx.discordLogger.forceFlush()
+        // 커맨드 채널: 진행 메시지 업데이트
         ctx.processingMsg.edit('❌ 작업이 실패했습니다.').catch(() => {})
+        // 결과 채널: 실패 알림
+        const resultTarget = ctx.resultChannel ?? (ctx.processingMsg.channel as { send: (content: string) => Promise<unknown> })
+        resultTarget.send(`❌ 작업이 실패했습니다. (${elapsed}s)`).catch(() => {})
       }
       break
     }
