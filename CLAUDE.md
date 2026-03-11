@@ -84,6 +84,22 @@ Discord 요청을 받아 GitHub 이슈를 생성할 때:
 - **완료 조건을 하나씩 체크**하며 작업하고, 모두 충족되면 종료한다. (섹션 4와 동일 원칙)
 - 이슈에 명시되지 않은 변경이 필요하면 임의로 수정하지 않고 새 이슈를 생성한다.
 
+### 브랜치 워크플로우
+
+새 이슈 작업을 시작할 때는 반드시 아래 순서를 따른다:
+
+```
+1. git checkout dev
+2. git pull origin dev
+3. git checkout -b feature/<이슈번호>-<짧은-설명>
+   예시: feature/12-add-init-command
+4. 작업 후 PR을 dev 브랜치로 생성
+```
+
+- **main 브랜치에 직접 push 금지.** PR은 반드시 `dev`를 target으로 한다.
+- PR 제목 형식: `[#이슈번호] <작업 내용 요약>`
+- PR body에는 완료 조건 체크리스트를 그대로 복사해서 붙인다.
+
 ### 커밋 컨벤션
 
 ```
@@ -98,4 +114,31 @@ closes #<이슈번호>
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, and every issue has verifiable acceptance criteria before work begins.
+## 6. Safety Rules
+
+**절대 하면 안 되는 것. 예외 없음.**
+
+### 파괴적 명령어
+- `rm -rf` 실행 금지
+- `git push --force` / `git push -f` 금지
+- `git reset --hard` 금지 (작업 중 이력 파괴)
+- 조건 없는 DB 쿼리 금지: `DELETE FROM <table>`, `DROP TABLE`, `TRUNCATE`
+- `chmod 777`, `chown` 등 권한 변경 금지
+
+### 민감한 정보
+- `.env`, `.env.*`, `.env.local` 등 환경변수 파일 커밋 금지
+- API key, secret, token, password 하드코딩 금지
+- `console.log` / 로그에 민감한 객체(req, user, token 등) 출력 금지
+- 위 항목이 포함된 파일은 수정 전 반드시 확인하고, 의심스러우면 멈추고 물어본다
+
+### 범위 이탈
+- `node_modules/`, `dist/`, `build/` 직접 수정 금지
+- `pnpm-lock.yaml`, `package-lock.json` 수동 편집 금지
+- `.gitignore`에 등록된 파일 커밋 금지
+- `main` 브랜치 직접 push 금지
+
+> 위 항목이 필요하다고 판단되면, 실행하지 말고 이유와 함께 사용자에게 확인을 요청한다.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, every issue has verifiable acceptance criteria before work begins, and no destructive or sensitive operations are executed without explicit confirmation.
