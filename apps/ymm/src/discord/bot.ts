@@ -126,12 +126,14 @@ client.on('messageCreate', async (message: Message) => {
     const sessionId = getSession(message.channelId)
     const logChannel = getTextChannel(DISCORD_LOG_ID)
     const resultChannel = getTextChannel(DISCORD_RESULT_ID)
+    const commandChannel = getTextChannel(DISCORD_COMMAND_ID)
     const child = runClaudeCode(issuePrompt, message, processingMsg, [], {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
       logChannel,
       resultChannel,
+      commandChannel,
       onSuccess: async () => {
         const target = resultChannel ?? message.channel as TextChannel
         try {
@@ -163,6 +165,7 @@ client.on('messageCreate', async (message: Message) => {
       onDone: () => clearProcess(message.channelId),
       logChannel: getTextChannel(DISCORD_LOG_ID),
       resultChannel: getTextChannel(DISCORD_RESULT_ID),
+      commandChannel: getTextChannel(DISCORD_COMMAND_ID),
     })
     setProcess(message.channelId, child)
   } catch (err) {
