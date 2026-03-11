@@ -2,15 +2,19 @@ import { Client, GatewayIntentBits, Message } from 'discord.js'
 import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
-import { killProcess, setProcess, clearProcess } from './processStore.js'
+import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
+import { fetchIssue, buildIssuePrompt } from '../github/client.js'
 
 const COMMANDS = [
   { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
   { name: '!stop',    desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
   { name: '!session', desc: '현재 활성 세션 ID 확인' },
+  { name: '#42',      desc: 'GitHub 이슈 번호로 Claude Code 작업 시작' },
   { name: '/help',    desc: '명령어 목록 보기' },
 ]
+
+const ISSUE_PATTERN = /^#(\d+)$/
 
 export const client = new Client({
   intents: [
@@ -60,6 +64,39 @@ client.on('messageCreate', async (message: Message) => {
   if (text === '/help') {
     const lines = COMMANDS.map(c => `\`${c.name}\` — ${c.desc}`)
     await message.reply('**Claude CLI 세션 명령어**\n' + lines.join('\n'))
+    return
+  }
+
+  // 작업 중 거부 — 이미 실행 중인 프로세스가 있으면 새 작업 차단
+  if (getProcess(message.channelId)) {
+    await message.reply('⚠️ 이미 작업이 진행 중입니다. `!stop`으로 중단 후 재시도하세요.')
+    return
+  }
+
+  // #42 — GitHub 이슈 번호로 Claude Code 실행
+  const issueMatch = text.match(ISSUE_PATTERN)
+  if (issueMatch) {
+    const issueNumber = parseInt(issueMatch[1], 10)
+    const fetchingMsg = await message.reply(`🔍 GitHub Issue #${issueNumber} 가져오는 중...`)
+    let issue
+    try {
+      issue = await fetchIssue(issueNumber)
+    } catch (err) {
+      await fetchingMsg.edit(`❌ ${(err as Error).message}`)
+      return
+    }
+
+    const issuePrompt = buildIssuePrompt(issue)
+    await fetchingMsg.edit(`📋 **Issue #${issue.number}: ${issue.title}**\n> 작업을 시작합니다...`)
+
+    const processingMsg = fetchingMsg
+    const sessionId = getSession(message.channelId)
+    const child = runClaudeCode(issuePrompt, message, processingMsg, [], {
+      sessionId,
+      onSessionId: (id) => setSession(message.channelId, id),
+      onDone: () => clearProcess(message.channelId),
+    })
+    setProcess(message.channelId, child)
     return
   }
 

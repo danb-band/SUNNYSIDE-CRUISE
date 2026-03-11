@@ -11,6 +11,9 @@ export const ALLOWED_CHANNEL_IDS = process.env.ALLOWED_CHANNEL_IDS
   ? process.env.ALLOWED_CHANNEL_IDS.split(',').map((id) => id.trim())
   : []
 
+export const GITHUB_TOKEN = process.env.GITHUB_TOKEN
+export const GITHUB_REPO = process.env.GITHUB_REPO
+
 if (!DISCORD_TOKEN) {
   console.error('DISCORD_TOKEN이 설정되지 않았습니다. .env 파일을 확인하세요.')
   process.exit(1)
