@@ -1,6 +1,6 @@
-import { Client, GatewayIntentBits, Message } from 'discord.js'
+import { Client, GatewayIntentBits, Message, TextChannel } from 'discord.js'
 import { execSync } from 'child_process'
-import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
+import { DISCORD_TOKEN, PROJECT_ROOT, DISCORD_COMMAND_ID, DISCORD_RESULT_ID, DISCORD_LOG_ID } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
@@ -17,6 +17,13 @@ const COMMANDS = [
 
 const ISSUE_PATTERN = /^#(\d+)$/
 
+/** 채널 ID로 TextChannel을 가져옵니다. 없으면 undefined를 반환합니다. */
+function getTextChannel(id: string): TextChannel | undefined {
+  if (!id) return undefined
+  const ch = client.channels.cache.get(id)
+  return ch instanceof TextChannel ? ch : undefined
+}
+
 export const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -28,12 +35,15 @@ export const client = new Client({
 client.once('ready', () => {
   console.log(`봇 로그인 완료: ${client.user?.tag}`)
   console.log(`프로젝트 루트: ${PROJECT_ROOT}`)
-  console.log(`허용된 채널: ${ALLOWED_CHANNEL_IDS.length > 0 ? ALLOWED_CHANNEL_IDS.join(', ') : '모든 채널'}`)
+  console.log(`명령 채널: ${DISCORD_COMMAND_ID || '(미설정)'}`)
+  console.log(`결과 채널: ${DISCORD_RESULT_ID || '(미설정)'}`)
+  console.log(`로그 채널:  ${DISCORD_LOG_ID || '(미설정)'}`)
 })
 
 client.on('messageCreate', async (message: Message) => {
   if (message.author.bot) return
-  if (ALLOWED_CHANNEL_IDS.length > 0 && !ALLOWED_CHANNEL_IDS.includes(message.channelId)) return
+  // 명령 채널이 설정된 경우 해당 채널에서만 수신
+  if (DISCORD_COMMAND_ID && message.channelId !== DISCORD_COMMAND_ID) return
 
   const text = message.content.trim()
 
@@ -105,16 +115,21 @@ client.on('messageCreate', async (message: Message) => {
 
     const processingMsg = fetchingMsg
     const sessionId = getSession(message.channelId)
+    const logChannel = getTextChannel(DISCORD_LOG_ID)
+    const resultChannel = getTextChannel(DISCORD_RESULT_ID)
     const child = runClaudeCode(issuePrompt, message, processingMsg, [], {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
+      logChannel,
+      resultChannel,
       onSuccess: async () => {
+        const target = resultChannel ?? message.channel as TextChannel
         try {
           const pr = await createPR(issue, branchName)
-          await message.reply(`🎉 PR이 생성되었습니다! **#${pr.number}**\n${pr.url}`)
+          await target.send(`🎉 PR이 생성되었습니다! **#${pr.number}**\n${pr.url}`)
         } catch (err) {
-          await message.reply(`❌ PR 자동 생성 실패: ${(err as Error).message}`)
+          await target.send(`❌ PR 자동 생성 실패: ${(err as Error).message}`)
         }
       },
     })
@@ -137,6 +152,8 @@ client.on('messageCreate', async (message: Message) => {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
+      logChannel: getTextChannel(DISCORD_LOG_ID),
+      resultChannel: getTextChannel(DISCORD_RESULT_ID),
     })
     setProcess(message.channelId, child)
   } catch (err) {
