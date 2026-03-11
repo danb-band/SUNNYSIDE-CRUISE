@@ -1,10 +1,11 @@
 import { Client, GatewayIntentBits, Message } from 'discord.js'
+import { execSync } from 'child_process'
 import { DISCORD_TOKEN, PROJECT_ROOT, ALLOWED_CHANNEL_IDS } from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
-import { fetchIssue, buildIssuePrompt } from '../github/client.js'
+import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
 
 const COMMANDS = [
   { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
@@ -86,8 +87,21 @@ client.on('messageCreate', async (message: Message) => {
       return
     }
 
+    // feature 브랜치 생성
+    const branchName = `feat/issue-${issue.number}`
+    try {
+      execSync(`git -C "${PROJECT_ROOT}" checkout -b ${branchName}`, { stdio: 'pipe' })
+    } catch {
+      try {
+        execSync(`git -C "${PROJECT_ROOT}" checkout ${branchName}`, { stdio: 'pipe' })
+      } catch (err) {
+        await fetchingMsg.edit(`❌ 브랜치 생성 실패: ${(err as Error).message}`)
+        return
+      }
+    }
+
     const issuePrompt = buildIssuePrompt(issue)
-    await fetchingMsg.edit(`📋 **Issue #${issue.number}: ${issue.title}**\n> 작업을 시작합니다...`)
+    await fetchingMsg.edit(`📋 **Issue #${issue.number}: ${issue.title}**\n> \`${branchName}\` 브랜치에서 작업을 시작합니다...`)
 
     const processingMsg = fetchingMsg
     const sessionId = getSession(message.channelId)
@@ -95,6 +109,14 @@ client.on('messageCreate', async (message: Message) => {
       sessionId,
       onSessionId: (id) => setSession(message.channelId, id),
       onDone: () => clearProcess(message.channelId),
+      onSuccess: async () => {
+        try {
+          const pr = await createPR(issue, branchName)
+          await message.reply(`🎉 PR이 생성되었습니다! **#${pr.number}**\n${pr.url}`)
+        } catch (err) {
+          await message.reply(`❌ PR 자동 생성 실패: ${(err as Error).message}`)
+        }
+      },
     })
     setProcess(message.channelId, child)
     return

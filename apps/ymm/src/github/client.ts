@@ -9,6 +9,11 @@ export interface GitHubIssue {
   url: string
 }
 
+export interface GitHubPR {
+  number: number
+  url: string
+}
+
 export async function fetchIssue(issueNumber: number): Promise<GitHubIssue> {
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
     throw new Error('GITHUB_TOKEN 또는 GITHUB_REPO가 설정되지 않았습니다.')
@@ -42,6 +47,38 @@ export async function fetchIssue(issueNumber: number): Promise<GitHubIssue> {
     state: data.state,
     url: data.html_url,
   }
+}
+
+export async function createPR(issue: GitHubIssue, branchName: string, baseBranch = 'dev'): Promise<GitHubPR> {
+  if (!GITHUB_TOKEN || !GITHUB_REPO) {
+    throw new Error('GITHUB_TOKEN 또는 GITHUB_REPO가 설정되지 않았습니다.')
+  }
+
+  const body = [`closes #${issue.number}`, '', issue.body ?? ''].join('\n').trim()
+
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/pulls`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: issue.title,
+      body,
+      head: branchName,
+      base: baseBranch,
+    }),
+  })
+
+  if (!res.ok) {
+    const errorBody = await res.text()
+    throw new Error(`PR 생성 실패: ${res.status} ${res.statusText} - ${errorBody}`)
+  }
+
+  const data = await res.json() as { number: number; html_url: string }
+  return { number: data.number, url: data.html_url }
 }
 
 export function buildIssuePrompt(issue: GitHubIssue): string {

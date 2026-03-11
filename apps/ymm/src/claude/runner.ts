@@ -21,6 +21,7 @@ type RunOptions = {
   sessionId?: string          // 이어갈 세션 ID (없으면 새 세션)
   onSessionId?: (id: string) => void  // 세션 ID 획득 시 콜백
   onDone?: () => void         // 프로세스 종료 시 콜백
+  onSuccess?: () => Promise<void>     // 작업 성공 시 콜백
 }
 
 export function runClaudeCode(
@@ -28,7 +29,7 @@ export function runClaudeCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { sessionId, onSessionId, onDone }: RunOptions = {}
+  { sessionId, onSessionId, onDone, onSuccess }: RunOptions = {}
 ) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(message.channel as { send: (content: string) => Promise<unknown> })
@@ -69,6 +70,7 @@ export function runClaudeCode(
       toolStats,
       onDecisionCount: (n) => { decisionCount = n },
       onSessionId,
+      onSuccess,
     })
   )
 
@@ -114,6 +116,7 @@ type StreamContext = {
   toolStats: Map<string, number>
   onDecisionCount: (n: number) => void
   onSessionId?: (id: string) => void
+  onSuccess?: () => Promise<void>
 }
 
 function handleStreamLine(line: string, ctx: StreamContext) {
@@ -204,6 +207,10 @@ function handleStreamLine(line: string, ctx: StreamContext) {
         ctx.discordLogger.forceFlush()
         const finalText = res.result?.trim() ? truncate(res.result, 1800) : '✅ 작업이 완료되었습니다.'
         ctx.processingMsg.edit(finalText).catch(() => {})
+        ctx.onSuccess?.().catch((err: Error) => {
+          ctx.discordLogger.log(`❌ PR 생성 실패: ${err.message}`)
+          ctx.discordLogger.forceFlush()
+        })
       } else {
         console.log(`\n${ts()} ${c.bold}${c.red}══ 작업 실패 (${elapsed}s) ══${c.reset}`)
         ctx.discordLogger.log(`❌ 작업 실패 (${elapsed}s)`)
