@@ -4,6 +4,8 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
+---
+
 ## 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
@@ -62,4 +64,38 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+## 5. Issue Management (Discord → Claude Code Pipeline)
+
+이 프로젝트는 Discord 요청 → GitHub 이슈 생성 → 코드 작업 순서로 동작합니다.
+
+### 이슈 생성 규칙
+
+Discord 요청을 받아 GitHub 이슈를 생성할 때:
+
+- **영향 범위는 반드시 구체적인 파일/패키지 경로로 명시.** 모노레포의 경우 어느 패키지인지 반드시 포함.
+- **완료 조건은 검증 가능한 형태로.** "구현한다" ❌ → "~를 호출하면 ~를 반환한다" ✅
+- **모호한 요청은 가정을 `❓ 불명확한 사항` 섹션에 명시하고 진행.** 임의로 결정하지 않는다.
+- label은 요청 성격에 따라 판단: 새 기능이면 `enhancement`, 리팩터링/문서화/설정이면 `task`
+
+### 이슈 기반 작업 규칙
+
+이슈를 읽고 작업을 시작하기 전:
+- 이슈의 **영향 범위** 밖의 파일은 수정하지 않는다. (섹션 3과 동일 원칙)
+- **완료 조건을 하나씩 체크**하며 작업하고, 모두 충족되면 종료한다. (섹션 4와 동일 원칙)
+- 이슈에 명시되지 않은 변경이 필요하면 임의로 수정하지 않고 새 이슈를 생성한다.
+
+### 커밋 컨벤션
+
+```
+<type>(<scope>): <subject>
+
+closes #<이슈번호>
+```
+
+- type: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`
+- scope: 영향 받는 패키지 또는 모듈명
+- 예시: `feat(cli): add init command closes #12`
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, and every issue has verifiable acceptance criteria before work begins.
