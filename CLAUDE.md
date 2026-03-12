@@ -141,4 +141,35 @@ closes #<이슈번호>
 
 ---
 
+## 7. Team Command Routing
+
+**명령 앞에 `team N:` 접두사가 붙으면 멀티 워커 모드로 실행한다.**
+
+### 형식
+
+```
+team <N>:<작업 내용>
+```
+
+- `N`: 생성할 워커 수 (양의 정수)
+- `<작업 내용>`: 수행할 작업 설명
+
+### 동작 규칙
+
+| 입력 형식 | 처리 방식 |
+|---|---|
+| `team 3:작업내용` | OMC `/oh-my-claudecode:team` 스킬을 N=3 워커로 실행 |
+| `작업내용` | 일반 작업으로 처리 (team 모드 없음) |
+
+### 파싱 규칙
+
+사용자 메시지가 `team <숫자>:` 로 시작하면:
+1. 숫자를 워커 수(N)로 파싱한다.
+2. `:` 이후의 텍스트를 작업 내용으로 파싱한다.
+3. `Agent` 툴로 `oh-my-claudecode:team` 서브에이전트를 N개 워커로 실행한다.
+
+`team <숫자>:` 접두사가 없으면 평소와 동일하게 일반 작업을 수행한다.
+
+---
+
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, every issue has verifiable acceptance criteria before work begins, and no destructive or sensitive operations are executed without explicit confirmation.
