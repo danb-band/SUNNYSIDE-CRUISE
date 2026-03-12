@@ -6,6 +6,7 @@ import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
+import { splitIntoChunks } from '../utils/ansi.js'
 
 const COMMANDS = [
   { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
@@ -82,7 +83,14 @@ client.on('messageCreate', async (message: Message) => {
         encoding: 'utf8',
         timeout: 15000,
       }).trim()
-      await message.reply(output ? `\`\`\`\n${output}\n\`\`\`` : '비용 정보를 가져올 수 없습니다.')
+      if (!output) {
+        await message.reply('비용 정보를 가져올 수 없습니다.')
+      } else {
+        const chunks = splitIntoChunks(output, 1800)
+        for (const chunk of chunks) {
+          await message.reply('```\n' + chunk + '\n```')
+        }
+      }
     } catch (err) {
       await message.reply(`❌ 비용 조회 실패: ${(err as Error).message}`)
     }
