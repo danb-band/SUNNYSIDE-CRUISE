@@ -11,9 +11,12 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-# Initialize Supabase if not present (run from apps/assassin)
+# Supabase CLI requires config.toml to be in cwd
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ ! -f "$SCRIPT_DIR/config.toml" ]; then
+cd "$SCRIPT_DIR"
+
+# Initialize Supabase if not present
+if [ ! -f "config.toml" ]; then
   supabase init
 fi
 
@@ -126,7 +129,6 @@ END $$;
 SQL
 
 # Apply SQL migrations
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for migration in "$SCRIPT_DIR/migrations"/*.sql; do
   [ -f "$migration" ] || continue
   echo "Applying migration: $(basename "$migration")"
