@@ -1,0 +1,20 @@
+#!/bin/sh
+# Validates conventional commit message format
+# Pattern: <type>(<scope>): <subject>
+# Types: feat, fix, refactor, docs, chore, test, style, perf, ci, build, revert
+
+commit_msg=$(cat "$1")
+
+pattern='^(feat|fix|refactor|docs|chore|test|style|perf|ci|build|revert)(\(.+\))?: .{1,100}'
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo "❌ 커밋 메시지 형식 오류"
+  echo ""
+  echo "  올바른 형식: <type>(<scope>): <subject>"
+  echo "  예시: feat(ymm): Discord 봇 명령 추가 closes #12"
+  echo ""
+  echo "  허용 type: feat, fix, refactor, docs, chore, test, style, perf, ci, build, revert"
+  echo ""
+  echo "  현재 메시지: $commit_msg"
+  exit 1
+fi
