@@ -1,0 +1,16 @@
+#!/bin/sh
+# Blocks direct push to main branch
+
+current_branch=$(git symbolic-ref HEAD | sed 's|refs/heads/||')
+remote="$1"
+remote_url="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -qE "^refs/heads/main$"; then
+    echo "❌ main 브랜치에 직접 push 금지 (CLAUDE.md Section 6)"
+    echo "   PR을 통해 dev → main 머지를 사용하세요."
+    exit 1
+  fi
+done
+
+exit 0
