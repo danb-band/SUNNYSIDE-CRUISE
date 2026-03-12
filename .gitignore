@@ -52,3 +52,6 @@
 # env
 **/.env
 **/.env.local
+
+# omc
+.omc
