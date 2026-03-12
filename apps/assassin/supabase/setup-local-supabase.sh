@@ -7,17 +7,29 @@ if ! command -v supabase >/dev/null 2>&1; then
 fi
 
 if ! docker info >/dev/null 2>&1; then
-  echo "Docker is not running. Start Docker Desktop and retry." >&2
+  echo "Docker is not running. Start Docker and retry." >&2
   exit 1
 fi
 
+# Supabase CLI requires config.toml to be in cwd
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+docker_context="$(docker context show 2>/dev/null || true)"
+docker_endpoint="$(docker context inspect "$docker_context" --format '{{(index .Endpoints "docker").Host}}' 2>/dev/null || true)"
+
 # Initialize Supabase if not present
-if [ ! -d "./supabase" ]; then
+if [ ! -f "config.toml" ]; then
   supabase init
 fi
 
 # Start local Supabase
-supabase start
+if [[ "$docker_endpoint" == *"/.colima/"* ]]; then
+  echo "Detected Colima Docker socket. Starting Supabase with '-x vector' to avoid docker.sock mount issue."
+  supabase start -x vector
+else
+  supabase start
+fi
 
 status_json=$(supabase status --output json)
 
@@ -80,7 +92,7 @@ docker exec -i "$db_container" psql -U postgres -d postgres \
   -c "ALTER TABLE IF EXISTS public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;"
 
 # Apply Prisma schema (explicitly use local DB URL so prisma.config.ts doesn't fall back to remote)
-DATABASE_URL="$local_db_url" DIRECT_URL="$local_db_url" pnpm assassin exec prisma db push
+DATABASE_URL="$local_db_url" DIRECT_URL="$local_db_url" pnpm exec prisma db push
 
 # Ensure realtime publication + replica identity for core tables
 cat <<'SQL' | docker exec -i "$db_container" psql -U postgres -d postgres
@@ -125,7 +137,6 @@ END $$;
 SQL
 
 # Apply SQL migrations
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for migration in "$SCRIPT_DIR/migrations"/*.sql; do
   [ -f "$migration" ] || continue
   echo "Applying migration: $(basename "$migration")"

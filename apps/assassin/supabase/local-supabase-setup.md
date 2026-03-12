@@ -2,14 +2,14 @@
 
 ## Prerequisites
 
-- Docker Desktop installed and running
+- Docker daemon running (Docker Desktop / Colima / OrbStack)
 - Xcode Command Line Tools installed
 
 ## One-shot CLI (recommended)
 
-From repo root:
+From `apps/assassin`:
 
-./scripts/setup-local-supabase.sh
+./supabase/setup-local-supabase.sh
 
 ## Login (local)
 
@@ -42,6 +42,10 @@ supabase init
 ### 4) Start local Supabase (Docker)
 
 supabase start
+
+If you use Colima and see a docker.sock mount error, run:
+
+supabase start -x vector
 
 ### 5) Verify services
 
