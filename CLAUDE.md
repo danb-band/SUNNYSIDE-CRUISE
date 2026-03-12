@@ -6,6 +6,28 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 
 ---
 
+## ⛔ 작업 시작 전 필수 체크리스트 (MANDATORY — 코딩 전 반드시 확인)
+
+**코드를 한 줄도 작성하기 전에 아래를 순서대로 실행할 것.**
+
+```
+[ ] 1. GitHub 이슈 존재 확인 — 없으면 먼저 생성 (gh issue create)
+[ ] 2. git checkout dev && git pull origin dev
+[ ] 3. git checkout -b feature/<이슈번호>-<짧은-설명>
+[ ] 4. 이슈의 영향 범위 확인 — 그 외 파일 수정 금지
+[ ] 5. 완료 조건 목록 작성 — 모두 충족 후 종료
+```
+
+작업 완료 후:
+```
+[ ] 6. git commit (conventional commit 형식, 이슈번호 포함)
+[ ] 7. PR 생성 — dev 브랜치 타겟, PR body에 완료 조건 체크리스트 포함
+```
+
+> 이 체크리스트를 건너뛰면 나중에 브랜치/PR 구조를 다시 고쳐야 한다. 처음부터 지킬 것.
+
+---
+
 ## 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
