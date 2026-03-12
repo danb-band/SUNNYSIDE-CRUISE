@@ -11,8 +11,9 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-# Initialize Supabase if not present
-if [ ! -d "./supabase" ]; then
+# Initialize Supabase if not present (run from apps/assassin)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ ! -f "$SCRIPT_DIR/config.toml" ]; then
   supabase init
 fi
 

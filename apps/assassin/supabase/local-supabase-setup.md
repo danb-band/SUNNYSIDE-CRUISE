@@ -7,9 +7,9 @@
 
 ## One-shot CLI (recommended)
 
-From repo root:
+From `apps/assassin`:
 
-./scripts/setup-local-supabase.sh
+./supabase/setup-local-supabase.sh
 
 ## Login (local)
 
