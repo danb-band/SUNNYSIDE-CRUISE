@@ -4,8 +4,10 @@ import { Check, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRsvpLogic } from "@/features/rsvp/hooks/useRsvpLogic";
 import { useRsvpHandlers } from "@/features/rsvp/hooks/useRsvpHandlers";
+import { useRealtimeRsvpSync } from "@/features/rsvp/hooks/useRealtimeRsvpSync";
 
 export function RsvpButton({ eventId }: { eventId: string }) {
+  useRealtimeRsvpSync(eventId);
   const { isAttending } = useRsvpLogic(eventId);
   const { handleToggle, isLoading } = useRsvpHandlers(eventId);
 
