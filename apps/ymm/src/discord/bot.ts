@@ -9,12 +9,13 @@ import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
 import { splitIntoChunks } from '../utils/ansi.js'
 
 const COMMANDS = [
-  { name: '!done',    desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
-  { name: '!stop',    desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
-  { name: '!session', desc: '현재 활성 세션 ID 확인' },
-  { name: '!cost',    desc: 'Claude Code 세션의 토큰 사용량 확인' },
-  { name: '#숫자',    desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
-  { name: '/help',    desc: '명령어 목록 보기' },
+  { name: '!done',         desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
+  { name: '!stop',         desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
+  { name: '!session',      desc: '현재 활성 세션 ID 확인' },
+  { name: '!cost',         desc: 'Claude Code 세션의 토큰 사용량 확인' },
+  { name: '#숫자',         desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
+  { name: 'team N:작업',  desc: 'N개 워커로 멀티 에이전트 병렬 실행 (예: team 3:버튼 컴포넌트 리팩터)' },
+  { name: '/help',         desc: '명령어 목록 보기' },
 ]
 
 const ISSUE_PATTERN = /^#(\d+)$/
