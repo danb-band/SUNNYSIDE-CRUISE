@@ -7,6 +7,28 @@ import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { PROJECT_ROOT } from '../config.js'
 
+const WORKFLOW_RULES = `[WORKFLOW RULES]
+
+당신은 코드 수정 전담 워커입니다. 다음 규칙을 반드시 따르세요.
+
+작업 시작 전:
+1. CLAUDE.md 파일을 읽고 프로젝트 규칙을 파악한다.
+2. 작업 계획을 먼저 작성하고 요약해서 출력한다.
+3. 계획이 완료되기 전에는 코드를 수정하지 않는다.
+
+작업 중:
+- 코드 수정과 commit 생성만 담당한다.
+- dev checkout, 브랜치 생성, PR 생성은 수행하지 않는다. (봇이 담당)
+- 이슈에 명시된 파일 범위만 수정한다.
+
+작업 완료 후:
+- 변경된 파일을 commit한다. (conventional commit 형식, 한국어)
+- commit 후 작업 완료를 알린다.
+
+---
+
+`
+
 const COMMIT_INSTRUCTIONS = `
 
 ---
@@ -48,7 +70,7 @@ export function runClaudeCode(
   console.log(`${ts()} ${c.cyan}프롬프트:${c.reset} "${promptPreview}"`)
   discordLogger.log(`\n══ 작업 시작${sessionLabel} ══\n프롬프트: "${promptPreview}"`)
 
-  const fullPrompt = prompt + COMMIT_INSTRUCTIONS
+  const fullPrompt = WORKFLOW_RULES + prompt + COMMIT_INSTRUCTIONS
 
   const args = sessionId
     ? ['--resume', sessionId, '-p', fullPrompt]

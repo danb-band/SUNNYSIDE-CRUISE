@@ -163,6 +163,14 @@ client.on('messageCreate', async (message: Message) => {
       commandChannel,
       onSuccess: async () => {
         const target = resultChannel ?? message.channel as TextChannel
+        // 빌드 확인
+        try {
+          execSync('pnpm --filter ymm build', { cwd: PROJECT_ROOT, stdio: 'pipe' })
+        } catch (err) {
+          await target.send(`❌ 빌드 실패로 PR 생성을 건너뜁니다.\n\`\`\`\n${(err as Error).message.slice(0, 500)}\n\`\`\``)
+          return
+        }
+        // PR 생성
         try {
           const pr = await createPR(issue, branchName)
           await target.send(`🎉 PR이 생성되었습니다! **#${pr.number}**\n${pr.url}`)
