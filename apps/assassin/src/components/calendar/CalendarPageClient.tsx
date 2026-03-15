@@ -15,6 +15,8 @@ import { useDeleteCalendarEvent } from "@/features/calendar/mutations/useDeleteC
 import { useCalendarEventLogic } from "@/features/calendar/hooks/useCalendarEventLogic";
 import { useRealtimeCalendarEventSync } from "@/features/calendar/hooks/useRealtimeCalendarEventSync";
 import type { CalendarEvent } from "@/features/calendar/schema";
+import { RsvpButton } from "@/components/calendar/RsvpButton";
+import { RsvpList } from "@/components/calendar/RsvpList";
 
 type DialogState =
   | { type: "none" }
@@ -333,6 +335,11 @@ function EventCard({
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {getTimeLabel(event, selectedDate)}
           </p>
+        </div>
+        {/* RSVP 섹션 */}
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-start justify-between gap-2">
+          <RsvpList eventId={event.id} />
+          <RsvpButton eventId={event.id} />
         </div>
       </div>
     </li>

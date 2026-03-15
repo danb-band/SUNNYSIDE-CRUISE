@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Profile {
-  id        String     @id @db.Uuid
+  id        String              @id @db.Uuid
   name      String
   comment   Comment[]
   song_like SongLike[]
+  rsvp      CalendarEventRsvp[]
 
   @@map("profiles")
 }
@@ -81,15 +82,31 @@ model Song {
 }
 
 model CalendarEvent {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title     String
   location  String
-  startDate DateTime @db.Timestamptz(6)
-  endDate   DateTime @db.Timestamptz(6)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+  startDate DateTime            @db.Timestamptz(6)
+  endDate   DateTime            @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime            @default(now()) @db.Timestamptz(6)
+  rsvp      CalendarEventRsvp[]
 
   @@map("calendar_event")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model CalendarEventRsvp {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String        @db.Uuid
+  userId    String        @db.Uuid
+  status    RsvpStatus
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime      @default(now()) @db.Timestamptz(6)
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  profile   Profile       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([eventId, userId])
+  @@map("calendar_event_rsvp")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -103,4 +120,9 @@ model SongLike {
 
   @@unique([songId, userId])
   @@map("song_like")
+}
+
+enum RsvpStatus {
+  ATTENDING
+  NOT_ATTENDING
 }
