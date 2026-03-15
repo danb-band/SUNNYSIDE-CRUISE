@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "assassin": "pnpm --filter assassin",
+    "ymm": "pnpm --filter ymm",
     "global-eslint": "pnpm --filter global-eslint",
     "preinstall": "npx only-allow pnpm",
+    "prepare": "git config core.hooksPath .githooks || true",
     "lint": "eslint ."
   },
   "devDependencies": {
