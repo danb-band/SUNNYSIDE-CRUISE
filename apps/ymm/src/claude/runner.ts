@@ -7,6 +7,29 @@ import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { PROJECT_ROOT } from '../config.js'
 
+const WORKFLOW_RULES = `[WORKFLOW RULES]
+
+작업을 시작하기 전에 반드시 다음 절차를 수행해야 한다.
+
+1. dev 브랜치를 checkout 하고 최신 상태로 pull 한다.
+2. claude.md 파일을 읽는다.
+3. claude.md에 정의된 작업 규칙을 요약한다.
+4. 작업 계획을 먼저 작성하고 요약해서 출력한다.
+5. 계획이 완료되기 전에는 코드를 수정하지 않는다.
+
+작업을 완료한 후에는 반드시 다음 절차를 수행해야 한다.
+
+- 테스트 실행
+- 빌드 확인
+- 테스트와 빌드가 모두 성공한 경우에만 PR 생성
+
+이 규칙은 항상 준수해야 한다.
+규칙을 따르지 못하는 경우 작업을 중단하고 이유를 설명해야 한다.
+
+---
+
+`
+
 const COMMIT_INSTRUCTIONS = `
 
 ---
@@ -48,7 +71,7 @@ export function runClaudeCode(
   console.log(`${ts()} ${c.cyan}프롬프트:${c.reset} "${promptPreview}"`)
   discordLogger.log(`\n══ 작업 시작${sessionLabel} ══\n프롬프트: "${promptPreview}"`)
 
-  const fullPrompt = prompt + COMMIT_INSTRUCTIONS
+  const fullPrompt = WORKFLOW_RULES + prompt + COMMIT_INSTRUCTIONS
 
   const args = sessionId
     ? ['--resume', sessionId, '-p', fullPrompt]
