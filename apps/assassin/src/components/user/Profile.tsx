@@ -83,7 +83,7 @@ export function Profile() {
                   className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400"
                 >
                   <User className="h-3.5 w-3.5" />
-                  이름
+                  닉네임
                 </label>
                 <Input
                   id="edit-name"
