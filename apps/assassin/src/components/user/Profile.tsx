@@ -95,6 +95,22 @@ export function Profile() {
                 {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
               </div>
 
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="edit-real-name"
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  실명
+                </label>
+                <Input
+                  id="edit-real-name"
+                  value={profile?.real_name ?? ""}
+                  readOnly
+                  className={`${inputClassName} cursor-not-allowed opacity-60`}
+                />
+              </div>
+
               {errors._root && <p className="text-xs text-red-500">{errors._root}</p>}
               {successMessage && <p className="text-xs text-green-600">{successMessage}</p>}
             </div>
