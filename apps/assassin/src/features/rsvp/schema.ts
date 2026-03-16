@@ -18,6 +18,7 @@ export const rsvpWithProfileSchema = calendarEventRsvpSchema.extend({
   profile: z.object({
     id: z.uuid(),
     name: z.string(),
+    realName: z.string(),
   }),
 });
 

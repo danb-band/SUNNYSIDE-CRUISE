@@ -1,25 +1,25 @@
--- Migration: add_profile_real_name
--- Adds real_name column to profiles table (NOT NULL).
--- Backfills existing rows with real_name = name.
--- Creates/updates trigger to inject real_name for new users.
+-- Migration: add_profile_realName
+-- Adds "realName" column to profiles table (NOT NULL).
+-- Backfills existing rows with "realName" = name.
+-- Creates/updates trigger to inject "realName" for new users.
 
 BEGIN;
 
--- 1. Add real_name column as nullable first (needed for backfill)
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS real_name TEXT;
+-- 1. Add "realName" column as nullable first (needed for backfill)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS "realName" TEXT;
 
 -- 2. Backfill existing rows
-UPDATE public.profiles SET real_name = name WHERE real_name IS NULL;
+UPDATE public.profiles SET "realName" = name WHERE "realName" IS NULL;
 
 -- 3. Enforce NOT NULL
-ALTER TABLE public.profiles ALTER COLUMN real_name SET NOT NULL;
+ALTER TABLE public.profiles ALTER COLUMN "realName" SET NOT NULL;
 
 -- 4. Create/replace trigger function for new user sign-ups
---    Sets both name and real_name from auth user metadata.
+--    Sets both name and "realName" from auth user metadata.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name, real_name)
+  INSERT INTO public.profiles (id, name, "realName")
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', ''),

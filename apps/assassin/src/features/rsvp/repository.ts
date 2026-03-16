@@ -3,7 +3,7 @@ import { prisma } from "@libs/prisma/client";
 async function getRsvpsByEvent(eventId: string) {
   return prisma.calendarEventRsvp.findMany({
     where: { eventId, status: "ATTENDING" },
-    include: { profile: { select: { id: true, name: true } } },
+    include: { profile: { select: { id: true, name: true, realName: true } } },
     orderBy: { createdAt: "asc" },
   });
 }
