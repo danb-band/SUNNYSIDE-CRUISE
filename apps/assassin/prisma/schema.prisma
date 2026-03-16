@@ -10,6 +10,7 @@ datasource db {
 model Profile {
   id        String              @id @db.Uuid
   name      String
+  real_name String
   comment   Comment[]
   song_like SongLike[]
   rsvp      CalendarEventRsvp[]

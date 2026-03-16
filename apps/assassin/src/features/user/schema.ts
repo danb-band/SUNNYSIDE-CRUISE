@@ -3,6 +3,7 @@ import * as z from "zod";
 export const profileSchema = z.object({
   id: z.uuid(),
   name: z.string(),
+  real_name: z.string(),
 });
 
 export const updateProfileSchema = z.object({
