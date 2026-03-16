@@ -91,6 +91,13 @@ PY
 docker exec -i "$db_container" psql -U postgres -d postgres \
   -c "ALTER TABLE IF EXISTS public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;"
 
+# Apply SQL migrations first (must run before prisma db push so nullable→backfill→NOT NULL pattern works)
+for migration in "$SCRIPT_DIR/migrations"/*.sql; do
+  [ -f "$migration" ] || continue
+  echo "Applying migration: $(basename "$migration")"
+  docker exec -i "$db_container" psql -U postgres -d postgres < "$migration"
+done
+
 # Apply Prisma schema (explicitly use local DB URL so prisma.config.ts doesn't fall back to remote)
 DATABASE_URL="$local_db_url" DIRECT_URL="$local_db_url" pnpm exec prisma db push
 
@@ -135,13 +142,6 @@ BEGIN
   END IF;
 END $$;
 SQL
-
-# Apply SQL migrations
-for migration in "$SCRIPT_DIR/migrations"/*.sql; do
-  [ -f "$migration" ] || continue
-  echo "Applying migration: $(basename "$migration")"
-  docker exec -i "$db_container" psql -U postgres -d postgres < "$migration"
-done
 
 # Seed demo data
 cat <<'SQL' | docker exec -i "$db_container" psql -U postgres -d postgres
