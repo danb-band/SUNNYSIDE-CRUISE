@@ -83,7 +83,7 @@ export function Profile() {
                   className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400"
                 >
                   <User className="h-3.5 w-3.5" />
-                  이름
+                  닉네임
                 </label>
                 <Input
                   id="edit-name"
@@ -93,6 +93,22 @@ export function Profile() {
                   className={inputClassName}
                 />
                 {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="edit-real-name"
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  이름
+                </label>
+                <Input
+                  id="edit-real-name"
+                  value={profile?.realName ?? ""}
+                  readOnly
+                  className={`${inputClassName} cursor-not-allowed opacity-60`}
+                />
               </div>
 
               {errors._root && <p className="text-xs text-red-500">{errors._root}</p>}
