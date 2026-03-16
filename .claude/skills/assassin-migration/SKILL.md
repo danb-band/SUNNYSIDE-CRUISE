@@ -1,14 +1,14 @@
 ---
-name: sunnyside-migration
+name: assassin-migration
 description: >
-  Guide for adding a new Supabase migration to the SUNNYSIDE-CRUISE project (apps/assassin).
+  Guide for adding a new Supabase migration to the assassin app.
   Use this skill whenever a new DB table, column, enum, index, RLS policy, trigger, or
   Prisma model change is needed. Triggers on requests like "add a table", "create a migration",
   "add a column to X", "new Prisma model", "DB schema 변경", "RLS 추가", "마이그레이션 만들어줘",
   or any request that requires touching prisma/schema.prisma or supabase/migrations/.
 ---
 
-# SUNNYSIDE-CRUISE Migration Guide
+# Assassin App Migration Guide
 
 ## Architecture Overview
 

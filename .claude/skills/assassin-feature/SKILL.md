@@ -1,7 +1,7 @@
 ---
-name: sunnyside-feature
+name: assassin-feature
 description: >
-  Guide for adding a new domain feature to apps/assassin in the SUNNYSIDE-CRUISE project.
+  Guide for adding a new domain feature to the assassin app.
   Apply this skill whenever a new feature, domain, or module needs to be built inside the
   features/ directory — following the project's layered architecture:
   schema → repository → service → actions → queries/mutations → hooks.
@@ -9,7 +9,7 @@ description: >
   for X", "add a feature folder", or any request that involves creating files under src/features/.
 ---
 
-# SUNNYSIDE-CRUISE Feature Creation Guide
+# Assassin App Feature Creation Guide
 
 ## Project Context
 
