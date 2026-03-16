@@ -117,7 +117,7 @@ export function RsvpList({ eventId }: { eventId: string }) {
                   aria-selected={false}
                   className="px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-default"
                 >
-                  {rsvp.profile.real_name}
+                  {rsvp.profile.realName}
                 </div>
               ))}
             </div>

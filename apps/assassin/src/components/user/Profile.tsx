@@ -105,7 +105,7 @@ export function Profile() {
                 </label>
                 <Input
                   id="edit-real-name"
-                  value={profile?.real_name ?? ""}
+                  value={profile?.realName ?? ""}
                   readOnly
                   className={`${inputClassName} cursor-not-allowed opacity-60`}
                 />

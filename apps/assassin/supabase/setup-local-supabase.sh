@@ -148,9 +148,9 @@ cat <<'SQL' | docker exec -i "$db_container" psql -U postgres -d postgres
 BEGIN;
 
 -- Profile
-INSERT INTO profiles (id, name, real_name)
+INSERT INTO profiles (id, name, "realName")
 SELECT id, 'Demo User', 'Demo User' FROM auth.users WHERE email = 'demo@local.test'
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, real_name = EXCLUDED.real_name;
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, "realName" = EXCLUDED."realName";
 
 -- Seasons
 INSERT INTO season (id, name, "sortOrder", "isArchived")
