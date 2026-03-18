@@ -1,58 +1,54 @@
 import { prisma } from "@libs/prisma/client";
-import type { Player } from "@generated/prisma/client";
+import type { Player, Profile } from "@generated/prisma/client";
 import { PlayerPayload, PlayerUpdatePayload } from "./schema";
 import { TransactionClient } from "@libs/prisma/types";
 
-async function getAllPlayers(): Promise<Player[]> {
-  const players = await prisma.player.findMany({
+type PlayerWithProfile = Player & { profile: Profile };
+
+async function getAllPlayers(): Promise<PlayerWithProfile[]> {
+  return await prisma.player.findMany({
     where: { deletedAt: null },
+    include: { profile: true },
     orderBy: { createdAt: "desc" },
   });
-  return players;
 }
 
-async function getPlayerById(id: string): Promise<Player | null> {
-  const player = await prisma.player.findUnique({
-    where: {
-      id,
-      deletedAt: null,
-    },
+async function getPlayerById(id: string): Promise<PlayerWithProfile | null> {
+  return await prisma.player.findUnique({
+    where: { id, deletedAt: null },
+    include: { profile: true },
   });
-  return player;
 }
 
-async function getPlayersBySongId(songId: string): Promise<Player[]> {
-  const players = await prisma.player.findMany({
-    where: {
-      songId: songId,
-      deletedAt: null,
-    },
+async function getPlayersBySongId(songId: string): Promise<PlayerWithProfile[]> {
+  return await prisma.player.findMany({
+    where: { songId, deletedAt: null },
+    include: { profile: true },
     orderBy: { createdAt: "asc" },
   });
-  return players;
 }
 
-async function createPlayer(input: PlayerPayload): Promise<Player> {
-  const player = await prisma.player.create({
+async function createPlayer(input: PlayerPayload): Promise<PlayerWithProfile> {
+  return await prisma.player.create({
     data: {
-      name: input.name,
+      userId: input.userId,
       instrument: input.instrument,
       songId: input.songId,
     },
+    include: { profile: true },
   });
-  return player;
 }
 
-async function updatePlayer(id: string, input: PlayerUpdatePayload): Promise<Player> {
-  const player = await prisma.player.update({
+async function updatePlayer(id: string, input: PlayerUpdatePayload): Promise<PlayerWithProfile> {
+  return await prisma.player.update({
     where: { id },
     data: {
-      name: input.name,
+      userId: input.userId,
       instrument: input.instrument,
       songId: input.songId,
     },
+    include: { profile: true },
   });
-  return player;
 }
 
 async function deletePlayer(id: string, tx?: TransactionClient) {
@@ -66,7 +62,7 @@ async function deletePlayer(id: string, tx?: TransactionClient) {
 async function deletePlayersBySongId(songId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.player.updateMany({
-    where: { songId: songId },
+    where: { songId },
     data: { deletedAt: new Date() },
   });
 }

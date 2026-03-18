@@ -20,7 +20,7 @@ export type UsePlayerFormProps =
     };
 interface FormErrors {
   songId?: string;
-  name?: string;
+  userId?: string;
   instrument?: string;
   _root?: string;
 }
@@ -30,7 +30,7 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
 
   const [formData, setFormData] = useState<Partial<PlayerPayload>>({
     songId: initialData.songId || "",
-    name: initialData.name || "",
+    userId: initialData.userId || "",
     instrument: initialData.instrument || undefined,
   });
 
@@ -82,7 +82,7 @@ export const usePlayerForm = (props: UsePlayerFormProps) => {
   const resetForm = useCallback(() => {
     setFormData({
       songId: initialData.songId || "",
-      name: initialData.name || "",
+      userId: initialData.userId || "",
       instrument: initialData.instrument || undefined,
     });
     setErrors({});
