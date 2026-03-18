@@ -1,5 +1,10 @@
 import UserRepository from "./repository";
 import { Profile, profileSchema, updateProfileSchema, UpdateProfilePayload } from "./schema";
+import type { Profile as PrismaProfile } from "@generated/prisma/client";
+
+const getAllProfiles = async (): Promise<PrismaProfile[]> => {
+  return await UserRepository.getAllProfiles();
+};
 
 const getProfile = async (id: string): Promise<Profile | null> => {
   const profile = await UserRepository.getProfileById(id);
@@ -41,6 +46,7 @@ const updateProfile = async (id: string, payload: UpdateProfilePayload): Promise
 
 const UserService = {
   getProfile,
+  getAllProfiles,
   updateProfile,
 };
 
