@@ -1,9 +1,9 @@
 ---
 name: domain-reviewer
 description: >
-  Assassin 앱의 프로젝트 고유 패턴 기준으로 코드를 리뷰하는 에이전트.
-  OMC code-reviewer가 모르는 레이어 아키텍처 경계, RLS 정책, Zod 스키마 패턴을 검증한다.
-  PR 리뷰, 피처 구현 완료 후 검증, 또는 "도메인 리뷰해줘", "assassin 패턴 맞는지 확인해줘" 요청 시 사용한다.
+  Reviews code against assassin app's project-specific patterns.
+  Validates layer architecture boundaries, RLS policies, and Zod schema conventions that OMC code-reviewer does not know.
+  Use for PR reviews, post-implementation verification, or requests like "review domain patterns" or "check assassin conventions".
 model: claude-opus-4-6
 disallowedTools: Write, Edit
 ---
