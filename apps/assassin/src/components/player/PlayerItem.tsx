@@ -2,23 +2,23 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Save, X, Loader2 } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { usePlayerHandlers } from "@/features/player/hooks/usePlayerHandlers";
-import type { Player, Instrument } from "@/features/player/schema";
+import type { PlayerWithProfile, Instrument } from "@/features/player/schema";
 import { INSTRUMENT_LABELS, INSTRUMENT_COLORS } from "./constants";
+import { UserSearchInput } from "./UserSearchInput";
 
 interface PlayerItemProps {
-  player: Player;
+  player: PlayerWithProfile;
 }
 
 export function PlayerItem({ player }: PlayerItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const savedDataRef = useRef({ instrument: player.instrument, name: player.name });
+  const savedDataRef = useRef({ instrument: player.instrument, userId: player.userId });
 
   const { formState, handleSubmit, handleChangeField, handleDeletePlayer, isProcessing } =
     usePlayerHandlers({
@@ -26,7 +26,7 @@ export function PlayerItem({ player }: PlayerItemProps) {
       playerId: player.id,
       initialData: {
         songId: player.songId,
-        name: player.name,
+        userId: player.userId,
         instrument: player.instrument,
       },
     });
@@ -34,11 +34,11 @@ export function PlayerItem({ player }: PlayerItemProps) {
   const { formData, errors } = formState;
 
   const handleStartEditing = useCallback(() => {
-    savedDataRef.current = { instrument: player.instrument, name: player.name };
+    savedDataRef.current = { instrument: player.instrument, userId: player.userId };
     handleChangeField("instrument", player.instrument);
-    handleChangeField("name", player.name);
+    handleChangeField("userId", player.userId);
     setIsEditing(true);
-  }, [player.instrument, player.name, handleChangeField]);
+  }, [player.instrument, player.userId, handleChangeField]);
 
   const handleSave = useCallback(async () => {
     const result = await handleSubmit();
@@ -49,7 +49,7 @@ export function PlayerItem({ player }: PlayerItemProps) {
 
   const handleCancel = useCallback(() => {
     handleChangeField("instrument", savedDataRef.current.instrument);
-    handleChangeField("name", savedDataRef.current.name);
+    handleChangeField("userId", savedDataRef.current.userId);
     setIsEditing(false);
   }, [handleChangeField]);
 
@@ -61,9 +61,6 @@ export function PlayerItem({ player }: PlayerItemProps) {
     await handleDeletePlayer(player.id, player.songId);
     setIsDeleteDialogOpen(false);
   }, [handleDeletePlayer, player.id, player.songId]);
-
-  const inputClassName =
-    "h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
 
   if (isEditing) {
     return (
@@ -90,17 +87,10 @@ export function PlayerItem({ player }: PlayerItemProps) {
           })}
         </div>
         <div className="flex items-center gap-2">
-          <Input
-            value={(formData.name as string) ?? ""}
-            onChange={(e) => handleChangeField("name", e.target.value)}
-            placeholder="이름"
-            className={cn(inputClassName, "flex-1")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                handleSave();
-              }
-            }}
+          <UserSearchInput
+            value={(formData.userId as string) ?? ""}
+            onChange={(userId) => handleChangeField("userId", userId)}
+            placeholder="이름 검색"
           />
           <div className="flex gap-1">
             <Button
@@ -127,8 +117,8 @@ export function PlayerItem({ player }: PlayerItemProps) {
           </div>
         </div>
 
-        {(errors.instrument || errors.name || errors._root) && (
-          <p className="text-xs text-red-500">{errors.instrument || errors.name || errors._root}</p>
+        {(errors.instrument || errors.userId || errors._root) && (
+          <p className="text-xs text-red-500">{errors.instrument || errors.userId || errors._root}</p>
         )}
         </div>
         <ConfirmDialog
@@ -156,7 +146,7 @@ export function PlayerItem({ player }: PlayerItemProps) {
           >
             {INSTRUMENT_LABELS[player.instrument]}
           </Badge>
-          <span className="text-sm text-slate-800 dark:text-slate-200 truncate">{player.name}</span>
+          <span className="text-sm text-slate-800 dark:text-slate-200 truncate">{player.profile.realName}</span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity">
           <Button

@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { usePlayerHandlers } from "@/features/player/hooks/usePlayerHandlers";
 import type { Instrument } from "@/features/player/schema";
 import { INSTRUMENT_LABELS, INSTRUMENT_COLORS } from "./constants";
+import { UserSearchInput } from "./UserSearchInput";
 
 interface PlayerInputProps {
   songId: string;
@@ -56,17 +56,10 @@ export function PlayerInput({ songId, onComplete }: PlayerInputProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Input
-          value={formData.name ?? ""}
-          onChange={(e) => handleChangeField("name", e.target.value)}
-          placeholder="이름"
-          className={cn(inputClassName, "flex-1")}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              handleAdd();
-            }
-          }}
+        <UserSearchInput
+          value={(formData.userId as string) ?? ""}
+          onChange={(userId) => handleChangeField("userId", userId)}
+          placeholder="이름 검색"
         />
         <Button
           size="sm"
@@ -91,8 +84,8 @@ export function PlayerInput({ songId, onComplete }: PlayerInputProps) {
         </Button>
       </div>
 
-      {(errors.instrument || errors.name || errors._root) && (
-        <p className="text-xs text-red-500">{errors.instrument || errors.name || errors._root}</p>
+      {(errors.instrument || errors.userId || errors._root) && (
+        <p className="text-xs text-red-500">{errors.instrument || errors.userId || errors._root}</p>
       )}
     </div>
   );
