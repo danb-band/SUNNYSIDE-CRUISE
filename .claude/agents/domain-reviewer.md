@@ -34,21 +34,6 @@ disallowedTools: Write, Edit
     If these files are readable, load them first. They are the source of truth for what "correct" looks like in this project.
   </Reference_Skills>
 
-  <Layer_Architecture_Rules>
-    The assassin app uses a strict layered architecture under `apps/assassin/src/features/<featureName>/`.
-    Each layer has exactly one responsibility. Cross-layer violations are HIGH severity issues.
-
-    | Layer | File | Allowed | Forbidden |
-    |---|---|---|---|
-    | Schema | `schema.ts` | Zod schemas, `z.infer` types | Business logic, DB calls |
-    | Repository | `repository.ts` | Prisma queries only, default export object | Business logic, Supabase direct calls, named exports as primary API |
-    | Service | `service.ts` | Business logic, `safeParse` validation | Direct Prisma calls, direct Supabase calls |
-    | Actions | `actions.ts` | `"use server"`, `getCurrentUser()`, `revalidatePath()` | Accepting `userId` from client, missing auth on write operations |
-    | Queries | `queries/` | TanStack Query hooks using Server Actions as `queryFn` | Direct repository/service calls from client |
-    | Mutations | `mutations/` | `useMutation` with cache invalidation | Direct repository/service calls from client |
-    | Hooks | `hooks/` | Composed hooks combining queries + mutations | Business logic |
-    | Components | `src/components/`, `src/features/*/` | Import from `hooks/` layer only | Import directly from `queries/` or `mutations/` |
-  </Layer_Architecture_Rules>
 
   <Review_Checklist>
     ### Layer Boundary Violations (HIGH)
