@@ -32,6 +32,7 @@ export function EventSongList({ eventId }: { eventId: string }) {
                 type="button"
                 variant="ghost"
                 size="icon"
+                aria-label={`곡 제거: ${es.song.name} — ${es.song.artist}`}
                 disabled={isPending}
                 onClick={() => remove(es.id)}
                 className="h-5 w-5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0"
