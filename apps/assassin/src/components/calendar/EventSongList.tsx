@@ -35,7 +35,7 @@ export function EventSongList({ eventId }: { eventId: string }) {
                 aria-label={`곡 제거: ${es.song.name} — ${es.song.artist}`}
                 disabled={isPending}
                 onClick={() => remove(es.id)}
-                className="h-5 w-5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0"
+                className="h-5 w-5 opacity-60 group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100 text-slate-400 hover:text-red-500 dark:hover:text-red-400 flex-shrink-0"
               >
                 <X className="h-3 w-3" />
               </Button>
