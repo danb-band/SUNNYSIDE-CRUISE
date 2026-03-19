@@ -7,12 +7,12 @@ import { Pencil, Trash2, Save, X, Loader2 } from "lucide-react";
 import { cn } from "@/libs/shadcn/utils";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { usePlayerHandlers } from "@/features/player/hooks/usePlayerHandlers";
-import type { PlayerWithProfile, Instrument } from "@/features/player/schema";
+import type { Player, Instrument } from "@/features/player/schema";
 import { INSTRUMENT_LABELS, INSTRUMENT_COLORS } from "./constants";
 import { UserSearchInput } from "./UserSearchInput";
 
 interface PlayerItemProps {
-  player: PlayerWithProfile;
+  player: Player;
 }
 
 export function PlayerItem({ player }: PlayerItemProps) {
