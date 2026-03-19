@@ -1,9 +1,13 @@
 import UserRepository from "./repository";
 import { Profile, profileSchema, updateProfileSchema, UpdateProfilePayload } from "./schema";
-import type { Profile as PrismaProfile } from "@generated/prisma/client";
 
-const getAllProfiles = async (): Promise<PrismaProfile[]> => {
-  return await UserRepository.getAllProfiles();
+const getAllProfiles = async (): Promise<Profile[]> => {
+  const profiles = await UserRepository.getAllProfiles();
+  const parsed = profileSchema.array().safeParse(profiles);
+  if (!parsed.success) {
+    throw new Error("Invalid profile responses from DB");
+  }
+  return parsed.data;
 };
 
 const getProfile = async (id: string): Promise<Profile | null> => {
