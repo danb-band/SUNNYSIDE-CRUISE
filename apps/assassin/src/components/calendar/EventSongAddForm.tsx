@@ -93,6 +93,7 @@ export function EventSongAddForm({ eventId }: { eventId: string }) {
           disabled={!selectedSongId || isPending}
           onClick={handleAdd}
           className="bg-blue-500 hover:bg-blue-600 text-white flex-shrink-0"
+          aria-label="곡 추가"
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
