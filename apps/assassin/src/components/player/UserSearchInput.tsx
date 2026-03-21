@@ -28,6 +28,7 @@ export function UserSearchInput({
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
 
   const filtered =
     user.length > 0
@@ -58,12 +59,15 @@ export function UserSearchInput({
 
   useEffect(() => {
     if (!open) return;
-    const handleScroll = () => updateDropdownPosition();
+    const handleScroll = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      updateDropdownPosition();
+    };
     window.addEventListener("scroll", handleScroll, true);
-    window.addEventListener("resize", handleScroll);
+    window.addEventListener("resize", updateDropdownPosition);
     return () => {
       window.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("resize", updateDropdownPosition);
     };
   }, [open]);
 
@@ -88,6 +92,7 @@ export function UserSearchInput({
       {open && filtered.length > 0 &&
         createPortal(
           <ul
+            ref={dropdownRef}
             style={dropdownStyle}
             className="z-[9999] rounded-md border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 shadow-md max-h-48 overflow-auto text-sm"
           >
