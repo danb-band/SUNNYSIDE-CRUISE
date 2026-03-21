@@ -19,7 +19,7 @@ export function UserSearchInput({
   className,
 }: UserSearchInputProps) {
   const { data: profiles } = useAllProfiles();
-  const [query, setQuery] = useState(() => {
+  const [user, setUser] = useState(() => {
     // Initialize display value from selected userId
     const matched = profiles?.find((p) => p.id === value);
     return matched?.realName ?? "";
@@ -27,22 +27,22 @@ export function UserSearchInput({
   const [open, setOpen] = useState(false);
 
   const filtered =
-    query.length > 0
-      ? (profiles ?? []).filter((p) => p.realName.toLowerCase().includes(query.toLowerCase()))
+    user.length > 0
+      ? (profiles ?? []).filter((p) => p.realName.toLowerCase().includes(user.toLowerCase()))
       : (profiles ?? []);
 
   const handleSelect = (userId: string, realName: string) => {
     onChange(userId, realName);
-    setQuery(realName);
+    setUser(realName);
     setOpen(false);
   };
 
   return (
     <div className="relative flex-1">
       <Input
-        value={query}
+        value={user}
         onChange={(e) => {
-          setQuery(e.target.value);
+          setUser(e.target.value);
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
