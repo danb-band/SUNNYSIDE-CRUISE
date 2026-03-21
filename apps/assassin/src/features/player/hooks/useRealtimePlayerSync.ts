@@ -10,35 +10,19 @@ export const useRealtimePlayerSync = () => {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const updateSongPlayers = (songId: string, updater: (prev: Player[]) => Player[]) => {
-      queryClient.setQueryData(playerKeys.bySong(songId), (prev: Player[] | undefined) => {
-        const current = prev ?? [];
-        return updater(current);
-      });
-    };
-
     const removeSongPlayer = (songId: string, playerId: string) => {
       queryClient.removeQueries({ queryKey: playerKeys.detail(playerId) });
-      updateSongPlayers(songId, (prev) => prev.filter((player) => player.id !== playerId));
-    };
-
-    const upsertSongPlayer = (songId: string, player: Player) => {
-      queryClient.setQueryData(playerKeys.detail(player.id), player);
-      updateSongPlayers(songId, (prev) => {
-        const index = prev.findIndex((item) => item.id === player.id);
-        if (index === -1) return [...prev, player];
-        const updated = [...prev];
-        updated[index] = { ...updated[index], ...player };
-        return updated;
-      });
+      queryClient.setQueryData(playerKeys.bySong(songId), (prev: Player[] | undefined) =>
+        (prev ?? []).filter((player) => player.id !== playerId),
+      );
     };
 
     const playersChannel = supabase
       .channel("realtime:player")
       .on("postgres_changes", { event: "*", schema: "public", table: "player" }, (payload) => {
         const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
-        const nextPlayer = payload.new as Player | undefined;
-        const prevPlayer = payload.old as Player | undefined;
+        const nextPlayer = payload.new as Pick<Player, "id" | "songId" | "deletedAt"> | undefined;
+        const prevPlayer = payload.old as Pick<Player, "id" | "songId"> | undefined;
 
         if (eventType === "DELETE") {
           if (prevPlayer?.songId && prevPlayer?.id) {
@@ -54,18 +38,17 @@ export const useRealtimePlayerSync = () => {
           return;
         }
 
-        if (eventType === "UPDATE") {
-          if (
-            prevPlayer?.songId &&
-            nextPlayer.songId &&
-            prevPlayer.songId !== nextPlayer.songId &&
-            prevPlayer.id
-          ) {
-            removeSongPlayer(prevPlayer.songId, prevPlayer.id);
-          }
+        if (
+          eventType === "UPDATE" &&
+          prevPlayer?.songId &&
+          prevPlayer.songId !== nextPlayer.songId &&
+          prevPlayer.id
+        ) {
+          removeSongPlayer(prevPlayer.songId, prevPlayer.id);
         }
 
-        upsertSongPlayer(nextPlayer.songId, nextPlayer);
+        // payload.new doesn't include joined profile — invalidate to refetch with full data
+        queryClient.invalidateQueries({ queryKey: playerKeys.bySong(nextPlayer.songId) });
       })
       .subscribe();
 
