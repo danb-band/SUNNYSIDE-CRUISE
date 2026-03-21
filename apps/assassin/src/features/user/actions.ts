@@ -15,6 +15,10 @@ export const getCurrentUserProfileAction = async () => {
   return await UserService.getProfile(user.id);
 };
 
+export const getAllProfilesAction = async () => {
+  return await UserService.getAllProfiles();
+};
+
 export const updateProfileAction = async (payload: UpdateProfilePayload) => {
   const user = await getCurrentUser();
   const result = await UserService.updateProfile(user.id, payload);
