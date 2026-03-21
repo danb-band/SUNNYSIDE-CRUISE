@@ -1,5 +1,7 @@
 "use client";
 
+import { useId, useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/libs/shadcn/utils";
 import { useAllProfiles } from "@/features/user/queries/useAllProfiles";
 
@@ -13,33 +15,51 @@ interface UserSearchInputProps {
 export function UserSearchInput({
   value,
   onChange,
-  placeholder = "이름 선택",
+  placeholder = "이름 검색",
   className,
 }: UserSearchInputProps) {
   const { data: profiles } = useAllProfiles();
+  const datalistId = useId();
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value;
-    const profile = profiles?.find((p) => p.id === userId);
-    onChange(userId, profile?.realName ?? "");
+  const [displayValue, setDisplayValue] = useState(() => {
+    const matched = profiles?.find((p) => p.id === value);
+    return matched?.realName ?? "";
+  });
+
+  useEffect(() => {
+    const matched = profiles?.find((p) => p.id === value);
+    setDisplayValue(matched?.realName ?? "");
+  }, [value, profiles]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    setDisplayValue(input);
+    const matched = profiles?.find((p) => p.realName === input);
+    if (matched) {
+      onChange(matched.id, matched.realName);
+    } else if (!input) {
+      onChange("", "");
+    }
   };
 
   return (
-    <select
-      value={value}
-      onChange={handleChange}
-      className={cn(
-        "h-9 flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-sm text-slate-900 dark:text-slate-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20",
-        !value && "text-slate-400",
-        className,
-      )}
-    >
-      <option value="">{placeholder}</option>
-      {(profiles ?? []).map((p) => (
-        <option key={p.id} value={p.id}>
-          {p.realName}
-        </option>
-      ))}
-    </select>
+    <div className="flex-1">
+      <Input
+        list={datalistId}
+        value={displayValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        autoComplete="off"
+        className={cn(
+          "h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400",
+          className,
+        )}
+      />
+      <datalist id={datalistId}>
+        {(profiles ?? []).map((p) => (
+          <option key={p.id} value={p.realName} />
+        ))}
+      </datalist>
+    </div>
   );
 }
