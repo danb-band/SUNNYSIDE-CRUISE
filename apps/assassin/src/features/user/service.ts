@@ -1,6 +1,15 @@
 import UserRepository from "./repository";
 import { Profile, profileSchema, updateProfileSchema, UpdateProfilePayload } from "./schema";
 
+const getAllProfiles = async (): Promise<Profile[]> => {
+  const profiles = await UserRepository.getAllProfiles();
+  const parsed = profileSchema.array().safeParse(profiles);
+  if (!parsed.success) {
+    throw new Error("Invalid profile responses from DB");
+  }
+  return parsed.data;
+};
+
 const getProfile = async (id: string): Promise<Profile | null> => {
   const profile = await UserRepository.getProfileById(id);
 
@@ -41,6 +50,7 @@ const updateProfile = async (id: string, payload: UpdateProfilePayload): Promise
 
 const UserService = {
   getProfile,
+  getAllProfiles,
   updateProfile,
 };
 

@@ -14,6 +14,7 @@ model Profile {
   comment   Comment[]
   song_like SongLike[]
   rsvp      CalendarEventRsvp[]
+  player    Player[]
 
   @@map("profiles")
 }
@@ -37,11 +38,12 @@ model Comment {
 model Player {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   songId     String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
+  userId     String    @map("user_id") @db.Uuid
   instrument String
   createdAt  DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt  DateTime? @db.Timestamptz(6)
+  profile    Profile   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   song       Song      @relation(fields: [songId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_song_id_fkey")
 
   @@map("player")
