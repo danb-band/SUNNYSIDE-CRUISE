@@ -146,7 +146,9 @@ export function PlayerItem({ player }: PlayerItemProps) {
           >
             {INSTRUMENT_LABELS[player.instrument]}
           </Badge>
-          <span className="text-sm text-slate-800 dark:text-slate-200 truncate">{player.profile.realName}</span>
+          <span className="text-sm text-slate-800 dark:text-slate-200 truncate">
+            {player.profile?.realName ?? "알 수 없는 플레이어"}
+          </span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity">
           <Button
