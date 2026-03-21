@@ -64,10 +64,8 @@ export function UserSearchInput({
 
   useEffect(() => {
     if (!open) return;
-    window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
     return () => {
-      window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
   }, [open, updatePosition]);
@@ -130,6 +128,7 @@ export function UserSearchInput({
         createPortal(
           <ul
             ref={dropdownRef}
+            onScroll={(e) => e.stopPropagation()}
             style={{
               ...initialPos.current,
               maxHeight: `${ITEM_HEIGHT * MAX_VISIBLE_ITEMS}px`,
