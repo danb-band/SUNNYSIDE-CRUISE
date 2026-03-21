@@ -4,6 +4,11 @@ import { CalendarPageClient } from "@/components/calendar/CalendarPageClient";
 import { CalendarPageSkeleton } from "@/components/calendar/CalendarPageSkeleton";
 import { getCalendarEventsByMonthAction } from "@features/calendar/actions";
 import { calendarEventKeys } from "@features/calendar/queries/keys";
+import type { CalendarEvent } from "@features/calendar/schema";
+import { getRsvpAttendeesAction, getUserRsvpStatusAction } from "@features/rsvp/actions";
+import { rsvpKeys } from "@features/rsvp/queries/keys";
+import { getSongsByEventAction } from "@features/eventSong/actions";
+import { eventSongKeys } from "@features/eventSong/queries/keys";
 import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { CALENDAR_CACHE_TAG } from "@libs/cache/calendar";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
@@ -37,6 +42,25 @@ async function CalendarDataFetch({ searchParams }: CalendarPageProps) {
     queryKey: calendarEventKeys.lists(year, month),
     queryFn: () => getCachedCalendarEvents(year, month),
   });
+
+  const events =
+    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(year, month)) ?? [];
+  await Promise.all(
+    events.flatMap((event) => [
+      queryClient.prefetchQuery({
+        queryKey: rsvpKeys.byEvent(event.id),
+        queryFn: () => getRsvpAttendeesAction(event.id),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: rsvpKeys.byUser(event.id),
+        queryFn: () => getUserRsvpStatusAction(event.id),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: eventSongKeys.byEvent(event.id),
+        queryFn: () => getSongsByEventAction(event.id),
+      }),
+    ]),
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
