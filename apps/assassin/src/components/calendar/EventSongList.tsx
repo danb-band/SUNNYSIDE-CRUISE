@@ -4,8 +4,10 @@ import { Music, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSongsByEvent } from "@/features/eventSong/queries/useSongsByEvent";
 import { useRemoveEventSong } from "@/features/eventSong/mutations/useRemoveEventSong";
+import { useRealtimeEventSongSync } from "@/features/eventSong/hooks/useRealtimeEventSongSync";
 
 export function EventSongList({ eventId }: { eventId: string }) {
+  useRealtimeEventSongSync(eventId);
   const { data: eventSongs = [] } = useSongsByEvent(eventId);
   const { mutate: remove, isPending } = useRemoveEventSong(eventId);
 
