@@ -8,6 +8,12 @@ async function getProfileById(id: string): Promise<Profile | null> {
   });
 }
 
+async function getAllProfiles(): Promise<Profile[]> {
+  return await prisma.profile.findMany({
+    orderBy: { realName: "asc" },
+  });
+}
+
 async function updateProfile(id: string, input: UpdateProfilePayload): Promise<Profile> {
   return await prisma.profile.update({
     where: { id },
@@ -17,6 +23,7 @@ async function updateProfile(id: string, input: UpdateProfilePayload): Promise<P
 
 const UserRepository = {
   getProfileById,
+  getAllProfiles,
   updateProfile,
 };
 

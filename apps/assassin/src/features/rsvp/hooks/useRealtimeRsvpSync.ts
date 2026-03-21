@@ -25,7 +25,7 @@ export const useRealtimeRsvpSync = (eventId: string) => {
           const prevRow = payload.old as RsvpRow | undefined;
           const affectedEventId = nextRow?.eventId ?? prevRow?.eventId;
 
-          if (affectedEventId !== eventId) return;
+          if (affectedEventId !== undefined && affectedEventId !== eventId) return;
 
           queryClient.invalidateQueries({ queryKey: rsvpKeys.byEvent(eventId) });
           queryClient.invalidateQueries({ queryKey: rsvpKeys.byUser(eventId) });

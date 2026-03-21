@@ -14,6 +14,7 @@ model Profile {
   comment   Comment[]
   song_like SongLike[]
   rsvp      CalendarEventRsvp[]
+  player    Player[]
 
   @@map("profiles")
 }
@@ -37,11 +38,12 @@ model Comment {
 model Player {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   songId     String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
+  userId     String    @map("user_id") @db.Uuid
   instrument String
   createdAt  DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt  DateTime? @db.Timestamptz(6)
+  profile    Profile   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   song       Song      @relation(fields: [songId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_song_id_fkey")
 
   @@map("player")
@@ -76,21 +78,23 @@ model Song {
   likeCount   Int        @default(0)
   comment     Comment[]
   player      Player[]
-  season      Season     @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")
+  season      Season             @relation(fields: [seasonId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "songs_season_id_fkey")
   songLike    SongLike[]
+  eventSong   CalendarEventSong[]
 
   @@map("song")
 }
 
 model CalendarEvent {
-  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title     String
   location  String
-  startDate DateTime            @db.Timestamptz(6)
-  endDate   DateTime            @db.Timestamptz(6)
-  createdAt DateTime            @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime            @default(now()) @db.Timestamptz(6)
+  startDate DateTime             @db.Timestamptz(6)
+  endDate   DateTime             @db.Timestamptz(6)
+  createdAt DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime             @default(now()) @db.Timestamptz(6)
   rsvp      CalendarEventRsvp[]
+  eventSong CalendarEventSong[]
 
   @@map("calendar_event")
 }
@@ -121,6 +125,19 @@ model SongLike {
 
   @@unique([songId, userId])
   @@map("song_like")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model CalendarEventSong {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String        @db.Uuid
+  songId    String        @db.Uuid
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  song      Song          @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, songId])
+  @@map("calendar_event_song")
 }
 
 enum RsvpStatus {

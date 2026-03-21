@@ -1,20 +1,23 @@
 import { dbSchema } from "@libs/prisma/types";
 import * as z from "zod";
+import { profileSchema } from "@features/user/schema";
 
 const instrumentEnum = z.enum(["VOCAL", "GUITAR", "DRUM", "BASS", "KEYBOARD"]);
 
 // DB에 저장할 때 입력 스키마
 export const createPlayerSchema = z.object({
   songId: z.uuid(),
-  name: z.string().min(1, "Name required"),
+  userId: z.string().uuid("userId is required"),
   instrument: instrumentEnum,
 });
 
 // 부분 업데이트
 export const updatePlayerSchema = createPlayerSchema.partial();
 
-// DB에서 받은 응답 스키마
-export const playerSchema = createPlayerSchema.extend(dbSchema.shape);
+// DB에서 받은 응답 스키마 (profile 항상 포함)
+export const playerSchema = createPlayerSchema.extend(dbSchema.shape).extend({
+  profile: profileSchema,
+});
 
 export type PlayerPayload = z.infer<typeof createPlayerSchema>;
 export type PlayerUpdatePayload = z.infer<typeof updatePlayerSchema>;

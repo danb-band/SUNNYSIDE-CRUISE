@@ -17,6 +17,8 @@ import { useRealtimeCalendarEventSync } from "@/features/calendar/hooks/useRealt
 import type { CalendarEvent } from "@/features/calendar/schema";
 import { RsvpButton } from "@/components/calendar/RsvpButton";
 import { RsvpList } from "@/components/calendar/RsvpList";
+import { EventSongList } from "@/components/calendar/EventSongList";
+import { EventSongAddForm } from "@/components/calendar/EventSongAddForm";
 
 type DialogState =
   | { type: "none" }
@@ -341,6 +343,9 @@ function EventCard({
           <RsvpList eventId={event.id} />
           <RsvpButton eventId={event.id} />
         </div>
+        {/* 연주 곡 섹션 */}
+        <EventSongList eventId={event.id} />
+        <EventSongAddForm eventId={event.id} />
       </div>
     </li>
   );
