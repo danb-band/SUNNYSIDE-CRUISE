@@ -27,10 +27,12 @@ export function UserSearchInput({
   const { data: profiles } = useAllProfiles();
 
   const selectedProfile = profiles?.find((p) => p.id === value);
-  const [displayValue, setDisplayValue] = useState("");
+  const selectedRealName = selectedProfile?.realName ?? "";
+
+  const [searchValue, setSearchValue] = useState("");
   const [open, setOpen] = useState(false);
 
-  const inputValue = open ? displayValue : (selectedProfile?.realName ?? displayValue);
+  const inputValue = open ? searchValue : selectedRealName;
   const filtered =
     inputValue.length > 0
       ? (profiles ?? []).filter((p) => p.realName.toLowerCase().includes(inputValue.toLowerCase()))
@@ -38,7 +40,7 @@ export function UserSearchInput({
 
   const handleSelect = (userId: string, realName: string) => {
     onChange(userId, realName);
-    setDisplayValue(realName);
+    setSearchValue(realName);
     setOpen(false);
   };
 
@@ -49,11 +51,11 @@ export function UserSearchInput({
           <Input
             value={inputValue}
             onChange={(e) => {
-              setDisplayValue(e.target.value);
+              setSearchValue(e.target.value);
               setOpen(true);
             }}
             onFocus={() => {
-              setDisplayValue(selectedProfile?.realName ?? displayValue);
+              setSearchValue(selectedRealName);
               setOpen(true);
             }}
             placeholder={placeholder}
