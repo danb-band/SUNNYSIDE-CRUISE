@@ -9,7 +9,7 @@ import { cn } from "@/libs/shadcn/utils";
 import { useAllProfiles } from "@/features/user/queries/useAllProfiles";
 
 const MAX_VISIBLE_ITEMS = 4;
-const ITEM_HEIGHT = 36;
+const ITEM_HEIGHT = 38;
 
 interface UserSearchInputProps {
   value: string;
@@ -45,7 +45,7 @@ export function UserSearchInput({
   };
 
   return (
-    <Popover open={open && filtered.length > 0} onOpenChange={setOpen}>
+    <Popover open={open && filtered.length > 0}>
       <PopoverAnchor asChild>
         <div className="relative flex-1">
           <Input
@@ -55,8 +55,10 @@ export function UserSearchInput({
               setOpen(true);
             }}
             onFocus={() => {
-              setSearchValue(selectedRealName);
               setOpen(true);
+            }}
+            onBlur={() => {
+              setOpen(false);
             }}
             placeholder={placeholder}
             className={cn(
