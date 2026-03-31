@@ -229,7 +229,7 @@ DO $$
 DECLARE
   v_song_id    UUID;
   v_user_ids   UUID[];
-  v_instruments TEXT[] := ARRAY['보컬', '기타', '베이스', '드럼', '키보드'];
+  v_instruments TEXT[] := ARRAY['VOCAL', 'GUITAR', 'BASS', 'DRUM', 'KEYBOARD'];
   v_offset     INTEGER := 0;
 BEGIN
   IF (SELECT COUNT(*) FROM player) > 0 THEN RETURN; END IF;
