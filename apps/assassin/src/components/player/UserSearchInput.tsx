@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/libs/shadcn/utils";
 import { useAllProfiles } from "@/features/user/queries/useAllProfiles";
 
@@ -33,10 +32,13 @@ export function UserSearchInput({
   const [open, setOpen] = useState(false);
 
   const inputValue = open ? searchValue : selectedRealName;
+
   const filtered =
     inputValue.length > 0
       ? (profiles ?? []).filter((p) => p.realName.toLowerCase().includes(inputValue.toLowerCase()))
       : (profiles ?? []);
+
+  const visible = open && filtered.length > 0;
 
   const handleSelect = (userId: string, realName: string) => {
     onChange(userId, realName);
@@ -45,7 +47,7 @@ export function UserSearchInput({
   };
 
   return (
-    <Popover open={open && filtered.length > 0}>
+    <Popover open={visible}>
       <PopoverAnchor asChild>
         <div className="relative flex-1">
           <Input
@@ -74,36 +76,36 @@ export function UserSearchInput({
           />
         </div>
       </PopoverAnchor>
-
       <PopoverContent
         align="start"
         side="bottom"
         sideOffset={4}
         collisionPadding={12}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] rounded-md border border-slate-200 bg-white p-0 text-sm shadow-md dark:border-slate-700 dark:bg-slate-900"
+        onWheel={(e) => {
+          e.stopPropagation();
+        }}
+        className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] rounded-md border border-slate-200 bg-white p-0 text-sm shadow-md dark:border-slate-700 dark:bg-slate-900 overflow-y-auto"
+        style={{
+          maxHeight: `${MAX_VISIBLE_ITEMS * ITEM_HEIGHT}px`,
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+        }}
       >
-        <ScrollArea
-          className="overflow-hidden"
-          style={{
-            height: `${Math.min(filtered.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px`,
-          }}
-        >
-          <ul className="py-1">
-            {filtered.map((p) => (
-              <li
-                key={p.id}
-                className="cursor-pointer px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(p.id, p.realName);
-                }}
-              >
-                {p.realName}
-              </li>
-            ))}
-          </ul>
-        </ScrollArea>
+        <ul className="py-1">
+          {filtered.map((p) => (
+            <li
+              key={p.id}
+              className="cursor-pointer px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(p.id, p.realName);
+              }}
+            >
+              {p.realName}
+            </li>
+          ))}
+        </ul>
       </PopoverContent>
     </Popover>
   );
