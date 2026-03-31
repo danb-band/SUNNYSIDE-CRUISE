@@ -31,14 +31,6 @@ else
   supabase start
 fi
 
-# Local setup script should be deterministic. Reset DB by default to avoid
-# schema drift between older snake_case columns and newer camelCase schema.
-# Set SUPABASE_RESET_DB=0 to skip reset.
-if [[ "${SUPABASE_RESET_DB:-1}" == "1" ]]; then
-  echo "Resetting local Supabase DB (SUPABASE_RESET_DB=1)"
-  supabase db reset --local --no-seed
-fi
-
 status_json=$(supabase status --output json)
 
 # Derive local DB URL and container name from supabase status
@@ -93,7 +85,7 @@ for email, name in demo_users:
         "email_confirm": True,
         "user_metadata": {"name": name},
     })
-    result = subprocess.run(
+    subprocess.run(
         [
             "curl", "-s", "-X", "POST",
             f"{api_url}/auth/v1/admin/users",
@@ -103,13 +95,7 @@ for email, name in demo_users:
             "-d", payload,
         ],
         check=False,
-        capture_output=True,
-        text=True,
     )
-    # idempotent: ignore existing user errors and keep output readable
-    body = (result.stdout or "").strip()
-    if body and '"email_exists"' not in body:
-        print(body)
 PY
 
 # Drop cross-schema FK before Prisma introspects (Prisma cannot manage auth schema)
