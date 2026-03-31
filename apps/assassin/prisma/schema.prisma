@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Profile {
-  id        String              @id @db.Uuid
-  name      String
-  realName  String
-  comment   Comment[]
-  song_like SongLike[]
-  rsvp      CalendarEventRsvp[]
-  player    Player[]
+  id         String              @id @db.Uuid
+  name       String
+  realName   String
+  comment    Comment[]
+  song_like  SongLike[]
+  rsvp       CalendarEventRsvp[]
+  player     Player[]
+  orgMembers OrgMember[]
 
   @@map("profiles")
 }
@@ -57,7 +58,9 @@ model Season {
   isArchived Boolean
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+  orgId      String?  @db.Uuid
   song       Song[]
+  org        Org?     @relation(fields: [orgId], references: [id])
 
   @@map("season")
 }
@@ -93,8 +96,10 @@ model CalendarEvent {
   endDate   DateTime             @db.Timestamptz(6)
   createdAt DateTime             @default(now()) @db.Timestamptz(6)
   updatedAt DateTime             @default(now()) @db.Timestamptz(6)
+  orgId     String?              @db.Uuid
   rsvp      CalendarEventRsvp[]
   eventSong CalendarEventSong[]
+  org       Org?                 @relation(fields: [orgId], references: [id])
 
   @@map("calendar_event")
 }
@@ -143,4 +148,60 @@ model CalendarEventSong {
 enum RsvpStatus {
   ATTENDING
   NOT_ATTENDING
+}
+
+model Org {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  slug           String          @unique
+  createdAt      DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime        @default(now()) @db.Timestamptz(6)
+  members        OrgMember[]
+  invitations    OrgInvitation[]
+  seasons        Season[]
+  calendarEvents CalendarEvent[]
+
+  @@map("org")
+}
+
+model OrgMember {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String    @db.Uuid
+  userId    String    @db.Uuid
+  role      OrgRole
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @db.Timestamptz(6)
+  org       Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  profile   Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@map("org_member")
+}
+
+model OrgInvitation {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String           @db.Uuid
+  email     String
+  token     String           @unique
+  role      OrgRole          @default(MEMBER)
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime         @db.Timestamptz(6)
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime         @default(now()) @db.Timestamptz(6)
+  org       Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("org_invitation")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }
