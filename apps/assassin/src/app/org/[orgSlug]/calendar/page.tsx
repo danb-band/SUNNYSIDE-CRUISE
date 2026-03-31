@@ -1,0 +1,77 @@
+import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
+import { CalendarPageClient } from "@/components/calendar/CalendarPageClient";
+import { CalendarPageSkeleton } from "@/components/calendar/CalendarPageSkeleton";
+import { getCalendarEventsByMonthAction } from "@features/calendar/actions";
+import { calendarEventKeys } from "@features/calendar/queries/keys";
+import type { CalendarEvent } from "@features/calendar/schema";
+import { getRsvpAttendeesAction, getUserRsvpStatusAction } from "@features/rsvp/actions";
+import { rsvpKeys } from "@features/rsvp/queries/keys";
+import { getSongsByEventAction } from "@features/eventSong/actions";
+import { eventSongKeys } from "@features/eventSong/queries/keys";
+import { getQueryClient } from "@libs/react-query/getQueryClient";
+import { CALENDAR_CACHE_TAG } from "@libs/cache/calendar";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+
+interface CalendarPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+async function getCachedCalendarEvents(year: number, month: number) {
+  "use cache";
+  cacheTag(CALENDAR_CACHE_TAG);
+  cacheLife("max");
+  return getCalendarEventsByMonthAction(year, month);
+}
+
+async function CalendarDataFetch({ searchParams }: CalendarPageProps) {
+  const params = await searchParams;
+  const dateParam = typeof params.date === "string" ? params.date : undefined;
+
+  const targetDate = dateParam ? new Date(dateParam) : new Date();
+  if (isNaN(targetDate.getTime())) {
+    targetDate.setTime(new Date().getTime());
+  }
+
+  const year = targetDate.getFullYear();
+  const month = targetDate.getMonth() + 1;
+
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery({
+    queryKey: calendarEventKeys.lists(year, month),
+    queryFn: () => getCachedCalendarEvents(year, month),
+  });
+
+  const events =
+    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(year, month)) ?? [];
+  await Promise.all(
+    events.flatMap((event) => [
+      queryClient.prefetchQuery({
+        queryKey: rsvpKeys.byEvent(event.id),
+        queryFn: () => getRsvpAttendeesAction(event.id),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: rsvpKeys.byUser(event.id),
+        queryFn: () => getUserRsvpStatusAction(event.id),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: eventSongKeys.byEvent(event.id),
+        queryFn: () => getSongsByEventAction(event.id),
+      }),
+    ]),
+  );
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <CalendarPageClient />
+    </HydrationBoundary>
+  );
+}
+
+export default async function OrgCalendarPage(props: CalendarPageProps) {
+  return (
+    <Suspense fallback={<CalendarPageSkeleton />}>
+      <CalendarDataFetch searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
