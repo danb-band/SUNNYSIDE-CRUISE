@@ -7,8 +7,8 @@ import {
   updateSeasonSchema,
 } from "./schema";
 
-const assertSeasonExists = async (seasonId: string): Promise<void> => {
-  const season = await SeasonRepository.getSeasonById(seasonId);
+const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void> => {
+  const season = await SeasonRepository.getSeasonById(seasonId, orgId);
 
   const parsed = seasonSchema.safeParse(season);
 
@@ -17,8 +17,8 @@ const assertSeasonExists = async (seasonId: string): Promise<void> => {
   }
 };
 
-const createSeason = async (season: SeasonPayload): Promise<Season> => {
-  const result = await SeasonRepository.createSeason(season);
+const createSeason = async (season: SeasonPayload, orgId: string): Promise<Season> => {
+  const result = await SeasonRepository.createSeason(season, orgId);
 
   const parsed = seasonSchema.safeParse(result);
 
@@ -29,8 +29,8 @@ const createSeason = async (season: SeasonPayload): Promise<Season> => {
   return parsed.data;
 };
 
-const getSeasonById = async (id: string): Promise<Season> => {
-  const season = await SeasonRepository.getSeasonById(id);
+const getSeasonById = async (id: string, orgId: string): Promise<Season> => {
+  const season = await SeasonRepository.getSeasonById(id, orgId);
 
   const parsed = seasonSchema.safeParse(season);
 
@@ -41,8 +41,8 @@ const getSeasonById = async (id: string): Promise<Season> => {
   return parsed.data;
 };
 
-const getAllSeasons = async (): Promise<Array<Season>> => {
-  const seasons = await SeasonRepository.getAllSeasons();
+const getAllSeasons = async (orgId: string): Promise<Array<Season>> => {
+  const seasons = await SeasonRepository.getAllSeasons(orgId);
 
   const parsed = seasonSchema.array().safeParse(seasons);
 
@@ -53,8 +53,8 @@ const getAllSeasons = async (): Promise<Array<Season>> => {
   return parsed.data;
 };
 
-const updateSeason = async (id: string, season: SeasonUpdatePayload) => {
-  const existed = await getSeasonById(id);
+const updateSeason = async (id: string, orgId: string, season: SeasonUpdatePayload) => {
+  const existed = await getSeasonById(id, orgId);
 
   const parsedInput = updateSeasonSchema.safeParse(season);
 
@@ -64,7 +64,7 @@ const updateSeason = async (id: string, season: SeasonUpdatePayload) => {
 
   const newSeasonData: Season = { ...existed, ...parsedInput.data };
 
-  const updatedSeason = await SeasonRepository.updateSeason(id, newSeasonData);
+  const updatedSeason = await SeasonRepository.updateSeason(id, orgId, newSeasonData);
 
   const parsedOutput = seasonSchema.safeParse(updatedSeason);
 

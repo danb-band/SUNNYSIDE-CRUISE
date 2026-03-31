@@ -12,7 +12,7 @@ async function getAllSongs(): Promise<Song[]> {
 }
 
 async function getSongById(id: string): Promise<Song | null> {
-  const song = await prisma.song.findUnique({
+  const song = await prisma.song.findFirst({
     where: {
       id,
       deletedAt: null,
