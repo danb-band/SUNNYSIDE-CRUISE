@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import { SongDetailPage } from "@/components/song/SongDetailPage";
 import { getSeasonsAction } from "@features/season/actions";
+import { getOrgBySlugAction } from "@features/org/actions";
 import { seasonKeys } from "@features/season/queries/keys";
 import { getSongAction, getSongsBySeasonAction } from "@features/song/actions";
 import { songKeys } from "@features/song/queries/keys";
@@ -28,11 +29,13 @@ export default function OrgSongPage({ params }: Props) {
 }
 
 async function OrgSongPageAsync({ params }: Props) {
-  const { songId } = await params;
-  return <OrgSongPageContent songId={songId} />;
+  const { orgSlug, songId } = await params;
+  const org = await getOrgBySlugAction(orgSlug).catch(() => null);
+  if (!org) notFound();
+  return <OrgSongPageContent songId={songId} orgId={org.id} />;
 }
 
-async function OrgSongPageContent({ songId }: { songId: string }) {
+async function OrgSongPageContent({ songId, orgId }: { songId: string; orgId: string }) {
   "use cache";
   cacheTag(SEASON_BOARD_CACHE_TAG);
   cacheLife("max");
@@ -50,7 +53,7 @@ async function OrgSongPageContent({ songId }: { songId: string }) {
 
   const seasons = await queryClient.fetchQuery({
     queryKey: seasonKeys.lists(),
-    queryFn: getSeasonsAction,
+    queryFn: () => getSeasonsAction(orgId),
   });
 
   await Promise.all(

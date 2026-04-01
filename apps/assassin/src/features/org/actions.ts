@@ -1,12 +1,14 @@
 "use server";
 
-import { createClient } from "@libs/supabase/server";
+import { createServerSupabaseClient } from "@libs/supabase/server";
 import OrgService from "./service";
 import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
 
 async function getCurrentUserId(): Promise<string> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("인증이 필요합니다.");
   return user.id;
 }
