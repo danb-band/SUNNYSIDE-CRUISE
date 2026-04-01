@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { SeasonPageClient } from "@/components/season/SeasonPageClient";
 import { SongDetailPage } from "@/components/song/SongDetailPage";
 import { getSeasonsAction } from "@features/season/actions";
+import { getOrgBySlugAction } from "@features/org/actions";
 import { seasonKeys } from "@features/season/queries/keys";
 import { getSongAction, getSongsBySeasonAction } from "@features/song/actions";
 import { songKeys } from "@features/song/queries/keys";
@@ -16,26 +17,25 @@ import { cacheLife, cacheTag } from "next/cache";
 import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
 
 interface Props {
-  params: Promise<{ songId: string }>;
+  params: Promise<{ orgSlug: string; songId: string }>;
 }
 
-// 동기 shell — await 없이 params Promise를 Suspense 안 async 컴포넌트로 전달
-export default function SongPage({ params }: Props) {
+export default function OrgSongPage({ params }: Props) {
   return (
     <Suspense>
-      <SongPageAsync params={params} />
+      <OrgSongPageAsync params={params} />
     </Suspense>
   );
 }
 
-// Suspense 경계 안에서 동적 params 해석
-async function SongPageAsync({ params }: Props) {
-  const { songId } = await params;
-  return <SongPageContent songId={songId} />;
+async function OrgSongPageAsync({ params }: Props) {
+  const { orgSlug, songId } = await params;
+  const org = await getOrgBySlugAction(orgSlug).catch(() => null);
+  if (!org) notFound();
+  return <OrgSongPageContent songId={songId} orgId={org.id} />;
 }
 
-// 데이터 페칭 및 렌더링 with "use cache"
-async function SongPageContent({ songId }: { songId: string }) {
+async function OrgSongPageContent({ songId, orgId }: { songId: string; orgId: string }) {
   "use cache";
   cacheTag(SEASON_BOARD_CACHE_TAG);
   cacheLife("max");
@@ -53,7 +53,7 @@ async function SongPageContent({ songId }: { songId: string }) {
 
   const seasons = await queryClient.fetchQuery({
     queryKey: seasonKeys.lists(),
-    queryFn: getSeasonsAction,
+    queryFn: () => getSeasonsAction(orgId),
   });
 
   await Promise.all(

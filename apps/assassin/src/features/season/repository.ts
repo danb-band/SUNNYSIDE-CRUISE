@@ -2,32 +2,38 @@ import { prisma } from "@libs/prisma/client";
 import type { Season } from "@generated/prisma/client";
 import { SeasonPayload, SeasonUpdatePayload } from "./schema";
 
-async function getAllSeasons(): Promise<Season[]> {
+async function getAllSeasons(orgId: string): Promise<Season[]> {
   const seasons = await prisma.season.findMany({
+    where: { orgId },
     orderBy: { createdAt: "desc" },
   });
   return seasons;
 }
 
-async function getSeasonById(id: string): Promise<Season | null> {
-  const season = await prisma.season.findUnique({
-    where: { id },
+async function getSeasonById(id: string, orgId: string): Promise<Season | null> {
+  const season = await prisma.season.findFirst({
+    where: { id, orgId },
   });
   return season;
 }
 
-async function createSeason(input: SeasonPayload): Promise<Season> {
+async function createSeason(input: SeasonPayload, orgId: string): Promise<Season> {
   const season = await prisma.season.create({
     data: {
       name: input.name,
       sortOrder: input.sortOrder,
       isArchived: input.isArchived,
+      orgId,
     },
   });
   return season;
 }
 
-async function updateSeason(id: string, input: SeasonUpdatePayload): Promise<Season> {
+async function updateSeason(id: string, orgId: string, input: SeasonUpdatePayload): Promise<Season> {
+  const existing = await prisma.season.findFirst({ where: { id, orgId } });
+  if (!existing) {
+    throw new Error(`Season with ID ${id} not found in this org.`);
+  }
   const season = await prisma.season.update({
     where: { id },
     data: {
@@ -39,7 +45,11 @@ async function updateSeason(id: string, input: SeasonUpdatePayload): Promise<Sea
   return season;
 }
 
-async function deleteSeason(id: string): Promise<void> {
+async function deleteSeason(id: string, orgId: string): Promise<void> {
+  const existing = await prisma.season.findFirst({ where: { id, orgId } });
+  if (!existing) {
+    throw new Error(`Season with ID ${id} not found in this org.`);
+  }
   await prisma.season.delete({
     where: { id },
   });

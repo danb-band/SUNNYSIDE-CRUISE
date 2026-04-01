@@ -10,6 +10,7 @@ import { useAddEventSong } from "@/features/eventSong/mutations/useAddEventSong"
 import { useSongsByEvent } from "@/features/eventSong/queries/useSongsByEvent";
 import { seasonKeys } from "@/features/season/queries/keys";
 import { songKeys } from "@/features/song/queries/keys";
+import { useOrgId } from "@libs/org/OrgProvider";
 
 const selectClassName =
   "h-9 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-sm text-slate-900 dark:text-slate-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20";
@@ -20,9 +21,10 @@ export function EventSongAddForm({ eventId }: { eventId: string }) {
   const [selectedSeasonId, setSelectedSeasonId] = useState("");
   const [selectedSongId, setSelectedSongId] = useState("");
 
+  const orgId = useOrgId();
   const { data: seasons = [] } = useQuery({
     queryKey: seasonKeys.lists(),
-    queryFn: getSeasonsAction,
+    queryFn: () => getSeasonsAction(orgId),
     staleTime: 1000 * 60,
   });
 
