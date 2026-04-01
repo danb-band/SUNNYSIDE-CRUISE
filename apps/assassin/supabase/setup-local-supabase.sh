@@ -380,6 +380,17 @@ BEGIN
   END LOOP;
 END $$;
 
+-- Org members (demo user → OWNER, 나머지 → MEMBER)
+INSERT INTO org_member (id, "orgId", "userId", role)
+SELECT
+  gen_random_uuid(),
+  '00000000-0000-0000-0000-000000000001',
+  u.id,
+  CASE WHEN u.email = 'demo@local.test' THEN 'OWNER'::"OrgRole" ELSE 'MEMBER'::"OrgRole" END
+FROM auth.users u
+WHERE u.email LIKE '%@local.test'
+ON CONFLICT ("orgId", "userId") DO NOTHING;
+
 COMMIT;
 SQL
 
