@@ -17,7 +17,12 @@ async function OnboardingContent() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const orgs = user ? await getUserOrgsAction(user.id).catch(() => []) : [];
+  const orgs = user
+    ? await getUserOrgsAction(user.id).catch((e) => {
+        console.error("[Onboarding] getUserOrgsAction 실패:", e);
+        return [];
+      })
+    : [];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-4">

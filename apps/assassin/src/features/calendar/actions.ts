@@ -8,7 +8,11 @@ export const getCalendarEventsAction = async (orgId: string) => {
   return await CalendarEventService.getAllCalendarEvents(orgId);
 };
 
-export const getCalendarEventsByMonthAction = async (year: number, month: number, orgId: string) => {
+export const getCalendarEventsByMonthAction = async (
+  year: number,
+  month: number,
+  orgId: string,
+) => {
   return await CalendarEventService.getCalendarEventsByMonth(year, month, orgId);
 };
 
@@ -18,7 +22,11 @@ export const createCalendarEventAction = async (data: CalendarEventPayload, orgI
   return result;
 };
 
-export const updateCalendarEventAction = async (id: string, orgId: string, data: CalendarEventUpdatePayload) => {
+export const updateCalendarEventAction = async (
+  id: string,
+  orgId: string,
+  data: CalendarEventUpdatePayload,
+) => {
   const result = await CalendarEventService.updateCalendarEvent(id, orgId, data);
   revalidateCalendar();
   return result;
