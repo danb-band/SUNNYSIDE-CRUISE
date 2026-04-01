@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import { getUserOrgsAction } from "@features/org/actions";
 
