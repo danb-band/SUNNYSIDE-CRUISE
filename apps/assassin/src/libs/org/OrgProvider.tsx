@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-export type OrgRole = "OWNER" | "ADMIN" | "MEMBER";
+export type OrgRole = "OWNER" | "MEMBER";
 
 const OrgContext = createContext<{ orgId: string; role: OrgRole | null }>({
   orgId: "",
