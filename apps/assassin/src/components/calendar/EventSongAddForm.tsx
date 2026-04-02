@@ -30,7 +30,7 @@ export function EventSongAddForm({ eventId }: { eventId: string }) {
 
   const { data: songs = [] } = useQuery({
     queryKey: songKeys.bySeason(selectedSeasonId),
-    queryFn: () => getSongsBySeasonAction(selectedSeasonId),
+    queryFn: () => getSongsBySeasonAction(selectedSeasonId, orgId),
     enabled: !!selectedSeasonId,
     staleTime: 1000 * 60,
   });

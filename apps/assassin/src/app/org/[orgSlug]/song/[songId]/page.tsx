@@ -60,7 +60,7 @@ async function OrgSongPageContent({ songId, orgId }: { songId: string; orgId: st
     seasons.map((season) =>
       queryClient.prefetchQuery({
         queryKey: songKeys.bySeason(season.id),
-        queryFn: () => getSongsBySeasonAction(season.id),
+        queryFn: () => getSongsBySeasonAction(season.id, orgId),
       }),
     ),
   );

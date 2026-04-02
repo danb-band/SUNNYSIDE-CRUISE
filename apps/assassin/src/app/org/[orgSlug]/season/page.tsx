@@ -46,7 +46,7 @@ async function OrgSeasonPageData({ orgId }: { orgId: string }) {
     seasons.map((season) =>
       queryClient.prefetchQuery({
         queryKey: songKeys.bySeason(season.id),
-        queryFn: () => getSongsBySeasonAction(season.id),
+        queryFn: () => getSongsBySeasonAction(season.id, orgId),
       }),
     ),
   );

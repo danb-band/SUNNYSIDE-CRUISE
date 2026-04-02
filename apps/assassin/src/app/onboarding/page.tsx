@@ -3,6 +3,12 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import { getUserOrgsAction } from "@features/org/actions";
 
+type OnboardingOrg = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
 export default function OnboardingPage() {
   return (
     <Suspense>
@@ -17,7 +23,7 @@ async function OnboardingContent() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const orgs = user
+  const orgs: OnboardingOrg[] = user
     ? await getUserOrgsAction(user.id).catch((e) => {
         console.error("[Onboarding] getUserOrgsAction 실패:", e);
         return [];
