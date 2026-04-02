@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSeasonAction } from "../actions";
 import { seasonKeys } from "../queries/keys";
 import type { Season, SeasonUpdatePayload } from "../schema";
+import { useOrgId } from "@libs/org/OrgProvider";
 
 export const useUpdateSeason = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SeasonUpdatePayload }) =>
@@ -14,7 +16,7 @@ export const useUpdateSeason = () => {
 
       queryClient.setQueryData(seasonKeys.detail(updatedSeason.id), updatedSeason);
 
-      queryClient.setQueryData(seasonKeys.lists(), (prev: Season[] | undefined) => {
+      queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
         if (!prev) return [updatedSeason];
         const exists = prev.some((season) => season.id === updatedSeason.id);
         if (!exists) return [...prev, updatedSeason];

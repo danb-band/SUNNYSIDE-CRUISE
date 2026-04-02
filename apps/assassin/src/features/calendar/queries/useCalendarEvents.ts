@@ -7,7 +7,7 @@ import { useOrgId } from "@libs/org/OrgProvider";
 export const useCalendarEvents = (year: number, month: number) => {
   const orgId = useOrgId();
   return useSuspenseQuery({
-    queryKey: calendarEventKeys.lists(year, month),
+    queryKey: calendarEventKeys.lists(orgId, year, month),
     queryFn: () => getCalendarEventsByMonthAction(year, month, orgId),
     select: (data: CalendarEvent[]) =>
       [...data].sort((a, b) => {
