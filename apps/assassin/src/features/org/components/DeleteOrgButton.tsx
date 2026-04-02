@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,21 +15,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteOrgAction } from "@features/org/actions";
+import { useDeleteOrg } from "../mutations/useDeleteOrg";
 
 export function DeleteOrgButton({ orgId, orgName }: { orgId: string; orgName: string }) {
   const [input, setInput] = useState("");
-  const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const deleteOrgMutation = useDeleteOrg();
 
   const isMatch = input === orgName;
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!isMatch) return;
-    startTransition(async () => {
-      await deleteOrgAction(orgId);
-      router.push("/");
-    });
+    await deleteOrgMutation.mutateAsync(orgId);
+    router.push("/");
   }
 
   return (
@@ -67,10 +65,10 @@ export function DeleteOrgButton({ orgId, orgName }: { orgId: string; orgName: st
           <AlertDialogCancel>취소</AlertDialogCancel>
           <Button
             onClick={handleDelete}
-            disabled={!isMatch || isPending}
+            disabled={!isMatch || deleteOrgMutation.isPending}
             className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
           >
-            {isPending ? "삭제 중..." : "삭제"}
+            {deleteOrgMutation.isPending ? "삭제 중..." : "삭제"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
