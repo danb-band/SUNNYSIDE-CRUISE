@@ -28,7 +28,7 @@ const getUserOrgs = async (userId: string) => {
 };
 
 const updateOrg = async (orgId: string, requesterId: string, input: UpdateOrgPayload) => {
-  await assertOrgMember(requesterId, orgId, "ADMIN");
+  await assertOrgMember(requesterId, orgId, "OWNER");
   return await OrgRepository.updateOrg(orgId, input);
 };
 

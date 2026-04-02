@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { getUserOrgsAction } from "@features/org/actions";
 import { createServerSupabaseClient } from "@libs/supabase/server";
+import { getUserOrgsAction } from "@features/org/actions";
+import { OrgSelectPageClient } from "@/features/org/components/OrgSelectPageClient";
 
-export default async function Home() {
+export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -17,10 +18,5 @@ export default async function Home() {
     return [];
   });
 
-  if (orgs.length === 0) {
-    redirect("/onboarding");
-  }
-
-  // org 선택은 onboarding에서
-  redirect("/onboarding");
+  return <OrgSelectPageClient orgs={orgs} />;
 }

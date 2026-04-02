@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getOrgBySlugAction } from "@features/org/actions";
+import { createServerSupabaseClient } from "@libs/supabase/server";
+import { getOrgBySlugAction, getOrgMembersAction } from "@features/org/actions";
 import { OrgProvider } from "@libs/org/OrgProvider";
+import type { OrgRole } from "@libs/org/OrgProvider";
+import type { OrgMember } from "@features/org/schema";
 
 interface OrgLayoutProps {
   children: React.ReactNode;
@@ -24,5 +27,20 @@ async function OrgLayoutContent({ params, children }: OrgLayoutProps) {
     notFound();
   }
 
-  return <OrgProvider orgId={org.id}>{children}</OrgProvider>;
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let role: OrgRole | null = null;
+  if (user) {
+    const members = await getOrgMembersAction(org.id).catch(() => [] as OrgMember[]);
+    role = (members.find((m: OrgMember) => m.userId === user.id)?.role as OrgRole) ?? null;
+  }
+
+  return (
+    <OrgProvider orgId={org.id} role={role}>
+      {children}
+    </OrgProvider>
+  );
 }

@@ -1,7 +1,8 @@
+import { getUserOrgsAction } from "@/features/org/actions";
+import { createServerSupabaseClient } from "@/libs/supabase/server";
+import { Link } from "lucide-react";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import Link from "next/link";
-import { createServerSupabaseClient } from "@libs/supabase/server";
-import { getUserOrgsAction } from "@features/org/actions";
 
 type OnboardingOrg = {
   id: string;
@@ -10,6 +11,7 @@ type OnboardingOrg = {
 };
 
 export default function OnboardingPage() {
+  redirect("/");
   return (
     <Suspense>
       <OnboardingContent />

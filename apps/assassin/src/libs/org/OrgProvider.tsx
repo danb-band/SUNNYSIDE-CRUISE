@@ -2,10 +2,23 @@
 
 import { createContext, useContext } from "react";
 
-const OrgContext = createContext<{ orgId: string } | null>(null);
+export type OrgRole = "OWNER" | "ADMIN" | "MEMBER";
 
-export function OrgProvider({ orgId, children }: { orgId: string; children: React.ReactNode }) {
-  return <OrgContext.Provider value={{ orgId }}>{children}</OrgContext.Provider>;
+const OrgContext = createContext<{ orgId: string; role: OrgRole | null }>({
+  orgId: "",
+  role: null,
+});
+
+export function OrgProvider({
+  orgId,
+  role,
+  children,
+}: {
+  orgId: string;
+  role: OrgRole | null;
+  children: React.ReactNode;
+}) {
+  return <OrgContext.Provider value={{ orgId, role }}>{children}</OrgContext.Provider>;
 }
 
 export function useOrgId(): string {
@@ -16,4 +29,8 @@ export function useOrgId(): string {
   }
 
   return context.orgId;
+}
+
+export function useOrgRole(): OrgRole | null {
+  return useContext(OrgContext).role;
 }

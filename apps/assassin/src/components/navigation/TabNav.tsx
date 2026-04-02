@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useOrgRole } from "@libs/org/OrgProvider";
 
 export function TabNav() {
   const pathname = usePathname();
   const currentOrg = pathname.split("/")[2]; // Assuming URL structure is /org/[orgSlug]/...
+  const role = useOrgRole();
+  const isOwner = role === "OWNER";
 
   return (
     <div className="flex min-w-0">
@@ -29,6 +32,18 @@ export function TabNav() {
       >
         Calendar
       </Link>
+      {isOwner && (
+        <Link
+          href={`/org/${currentOrg}/settings`}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            pathname.startsWith(`/org/${currentOrg}/settings`)
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          Settings
+        </Link>
+      )}
     </div>
   );
 }
