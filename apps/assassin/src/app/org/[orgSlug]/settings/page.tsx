@@ -81,7 +81,7 @@ async function SettingsContent({ params }: Props) {
                     maxLength={100}
                     defaultValue={org.name}
                   />
-                  <Button type="submit" variant="outline">
+                  <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
                     저장
                   </Button>
                 </div>
