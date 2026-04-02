@@ -9,7 +9,7 @@ export const useCreateSeason = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (data: SeasonPayload) => createSeasonAction(data),
+    mutationFn: (data: SeasonPayload) => createSeasonAction(data, orgId),
     onSuccess: (createdSeason) => {
       if (!createdSeason) return;
 

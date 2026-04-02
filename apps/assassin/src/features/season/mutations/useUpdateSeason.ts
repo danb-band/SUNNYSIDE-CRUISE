@@ -10,7 +10,7 @@ export const useUpdateSeason = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SeasonUpdatePayload }) =>
-      updateSeasonAction(id, data),
+      updateSeasonAction(id, orgId, data),
     onSuccess: (updatedSeason) => {
       if (!updatedSeason) return;
 
