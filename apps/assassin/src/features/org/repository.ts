@@ -100,10 +100,7 @@ async function getPendingInvitationsByOrg(orgId: string) {
   });
 }
 
-async function updateInvitationStatus(
-  id: string,
-  status: "ACCEPTED" | "EXPIRED" | "CANCELLED",
-) {
+async function updateInvitationStatus(id: string, status: "ACCEPTED" | "EXPIRED" | "CANCELLED") {
   return await prisma.orgInvitation.update({
     where: { id },
     data: { status },

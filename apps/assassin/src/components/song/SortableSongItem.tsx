@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Song } from "@features/song/schema";
@@ -20,6 +20,7 @@ export function SortableSongItem({ song }: SortableSongItemProps) {
     () => false,
   );
   const router = useRouter();
+  const params = useParams<{ orgSlug?: string }>();
   const sortable = useSortable({
     id: song.id,
     disabled: !isMounted,
@@ -36,8 +37,9 @@ export function SortableSongItem({ song }: SortableSongItemProps) {
 
   const handleClick = useCallback(() => {
     if (isDragging) return;
-    router.push(`/song/${song.id}`);
-  }, [isDragging, router, song.id]);
+    const songPath = params.orgSlug ? `/org/${params.orgSlug}/song/${song.id}` : `/song/${song.id}`;
+    router.push(songPath);
+  }, [isDragging, params.orgSlug, router, song.id]);
 
   if (!isMounted) {
     return <SongItem song={song} onClick={handleClick} className="cursor-grab" />;
