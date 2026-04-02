@@ -1,41 +1,40 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useRealtimeOrgSync } from "@/features/org/hooks/useRealtimeOrgSync";
+import { useOrgBySlug } from "@/features/org/queries/useOrgBySlug";
 import { useUpdateOrg } from "../mutations/useUpdateOrg";
 import { DeleteOrgButton } from "./DeleteOrgButton";
 
 interface OrgSettingsPageClientProps {
-  orgId: string;
-  orgName: string;
+  orgSlug: string;
 }
 
-export function OrgSettingsPageClient({ orgId, orgName }: OrgSettingsPageClientProps) {
-  const [name, setName] = useState(orgName);
+export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
+  const { data: org } = useOrgBySlug(orgSlug);
+  const [editedName, setEditedName] = useState<string | null>(null);
+  const name = editedName ?? org.name;
   const updateOrgMutation = useUpdateOrg();
 
-  useRealtimeOrgSync(orgId);
+  useRealtimeOrgSync(org.id);
 
-  useEffect(() => {
-    setName(orgName);
-  }, [orgName]);
-
-  const isSameName = name.trim() === orgName;
+  const isSameName = name.trim() === org.name;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const nextName = name.trim();
-    if (!nextName || nextName === orgName) return;
+    if (!nextName || nextName === org.name) return;
 
     await updateOrgMutation.mutateAsync({
-      orgId,
+      orgId: org.id,
       data: { name: nextName },
     });
+    setEditedName(null);
   };
 
   return (
@@ -63,7 +62,7 @@ export function OrgSettingsPageClient({ orgId, orgName }: OrgSettingsPageClientP
                     required
                     maxLength={100}
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => setEditedName(e.target.value)}
                     className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                   />
                   <Button
@@ -90,7 +89,7 @@ export function OrgSettingsPageClient({ orgId, orgName }: OrgSettingsPageClientP
                     삭제하면 모든 데이터가 영구적으로 제거됩니다.
                   </p>
                 </div>
-                <DeleteOrgButton orgId={orgId} orgName={orgName} />
+                <DeleteOrgButton orgId={org.id} orgName={org.name} />
               </div>
             </section>
           </div>

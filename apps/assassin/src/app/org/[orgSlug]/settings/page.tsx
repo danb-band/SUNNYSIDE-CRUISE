@@ -1,7 +1,10 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@libs/supabase/server";
+import { getQueryClient } from "@/libs/react-query/getQueryClient";
 import { getOrgBySlugAction, getOrgMembersAction } from "@features/org/actions";
-import type { OrgMember } from "@features/org/schema";
+import type { Org, OrgMember } from "@features/org/schema";
+import { orgKeys } from "@/features/org/queries/keys";
 import { OrgSettingsPageClient } from "@/features/org/components/OrgSettingsPageClient";
 
 interface Props {
@@ -17,7 +20,13 @@ export default async function SettingsPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-  const org = await getOrgBySlugAction(orgSlug).catch(() => null);
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery({
+    queryKey: orgKeys.bySlug(orgSlug),
+    queryFn: () => getOrgBySlugAction(orgSlug),
+  });
+
+  const org = queryClient.getQueryData<Org>(orgKeys.bySlug(orgSlug));
   if (!org) notFound();
 
   const members = await getOrgMembersAction(org.id).catch(() => []);
@@ -26,5 +35,9 @@ export default async function SettingsPage({ params }: Props) {
     redirect(`/org/${orgSlug}`);
   }
 
-  return <OrgSettingsPageClient orgId={org.id} orgName={org.name} />;
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <OrgSettingsPageClient orgSlug={orgSlug} />
+    </HydrationBoundary>
+  );
 }
