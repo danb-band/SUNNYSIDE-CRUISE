@@ -3,12 +3,14 @@ import { createSongAction } from "../actions";
 import { songKeys } from "../queries/keys";
 import type { SongFormData } from "../hooks/useSongForm";
 import type { Song } from "../schema";
+import { useOrgId } from "@libs/org/OrgProvider";
 
 export const useCreateSong = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (data: SongFormData) => createSongAction(data),
+    mutationFn: (data: SongFormData) => createSongAction(orgId, data),
     onSuccess: (createdSong) => {
       if (!createdSong) return;
       queryClient.setQueryData(songKeys.detail(createdSong.id), createdSong);

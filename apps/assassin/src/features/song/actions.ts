@@ -10,11 +10,11 @@ export const getSongAction = async (id: string) => {
   return await SongService.getSongById(id);
 };
 
-export const getSongsBySeasonAction = async (seasonId: string) => {
-  return await SongService.getSongsBySeasonId(seasonId);
+export const getSongsBySeasonAction = async (seasonId: string, orgId: string) => {
+  return await SongService.getSongsBySeasonId(seasonId, orgId);
 };
 
-export const createSongAction = async (data: {
+export const createSongAction = async (orgId: string, data: {
   seasonId: string;
   name: string;
   artist: string;
@@ -23,7 +23,7 @@ export const createSongAction = async (data: {
   sortOrder: number;
 }) => {
   const user = await getCurrentUser();
-  const result = await SongService.createSong({ ...data, userId: user.id });
+  const result = await SongService.createSong({ ...data, userId: user.id }, orgId);
   revalidateSeasonBoard();
   return result;
 };

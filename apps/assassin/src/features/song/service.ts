@@ -19,8 +19,8 @@ const assertSongExists = async (songId: string): Promise<void> => {
   }
 };
 
-const createSong = async (song: SongPayload) => {
-  await SeasonService.assertSeasonExists(song.seasonId);
+const createSong = async (song: SongPayload, orgId: string) => {
+  await SeasonService.assertSeasonExists(song.seasonId, orgId);
 
   let result;
   try {
@@ -70,8 +70,8 @@ const getSongById = async (id: string): Promise<Song | null> => {
   return parsed.data;
 };
 
-const getSongsBySeasonId = async (seasonId: string): Promise<Array<Song>> => {
-  await SeasonService.assertSeasonExists(seasonId);
+const getSongsBySeasonId = async (seasonId: string, orgId: string): Promise<Array<Song>> => {
+  await SeasonService.assertSeasonExists(seasonId, orgId);
 
   const songs = await SongRepository.getSongsBySeasonId(seasonId);
 
