@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
@@ -256,6 +256,7 @@ function SeasonSongListDrag({ seasonId, songs, songCount, onAdd }: SeasonSongLis
 
 function SeasonSongListStatic({ songs, songCount, onAdd }: SeasonSongListProps) {
   const router = useRouter();
+  const params = useParams<{ orgSlug?: string }>();
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden rounded-md bg-slate-50 dark:bg-slate-900 p-3 sm:p-4">
@@ -264,7 +265,15 @@ function SeasonSongListStatic({ songs, songCount, onAdd }: SeasonSongListProps) 
       ) : (
         <div className="space-y-2">
           {songs.map((song) => (
-            <SongItem key={song.id} song={song} onClick={() => router.push(`/song/${song.id}`)} />
+            <SongItem
+              key={song.id}
+              song={song}
+              onClick={() =>
+                router.push(
+                  params.orgSlug ? `/org/${params.orgSlug}/song/${song.id}` : `/song/${song.id}`,
+                )
+              }
+            />
           ))}
         </div>
       )}

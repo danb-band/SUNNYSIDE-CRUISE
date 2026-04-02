@@ -38,7 +38,7 @@ async function OrgSeasonPageData({ orgId }: { orgId: string }) {
 
   const queryClient = getQueryClient();
   const seasons = await queryClient.fetchQuery({
-    queryKey: seasonKeys.lists(),
+    queryKey: seasonKeys.lists(orgId),
     queryFn: () => getSeasonsAction(orgId),
   });
 

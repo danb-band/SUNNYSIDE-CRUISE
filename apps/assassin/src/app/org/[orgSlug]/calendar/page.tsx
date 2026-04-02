@@ -46,12 +46,12 @@ async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
 
   const queryClient = getQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: calendarEventKeys.lists(year, month),
+    queryKey: calendarEventKeys.lists(org.id, year, month),
     queryFn: () => getCachedCalendarEvents(year, month, org.id),
   });
 
   const events =
-    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(year, month)) ?? [];
+    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(org.id, year, month)) ?? [];
   await Promise.all(
     events.flatMap((event) => [
       queryClient.prefetchQuery({
