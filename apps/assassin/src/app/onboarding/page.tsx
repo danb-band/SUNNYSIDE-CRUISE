@@ -51,7 +51,7 @@ async function OnboardingContent() {
       )}
 
       <Link
-        href="/org/new"
+        href="/org/create"
         className="px-6 py-3 bg-primary text-primary-foreground rounded-md font-medium"
       >
         새 조직 만들기
