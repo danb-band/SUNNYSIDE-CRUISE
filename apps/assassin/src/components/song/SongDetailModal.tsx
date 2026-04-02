@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Music } from "lucide-react";
@@ -20,6 +20,7 @@ interface SongDetailModalProps {
 
 export function SongDetailModal({ songId, open, onOpenChange }: SongDetailModalProps) {
   const pathname = usePathname();
+  const params = useParams<{ orgSlug?: string }>();
 
   const song = useSong(songId).data;
 
@@ -28,7 +29,8 @@ export function SongDetailModal({ songId, open, onOpenChange }: SongDetailModalP
   }
 
   const youtubeId = extractYoutubeId(song.youtubeUrl);
-  const isActiveRoute = pathname === `/song/${song.id}`;
+  const songRoute = params.orgSlug ? `/org/${params.orgSlug}/song/${song.id}` : `/song/${song.id}`;
+  const isActiveRoute = pathname === songRoute;
   const shouldRenderIframe = Boolean(youtubeId && isActiveRoute);
 
   return (
