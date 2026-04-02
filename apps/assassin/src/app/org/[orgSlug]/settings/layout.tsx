@@ -8,9 +8,6 @@ interface Props {
   params: Promise<{ orgSlug: string }>;
 }
 
-const ROLE_HIERARCHY = { OWNER: 3, ADMIN: 2, MEMBER: 1 } as const;
-type OrgRole = keyof typeof ROLE_HIERARCHY;
-
 export default async function SettingsLayout({ children, params }: Props) {
   const { orgSlug } = await params;
 
@@ -25,9 +22,7 @@ export default async function SettingsLayout({ children, params }: Props) {
 
   const members = await getOrgMembersAction(org.id).catch(() => []);
   const currentMember = members.find((m: OrgMember) => m.userId === user.id);
-  const hasAccess =
-    currentMember &&
-    ROLE_HIERARCHY[currentMember.role as OrgRole] >= ROLE_HIERARCHY.ADMIN;
+  const hasAccess = currentMember?.role === "OWNER";
 
   if (!hasAccess) redirect(`/org/${orgSlug}`);
 

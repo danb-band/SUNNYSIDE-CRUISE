@@ -39,7 +39,9 @@ export default function CreateOrgPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500 mb-2">
             <Building2 className="h-6 w-6 text-white" />
           </div>
-          <CardTitle className="text-xl text-slate-900 dark:text-slate-50">새 조직 만들기</CardTitle>
+          <CardTitle className="text-xl text-slate-900 dark:text-slate-50">
+            새 조직 만들기
+          </CardTitle>
           <CardDescription className="text-slate-500 dark:text-slate-400">
             조직 이름과 슬러그를 입력하세요
           </CardDescription>
@@ -74,7 +76,9 @@ export default function CreateOrgPage() {
                 pattern="[a-z0-9-]+"
                 className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400">소문자, 숫자, 하이픈만 허용</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                소문자, 숫자, 하이픈만 허용 · 생성 후 변경 불가
+              </p>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button
