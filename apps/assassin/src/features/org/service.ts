@@ -2,6 +2,26 @@ import OrgRepository from "./repository";
 import { assertOrgMember } from "@libs/auth/assertOrgMember";
 import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
 import { normalizeEmail } from "./utils/normalizeEmail";
+import { z } from "zod";
+
+const normalizedEmailSchema = z.email();
+
+type InviteMemberResult =
+  | {
+      ok: true;
+      type: "created";
+      invitation: Awaited<ReturnType<typeof OrgRepository.createInvitation>>;
+    }
+  | {
+      ok: true;
+      type: "reused_pending";
+      invitation: Awaited<ReturnType<typeof OrgRepository.getPendingInvitationByOrgAndEmail>>;
+    }
+  | {
+      ok: false;
+      code: "ALREADY_MEMBER" | "INVALID_ROLE" | "UNAUTHORIZED" | "INVALID_EMAIL";
+      message: string;
+    };
 
 const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
   const existing = await OrgRepository.getOrgBySlug(input.slug);
@@ -43,9 +63,77 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
   return await OrgRepository.getOrgMembers(orgId);
 };
 
-const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
-  await assertOrgMember(requesterId, orgId, "OWNER");
-  return await OrgRepository.createInvitation(orgId, input.email);
+const inviteMember = async (
+  orgId: string,
+  requester: { userId: string; email: string },
+  input: InviteMemberPayload,
+): Promise<InviteMemberResult> => {
+  try {
+    await assertOrgMember(requester.userId, orgId, "OWNER");
+  } catch {
+    return {
+      ok: false,
+      code: "UNAUTHORIZED",
+      message: "초대 권한이 없습니다.",
+    };
+  }
+
+  const normalizedEmail = normalizeEmail(input.email);
+  if (!normalizedEmailSchema.safeParse(normalizedEmail).success) {
+    return {
+      ok: false,
+      code: "INVALID_EMAIL",
+      message: "유효한 이메일이 아닙니다.",
+    };
+  }
+
+  const invitedRole = "MEMBER" as const;
+  if (invitedRole === "OWNER") {
+    return {
+      ok: false,
+      code: "INVALID_ROLE",
+      message: "OWNER 권한으로는 초대할 수 없습니다.",
+    };
+  }
+
+  if (normalizedEmail === normalizeEmail(requester.email)) {
+    return {
+      ok: false,
+      code: "ALREADY_MEMBER",
+      message: "이미 조직 멤버인 이메일입니다.",
+    };
+  }
+
+  const alreadyAccepted = await OrgRepository.getAcceptedInvitationByOrgAndEmail(
+    orgId,
+    normalizedEmail,
+  );
+  if (alreadyAccepted) {
+    return {
+      ok: false,
+      code: "ALREADY_MEMBER",
+      message: "이미 조직 멤버인 이메일입니다.",
+    };
+  }
+
+  const existingPending = await OrgRepository.getPendingInvitationByOrgAndEmail(
+    orgId,
+    normalizedEmail,
+  );
+  if (existingPending) {
+    return {
+      ok: true,
+      type: "reused_pending",
+      invitation: existingPending,
+    };
+  }
+
+  const invitation = await OrgRepository.createInvitation(orgId, normalizedEmail);
+  return {
+    ok: true,
+    type: "created",
+    invitation,
+  };
 };
 
 const acceptInvitation = async (token: string, authUser: { userId: string; email: string }) => {

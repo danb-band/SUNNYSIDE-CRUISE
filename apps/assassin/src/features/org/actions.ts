@@ -43,8 +43,8 @@ export const getOrgMembersAction = async (orgId: string) => {
 };
 
 export const inviteMemberAction = async (orgId: string, input: InviteMemberPayload) => {
-  const { id: userId } = await getCurrentUserIdentity();
-  return await OrgService.inviteMember(orgId, userId, input);
+  const { id: userId, email } = await getCurrentUserIdentity();
+  return await OrgService.inviteMember(orgId, { userId, email }, input);
 };
 
 export const acceptInvitationAction = async (token: string) => {
