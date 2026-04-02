@@ -52,7 +52,7 @@ async function OrgSongPageContent({ songId, orgId }: { songId: string; orgId: st
   }
 
   const seasons = await queryClient.fetchQuery({
-    queryKey: seasonKeys.lists(),
+    queryKey: seasonKeys.lists(orgId),
     queryFn: () => getSeasonsAction(orgId),
   });
 
