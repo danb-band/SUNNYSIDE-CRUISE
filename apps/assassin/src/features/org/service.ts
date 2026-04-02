@@ -42,11 +42,7 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
   return await OrgRepository.getOrgMembers(orgId);
 };
 
-const inviteMember = async (
-  orgId: string,
-  requesterId: string,
-  input: InviteMemberPayload,
-) => {
+const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
   await assertOrgMember(requesterId, orgId, "ADMIN");
   return await OrgRepository.createInvitation(orgId, input.email, input.role);
 };

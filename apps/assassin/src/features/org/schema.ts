@@ -1,16 +1,24 @@
 import { z } from "zod";
 
 export const orgSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, "slug는 소문자, 숫자, 하이픈만 허용"),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/, "slug는 소문자, 숫자, 하이픈만 허용"),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const createOrgSchema = z.object({
   name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, "slug는 소문자, 숫자, 하이픈만 허용"),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/, "slug는 소문자, 숫자, 하이픈만 허용"),
 });
 
 export const updateOrgSchema = z.object({
@@ -18,18 +26,18 @@ export const updateOrgSchema = z.object({
 });
 
 export const orgMemberSchema = z.object({
-  id: z.string().uuid(),
-  orgId: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  orgId: z.uuid(),
+  userId: z.uuid(),
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const orgInvitationSchema = z.object({
-  id: z.string().uuid(),
-  orgId: z.string().uuid(),
-  email: z.string().email(),
+  id: z.uuid(),
+  orgId: z.uuid(),
+  email: z.email(),
   token: z.string(),
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
   status: z.enum(["PENDING", "ACCEPTED", "EXPIRED", "CANCELLED"]),
@@ -39,7 +47,7 @@ export const orgInvitationSchema = z.object({
 });
 
 export const inviteMemberSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   role: z.enum(["ADMIN", "MEMBER"]).default("MEMBER"),
 });
 

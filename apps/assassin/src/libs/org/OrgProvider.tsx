@@ -22,7 +22,13 @@ export function OrgProvider({
 }
 
 export function useOrgId(): string {
-  return useContext(OrgContext).orgId;
+  const context = useContext(OrgContext);
+
+  if (!context) {
+    throw new Error("useOrgId must be used within OrgProvider");
+  }
+
+  return context.orgId;
 }
 
 export function useOrgRole(): OrgRole | null {

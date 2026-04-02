@@ -6,7 +6,7 @@ import { useOrgId } from "@libs/org/OrgProvider";
 export const useSeasons = () => {
   const orgId = useOrgId();
   return useSuspenseQuery({
-    queryKey: seasonKeys.lists(),
+    queryKey: seasonKeys.lists(orgId),
     queryFn: () => getSeasonsAction(orgId),
   });
 };
