@@ -5,6 +5,7 @@ import { House, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoutButton } from "./LogoutButton";
 import ProfileButton from "./ProfileButton";
+import { NavOverflowMenu } from "./NavOverflowMenu";
 import { TabNav } from "./TabNav";
 
 export function AppNav() {
@@ -25,7 +26,7 @@ export function AppNav() {
         <TabNav />
       </div>
 
-      <div className="flex items-center gap-1 pb-1 sm:pb-0">
+      <div className="hidden md:flex items-center gap-1 pb-1 sm:pb-0">
         <Button
           variant="ghost"
           size="sm"
@@ -43,6 +44,10 @@ export function AppNav() {
         </Button>
         <ProfileButton />
         <LogoutButton />
+      </div>
+
+      <div className="md:hidden pb-1 sm:pb-0">
+        <NavOverflowMenu />
       </div>
     </div>
   );
