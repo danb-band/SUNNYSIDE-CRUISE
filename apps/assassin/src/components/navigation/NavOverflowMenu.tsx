@@ -38,7 +38,10 @@ export function NavOverflowMenu() {
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent align="end" className="w-52 p-2">
+        <PopoverContent
+          align="end"
+          className="w-52 p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg"
+        >
           <div className="flex flex-col gap-1">
             <a
               href="https://youtube.com/@dnab-dnab?si=iX2ulzqGQYl_4Xm9"
