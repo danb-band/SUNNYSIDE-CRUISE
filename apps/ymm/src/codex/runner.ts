@@ -1,5 +1,6 @@
 import { Message } from 'discord.js'
 import { spawn } from 'child_process'
+import readline from 'node:readline'
 import { c, ts, truncate } from '../utils/ansi.js'
 import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
@@ -28,12 +29,18 @@ const WORKFLOW_RULES = `[WORKFLOW RULES]
 
 `
 
+// codex가 승인을 요청할 때 출력하는 패턴
+const APPROVAL_RE = /\[y\/n\]|\[Y\/n\]|\[y\/N\]|\(y\/n\)|\(Y\/n\)/i
+
 type SendFn = (content: string) => Promise<unknown>
 
 type RunOptions = {
   onDone?: () => void
   logChannel?: { send: SendFn }
   resultChannel?: { send: SendFn }
+  commandChannel?: { send: SendFn }
+  /** 승인 요청 발생 시 호출. 'y' 또는 'n'을 resolve해야 함 */
+  onApprovalRequest?: (prompt: string) => Promise<string>
 }
 
 export function runCodexCode(
@@ -41,7 +48,7 @@ export function runCodexCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { onDone, logChannel, resultChannel }: RunOptions = {},
+  { onDone, logChannel, resultChannel, commandChannel, onApprovalRequest }: RunOptions = {},
 ) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(
@@ -49,17 +56,42 @@ export function runCodexCode(
   )
   const fullPrompt = WORKFLOW_RULES + prompt
 
-  const child = spawn(CODEX_BIN, ['exec', fullPrompt], {
+  // --full-auto: on-request 승인 정책 + workspace-write 샌드박스
+  // stdin을 pipe로 열어 승인 응답을 write할 수 있도록 함
+  const child = spawn(CODEX_BIN, ['exec', '--full-auto', fullPrompt], {
     cwd: PROJECT_ROOT,
     env: { ...process.env },
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['pipe', 'pipe', 'pipe'],
   })
 
   let output = ''
-  child.stdout.on('data', (chunk: Buffer) => {
-    const text = chunk.toString()
-    output += text
-    discordLogger.log(`🧠 [codex] ${truncate(text, 500)}`)
+
+  const rl = readline.createInterface({ input: child.stdout, crlfDelay: Infinity })
+  rl.on('line', (line) => {
+    output += line + '\n'
+    discordLogger.log(`🧠 [codex] ${truncate(line, 500)}`)
+
+    if (APPROVAL_RE.test(line)) {
+      console.log(`${ts()} ${c.yellow}[codex 승인 요청]${c.reset} ${line}`)
+      const target = commandChannel ?? (message.channel as { send: SendFn })
+      target
+        .send(`❓ **Codex 승인 요청**\n\`\`\`\n${truncate(line, 500)}\n\`\`\`\n\`y\` 또는 \`n\`으로 답해주세요. (60초 내 무응답 시 자동으로 \`n\`)`)
+        .catch(() => {})
+
+      if (onApprovalRequest) {
+        onApprovalRequest(line)
+          .then((response) => {
+            child.stdin.write(response.trim() + '\n')
+            discordLogger.log(`✅ [승인 응답] ${response.trim()}`)
+          })
+          .catch(() => {
+            child.stdin.write('n\n')
+          })
+      } else {
+        // 콜백 없으면 자동으로 'n' 응답
+        child.stdin.write('n\n')
+      }
+    }
   })
 
   child.stderr.on('data', (chunk: Buffer) => {
