@@ -6,6 +6,10 @@ Discord 채널에서 Claude Code CLI 또는 Codex CLI를 선택해서 원격 실
 
 Discord 메시지로 프롬프트를 보내면, 봇이 지정한 프로젝트 루트 경로에서 선택한 에이전트(Claude/Codex)를 실행하고 결과를 채널로 전송합니다. Claude 사용 시 세션 유지 기능으로 대화 맥락을 이어갈 수 있습니다.
 
+두 에이전트 모두 실행 시점에 프로젝트 루트의 `CLAUDE.md`와 로컬 Codex skill/plugin 경로 목록을 프롬프트에 함께 주입받습니다. 따라서 Claude와 Codex가 동일한 작업 규칙과 보조 컨텍스트를 기준으로 동작합니다.
+
+검증은 `npm test`, `npm run build`로 수행할 수 있습니다.
+
 ## 사전 요구사항
 
 - [Node.js](https://nodejs.org/) v20 이상
