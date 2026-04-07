@@ -195,7 +195,6 @@ model OrgInvitation {
 
 enum OrgRole {
   OWNER
-  ADMIN
   MEMBER
 }
 

@@ -1,7 +1,7 @@
 -- Step 1: org 관련 테이블 생성 + Season/CalendarEvent에 nullable orgId 추가
 
 -- org_role enum
-CREATE TYPE org_role AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
+CREATE TYPE org_role AS ENUM ('OWNER', 'MEMBER');
 
 -- invitation_status enum
 CREATE TYPE invitation_status AS ENUM ('PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED');

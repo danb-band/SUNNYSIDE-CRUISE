@@ -43,8 +43,8 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
 };
 
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
-  await assertOrgMember(requesterId, orgId, "ADMIN");
-  return await OrgRepository.createInvitation(orgId, input.email, input.role);
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  return await OrgRepository.createInvitation(orgId, input.email, "MEMBER");
 };
 
 const acceptInvitation = async (token: string, userId: string) => {
@@ -63,19 +63,19 @@ const acceptInvitation = async (token: string, userId: string) => {
     throw new Error("만료된 초대입니다.");
   }
 
-  await OrgRepository.addMember(invitation.orgId, userId, invitation.role as "ADMIN" | "MEMBER");
+  await OrgRepository.addMember(invitation.orgId, userId, "MEMBER");
   await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED");
 
   return OrgRepository.getOrgById(invitation.orgId);
 };
 
 const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
-  await assertOrgMember(requesterId, orgId, "ADMIN");
+  await assertOrgMember(requesterId, orgId, "OWNER");
   await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
 };
 
 const removeMember = async (orgId: string, targetUserId: string, requesterId: string) => {
-  await assertOrgMember(requesterId, orgId, "ADMIN");
+  await assertOrgMember(requesterId, orgId, "OWNER");
 
   const targetMember = await OrgRepository.getMember(orgId, targetUserId);
   if (targetMember?.role === "OWNER") {
