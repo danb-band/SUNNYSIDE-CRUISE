@@ -36,6 +36,8 @@ const APPROVAL_RE = /\[y\/n\]|\[Y\/n\]|\[y\/N\]|\(y\/n\)|\(Y\/n\)/i
 type SendFn = (content: string) => Promise<unknown>
 
 type RunOptions = {
+  sessionId?: string
+  onSessionId?: (sessionId: string) => void
   onDone?: () => void
   logChannel?: { send: SendFn }
   resultChannel?: { send: SendFn }
@@ -49,46 +51,85 @@ export function runCodexCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { onDone, logChannel, resultChannel, commandChannel, onApprovalRequest }: RunOptions = {},
+  { sessionId, onSessionId, onDone, logChannel, resultChannel, commandChannel, onApprovalRequest }: RunOptions = {},
 ) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(
     logChannel ?? (message.channel as { send: SendFn }),
   )
-  const fullPrompt =
-    WORKFLOW_RULES + buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT }) + prompt
+  const sharedContext = buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT })
+  const fullPrompt = WORKFLOW_RULES + (sessionId ? '' : sharedContext) + prompt
+
+  const baseArgs = ['--json', '--dangerously-bypass-approvals-and-sandbox']
+  const args = sessionId
+    ? ['exec', 'resume', ...baseArgs, sessionId, fullPrompt]
+    : ['exec', ...baseArgs, fullPrompt]
 
   // dangerously-bypass-approvals-and-sandbox: 샌드박스 없이 실행
   // 이 봇은 전용 레포 안에서만 동작하므로 샌드박스 우회가 적합함
   // (--full-auto의 workspace-write 샌드박스는 .git/ 쓰기를 막아 git pull이 불가)
-  const child = spawn(
-    CODEX_BIN,
-    ['exec', '--dangerously-bypass-approvals-and-sandbox', fullPrompt],
-    {
-      cwd: PROJECT_ROOT,
-      env: { ...process.env },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    },
-  )
+  const child = spawn(CODEX_BIN, args, {
+    cwd: PROJECT_ROOT,
+    env: { ...process.env },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
   // stdin을 즉시 닫아 codex가 "Reading additional input from stdin..." 상태에서 블로킹되지 않도록 함
   child.stdin.end()
 
   let output = ''
+  const addOutput = (line: string) => {
+    output += line + '\n'
+  }
 
   const rl = readline.createInterface({ input: child.stdout, crlfDelay: Infinity })
   rl.on('line', (line) => {
-    output += line + '\n'
-    discordLogger.log(`🧠 [codex] ${truncate(line, 500)}`)
+    let event: { type?: string; thread_id?: string; item?: { text?: string } }
+    try {
+      event = JSON.parse(line)
+    } catch {
+      addOutput(line)
+      if (APPROVAL_RE.test(line)) {
+        handleApproval(line)
+      } else {
+        discordLogger.log(`🧠 [codex] ${truncate(line, 500)}`)
+      }
+      return
+    }
 
-    if (APPROVAL_RE.test(line)) {
-      console.log(`${ts()} ${c.yellow}[codex 승인 요청]${c.reset} ${line}`)
+    if (event.type === 'thread.started') {
+      if (event.thread_id) {
+        onSessionId?.(event.thread_id)
+      }
+      return
+    }
+
+    if (event.type === 'item.completed' && event.item?.text) {
+      const text = String(event.item.text).trim()
+      if (text) addOutput(text)
+      return
+    }
+
+    if (event.type === 'turn.completed') {
+      return
+    }
+
+    const lineText = line.includes(':') ? line.slice(line.indexOf(':') + 1).trim() : ''
+    addOutput(lineText || line)
+    if (lineText && APPROVAL_RE.test(lineText)) {
+      handleApproval(lineText)
+      return
+    }
+    discordLogger.log(`🧠 [codex] ${truncate(lineText || line, 500)}`)
+
+    function handleApproval(text: string) {
+      console.log(`${ts()} ${c.yellow}[codex 승인 요청]${c.reset} ${text}`)
       const target = commandChannel ?? (message.channel as { send: SendFn })
       target
-        .send(`❓ **Codex 승인 요청**\n\`\`\`\n${truncate(line, 500)}\n\`\`\`\n\`y\` 또는 \`n\`으로 답해주세요. (60초 내 무응답 시 자동으로 \`n\`)`)
+        .send(`❓ **Codex 승인 요청**\n\`\`\`\n${truncate(text, 500)}\n\`\`\`\n\`y\` 또는 \`n\`으로 답해주세요. (60초 내 무응답 시 자동으로 \`n\`)`)
         .catch(() => {})
 
       if (onApprovalRequest) {
-        onApprovalRequest(line)
+        onApprovalRequest(text)
           .then((response) => {
             child.stdin.write(response.trim() + '\n')
             discordLogger.log(`✅ [승인 응답] ${response.trim()}`)

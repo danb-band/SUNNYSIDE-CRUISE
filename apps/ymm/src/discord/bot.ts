@@ -84,6 +84,7 @@ client.on('messageCreate', async (message: Message) => {
       return
     }
     const nextAgent = text.endsWith('codex') ? 'codex' : 'claude'
+    clearSession(message.channelId)
     setAgent(message.channelId, nextAgent)
     await message.reply(`✅ 현재 채널 에이전트가 **${nextAgent}** 로 변경되었습니다.`)
     return
@@ -218,6 +219,8 @@ client.on('messageCreate', async (message: Message) => {
           commandChannel: getTextChannel(DISCORD_COMMAND_ID),
         })
       : runCodexCode(prompt, message, processingMsg, tempFiles, {
+          sessionId,
+          onSessionId: (id) => setSession(message.channelId, id),
           onDone: () => clearProcess(message.channelId),
           logChannel: getTextChannel(DISCORD_LOG_ID),
           resultChannel: getTextChannel(DISCORD_RESULT_ID),
