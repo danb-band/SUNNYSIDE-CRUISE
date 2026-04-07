@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const DISCORD_TOKEN = process.env.DISCORD_TOKEN
 export const PROJECT_ROOT =
   process.env.PROJECT_ROOT ?? path.resolve(__dirname, '../../..')
+export const CODEX_BIN = process.env.CODEX_BIN ?? 'codex'
 
 // 채널별 ID
 export const DISCORD_COMMAND_ID = process.env.DISCORD_COMMAND_ID ?? ''  // 명령/질의응답 채널
