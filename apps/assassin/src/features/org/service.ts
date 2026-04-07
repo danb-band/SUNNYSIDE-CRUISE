@@ -15,6 +15,10 @@ const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
   return org;
 };
 
+const getOrgById = async (orgId: string) => {
+  return await OrgRepository.getOrgById(orgId);
+};
+
 const getOrgBySlug = async (slug: string) => {
   const org = await OrgRepository.getOrgBySlug(slug);
   if (!org) {
@@ -100,8 +104,13 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
   await OrgRepository.removeMember(orgId, targetUserId);
 };
 
+const getProfileById = async (userId: string) => {
+  return await OrgRepository.getProfileById(userId);
+};
+
 const OrgService = {
   createOrg,
+  getOrgById,
   getOrgBySlug,
   getUserOrgs,
   updateOrg,
@@ -111,6 +120,7 @@ const OrgService = {
   acceptInvitation,
   cancelInvitation,
   removeMember,
+  getProfileById,
 };
 
 export default OrgService;

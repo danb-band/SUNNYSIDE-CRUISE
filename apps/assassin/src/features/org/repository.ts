@@ -107,6 +107,10 @@ async function updateInvitationStatus(id: string, status: "ACCEPTED" | "EXPIRED"
   });
 }
 
+async function getProfileById(userId: string) {
+  return await prisma.profile.findUnique({ where: { id: userId } });
+}
+
 // auth.users는 Prisma 스키마 외부(Supabase Auth 스키마)이므로 raw query 사용
 async function findUserIdByEmail(email: string): Promise<string | null> {
   const rows = await prisma.$queryRaw<{ id: string }[]>`
@@ -141,6 +145,7 @@ const OrgRepository = {
   updateInvitationStatus,
   findUserIdByEmail,
   cancelPendingInvitationsByEmail,
+  getProfileById,
 };
 
 export default OrgRepository;
