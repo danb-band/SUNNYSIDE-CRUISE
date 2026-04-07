@@ -107,6 +107,22 @@ async function updateInvitationStatus(id: string, status: "ACCEPTED" | "EXPIRED"
   });
 }
 
+// auth.users는 Prisma 스키마 외부(Supabase Auth 스키마)이므로 raw query 사용
+async function findUserIdByEmail(email: string): Promise<string | null> {
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM auth.users WHERE email = ${email} LIMIT 1
+  `;
+  return rows[0]?.id ?? null;
+}
+
+// 동일 (orgId, email)의 PENDING 초대를 모두 취소 — 재초대 시 호출
+async function cancelPendingInvitationsByEmail(orgId: string, email: string): Promise<void> {
+  await prisma.orgInvitation.updateMany({
+    where: { orgId, email, status: "PENDING" },
+    data: { status: "CANCELLED" },
+  });
+}
+
 const OrgRepository = {
   getOrgById,
   getOrgBySlug,
@@ -123,6 +139,8 @@ const OrgRepository = {
   getInvitationByToken,
   getPendingInvitationsByOrg,
   updateInvitationStatus,
+  findUserIdByEmail,
+  cancelPendingInvitationsByEmail,
 };
 
 export default OrgRepository;

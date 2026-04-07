@@ -44,7 +44,22 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
 
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
-  return await OrgRepository.createInvitation(orgId, input.email, "MEMBER");
+
+  const email = input.email.toLowerCase().trim();
+
+  // 이미 가입된 유저라면 조직 멤버 여부 확인
+  const existingUserId = await OrgRepository.findUserIdByEmail(email);
+  if (existingUserId) {
+    const existingMember = await OrgRepository.getMember(orgId, existingUserId);
+    if (existingMember) {
+      throw new Error("이미 조직의 멤버입니다.");
+    }
+  }
+
+  // 기존 PENDING 초대 취소 후 재생성 (재초대 정책: PENDING → CANCELLED + 신규 생성)
+  await OrgRepository.cancelPendingInvitationsByEmail(orgId, email);
+
+  return await OrgRepository.createInvitation(orgId, email, "MEMBER");
 };
 
 const acceptInvitation = async (token: string, userId: string) => {

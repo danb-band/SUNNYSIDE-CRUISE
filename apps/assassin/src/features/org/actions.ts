@@ -2,7 +2,12 @@
 
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import OrgService from "./service";
-import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
+import {
+  CreateOrgPayload,
+  InviteMemberPayload,
+  UpdateOrgPayload,
+  inviteMemberSchema,
+} from "./schema";
 
 async function getCurrentUserId(): Promise<string> {
   const supabase = await createServerSupabaseClient();
@@ -41,9 +46,31 @@ export const getOrgMembersAction = async (orgId: string) => {
   return await OrgService.getOrgMembers(orgId, userId);
 };
 
-export const inviteMemberAction = async (orgId: string, input: InviteMemberPayload) => {
-  const userId = await getCurrentUserId();
-  return await OrgService.inviteMember(orgId, userId, input);
+export const inviteMemberAction = async (
+  orgId: string,
+  input: InviteMemberPayload,
+): Promise<
+  | { success: true; data: { id: string; email: string; expiresAt: Date } }
+  | { success: false; error: string }
+> => {
+  const parsed = inviteMemberSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    const userId = await getCurrentUserId();
+    const invitation = await OrgService.inviteMember(orgId, userId, parsed.data);
+    return {
+      success: true,
+      data: { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "초대 생성에 실패했습니다.",
+    };
+  }
 };
 
 export const acceptInvitationAction = async (token: string) => {
