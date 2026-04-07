@@ -68,20 +68,30 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
   });
 };
 
-const acceptInvitation = async (token: string, userId: string) => {
+const acceptInvitation = async (token: string, userId: string, userEmail: string) => {
   const invitation = await OrgRepository.getInvitationByToken(token);
 
-  if (!invitation) {
-    throw new Error("유효하지 않은 초대 토큰입니다.");
+  if (!invitation) throw new Error("INVALID_TOKEN");
+
+  // 상태별 명시적 에러 코드
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt) {
+    if (invitation.status !== "EXPIRED") {
+      await OrgRepository.updateInvitationStatus(invitation.id, "EXPIRED");
+    }
+    throw new Error("EXPIRED");
   }
 
-  if (invitation.status !== "PENDING") {
-    throw new Error("이미 처리된 초대입니다.");
+  // 초대 이메일과 로그인한 유저 이메일 정확히 일치해야 함
+  if (invitation.email !== userEmail.toLowerCase().trim()) {
+    throw new Error("EMAIL_MISMATCH");
   }
 
-  if (new Date() > invitation.expiresAt) {
-    await OrgRepository.updateInvitationStatus(invitation.id, "EXPIRED");
-    throw new Error("만료된 초대입니다.");
+  // 멱등성: 이미 멤버라면 중복 생성하지 않음
+  const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
+  if (!existingMember) {
+    await OrgRepository.addMember(invitation.orgId, userId, "MEMBER");
   }
 
   // 멤버 추가와 초대 상태 업데이트를 트랜잭션으로 묶어 원자성 보장
@@ -90,7 +100,8 @@ const acceptInvitation = async (token: string, userId: string) => {
     await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
   });
 
-  return OrgRepository.getOrgById(invitation.orgId);
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return org!;
 };
 
 const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
@@ -113,6 +124,11 @@ const getProfileById = async (userId: string) => {
   return await OrgRepository.getProfileById(userId);
 };
 
+const getPendingInvitations = async (orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId);
+  return await OrgRepository.getPendingInvitationsByOrg(orgId);
+};
+
 const OrgService = {
   createOrg,
   getOrgById,
@@ -126,6 +142,7 @@ const OrgService = {
   cancelInvitation,
   removeMember,
   getProfileById,
+  getPendingInvitations,
 };
 
 export default OrgService;

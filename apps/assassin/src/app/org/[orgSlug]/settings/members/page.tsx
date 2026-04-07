@@ -1,17 +1,43 @@
-import { AppNav } from "@/components/navigation/AppNav";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient } from "@libs/supabase/server";
+import {
+  getOrgBySlugAction,
+  getOrgMembersAction,
+  getPendingInvitationsAction,
+} from "@features/org/actions";
+import { MembersPageClient } from "@features/org/components/MembersPageClient";
 
-export default function SettingsMembersPage() {
+interface Props {
+  params: Promise<{ orgSlug: string }>;
+}
+
+export default async function SettingsMembersPage({ params }: Props) {
+  const { orgSlug } = await params;
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/");
+
+  const org = await getOrgBySlugAction(orgSlug).catch(() => null);
+  if (!org) redirect(`/org/${orgSlug}`);
+
+  const [members, pendingInvitations] = await Promise.all([
+    getOrgMembersAction(org.id).catch(() => []),
+    getPendingInvitationsAction(org.id).catch(() => []),
+  ]);
+
+  // OWNER만 접근 가능
+  const currentMember = members.find((m) => m.userId === user.id);
+  if (currentMember?.role !== "OWNER") redirect(`/org/${orgSlug}`);
+
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
-      <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 h-full">
-        <div className="bg-white dark:bg-slate-900 rounded-lg p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col min-h-0 overflow-y-auto">
-          <AppNav />
-          <div className="max-w-lg flex flex-col gap-4 pt-4">
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">멤버 관리</h1>
-            <p className="text-sm text-muted-foreground">멤버 관리 기능은 준비 중입니다.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MembersPageClient
+      org={org}
+      members={members}
+      pendingInvitations={pendingInvitations}
+      currentUserId={user.id}
+    />
   );
 }

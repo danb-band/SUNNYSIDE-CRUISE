@@ -98,8 +98,12 @@ export const inviteMemberAction = async (
 };
 
 export const acceptInvitationAction = async (token: string) => {
-  const userId = await getCurrentUserId();
-  return await OrgService.acceptInvitation(token, userId);
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !user.email) throw new Error("인증이 필요합니다.");
+  return await OrgService.acceptInvitation(token, user.id, user.email);
 };
 
 export const cancelInvitationAction = async (invitationId: string, orgId: string) => {
@@ -110,4 +114,9 @@ export const cancelInvitationAction = async (invitationId: string, orgId: string
 export const removeMemberAction = async (orgId: string, targetUserId: string) => {
   const userId = await getCurrentUserId();
   await OrgService.removeMember(orgId, targetUserId, userId);
+};
+
+export const getPendingInvitationsAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getPendingInvitations(orgId, userId);
 };
