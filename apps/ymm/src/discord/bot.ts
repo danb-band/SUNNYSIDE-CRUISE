@@ -5,13 +5,16 @@ import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
+import { runCodexCode } from '../codex/runner.js'
 import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
 import { splitIntoChunks } from '../utils/ansi.js'
+import { getAgent, setAgent } from './agentStore.js'
 
 const COMMANDS = [
   { name: '!done',         desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
   { name: '!stop',         desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
   { name: '!session',      desc: '현재 활성 세션 ID 확인' },
+  { name: '!agent',        desc: '현재 에이전트 확인 또는 변경 (!agent claude | !agent codex)' },
   { name: '!cost',         desc: 'Claude Code 세션의 토큰 사용량 확인' },
   { name: '#숫자',         desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
   { name: 'team N:작업',  desc: 'N개 워커로 멀티 에이전트 병렬 실행 (예: team 3:버튼 컴포넌트 리팩터)' },
@@ -74,8 +77,24 @@ client.on('messageCreate', async (message: Message) => {
     return
   }
 
+  // !agent — 현재 에이전트 확인 / 변경
+  if (text === '!agent' || text === '!agent claude' || text === '!agent codex') {
+    if (text === '!agent') {
+      await message.reply(`현재 에이전트: **${getAgent(message.channelId)}**`)
+      return
+    }
+    const nextAgent = text.endsWith('codex') ? 'codex' : 'claude'
+    setAgent(message.channelId, nextAgent)
+    await message.reply(`✅ 현재 채널 에이전트가 **${nextAgent}** 로 변경되었습니다.`)
+    return
+  }
+
   // !cost — Claude Code /context 출력
   if (text === '!cost') {
+    if (getAgent(message.channelId) !== 'claude') {
+      await message.reply('ℹ️ `!cost`는 Claude 에이전트에서만 지원됩니다.')
+      return
+    }
     const sid = getSession(message.channelId)
     try {
       const resumeFlag = sid ? `--resume ${sid} ` : ''
@@ -178,7 +197,10 @@ client.on('messageCreate', async (message: Message) => {
   const hasAttachments = message.attachments.size > 0
   if (!text && !hasAttachments) return
 
-  const processingMsg = await message.reply('⏳ Claude Code가 작업 중입니다...')
+  const agent = getAgent(message.channelId)
+  const processingMsg = await message.reply(
+    agent === 'claude' ? '⏳ Claude Code가 작업 중입니다...' : '⏳ Codex가 작업 중입니다...',
+  )
 
   const sessionId = getSession(message.channelId)
 
@@ -186,14 +208,20 @@ client.on('messageCreate', async (message: Message) => {
   try {
     const attachmentPaths = await downloadAttachments(message, tempFiles)
     const prompt = buildPrompt(text, attachmentPaths)
-    const child = runClaudeCode(prompt, message, processingMsg, tempFiles, {
-      sessionId,
-      onSessionId: (id) => setSession(message.channelId, id),
-      onDone: () => clearProcess(message.channelId),
-      logChannel: getTextChannel(DISCORD_LOG_ID),
-      resultChannel: getTextChannel(DISCORD_RESULT_ID),
-      commandChannel: getTextChannel(DISCORD_COMMAND_ID),
-    })
+    const child = agent === 'claude'
+      ? runClaudeCode(prompt, message, processingMsg, tempFiles, {
+          sessionId,
+          onSessionId: (id) => setSession(message.channelId, id),
+          onDone: () => clearProcess(message.channelId),
+          logChannel: getTextChannel(DISCORD_LOG_ID),
+          resultChannel: getTextChannel(DISCORD_RESULT_ID),
+          commandChannel: getTextChannel(DISCORD_COMMAND_ID),
+        })
+      : runCodexCode(prompt, message, processingMsg, tempFiles, {
+          onDone: () => clearProcess(message.channelId),
+          logChannel: getTextChannel(DISCORD_LOG_ID),
+          resultChannel: getTextChannel(DISCORD_RESULT_ID),
+        })
     setProcess(message.channelId, child)
   } catch (err) {
     await processingMsg.edit(`❌ 첨부파일 다운로드 실패: ${(err as Error).message}`)
