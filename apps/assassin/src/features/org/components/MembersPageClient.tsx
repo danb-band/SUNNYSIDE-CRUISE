@@ -70,6 +70,26 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
     });
   };
 
+  const handleResendInvitation = (targetEmail: string) => {
+    setInviteError(null);
+    setInviteWarning(null);
+
+    startTransition(async () => {
+      const result = await inviteMemberAction(org.id, { email: targetEmail, role: "MEMBER" });
+      if (!result.success) {
+        setInviteError(result.error);
+        return;
+      }
+
+      if (!result.emailSent) {
+        setInviteWarning(
+          `재발송 초대가 생성되었지만 이메일 발송에 실패했습니다. (${result.emailError ?? "알 수 없는 오류"})`,
+        );
+      }
+      router.refresh();
+    });
+  };
+
   const handleRemoveMember = (targetUserId: string) => {
     startTransition(async () => {
       await removeMemberAction(org.id, targetUserId);
@@ -142,15 +162,26 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
                             만료: {new Date(inv.expiresAt).toLocaleDateString("ko-KR")}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => handleCancelInvitation(inv.id)}
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                        >
-                          취소
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => handleResendInvitation(inv.email)}
+                            className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                          >
+                            이메일 재발송
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => handleCancelInvitation(inv.id)}
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          >
+                            취소
+                          </Button>
+                        </div>
                       </li>
                     ))}
                   </ul>

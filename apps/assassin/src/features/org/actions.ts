@@ -68,26 +68,37 @@ export const inviteMemberAction = async (
     const userId = await getCurrentUserId();
     const invitation = await OrgService.inviteMember(orgId, userId, parsed.data);
 
-    // 이메일 발송에 필요한 조직명, 초대자 이름 조회
-    const [org, inviterProfile] = await Promise.all([
-      OrgService.getOrgById(orgId),
-      OrgService.getProfileById(userId),
-    ]);
+    let emailSent = false;
+    let emailError: string | undefined;
 
-    const emailResult = await sendInviteEmail({
-      to: invitation.email,
-      orgName: org?.name ?? orgId,
-      inviterName: inviterProfile?.name,
-      role: invitation.role,
-      expiresAt: invitation.expiresAt,
-      token: invitation.token,
-    });
+    try {
+      // 이메일 발송에 필요한 조직명, 초대자 이름 조회
+      const [org, inviterProfile] = await Promise.all([
+        OrgService.getOrgById(orgId),
+        OrgService.getProfileById(userId),
+      ]);
+
+      const emailResult = await sendInviteEmail({
+        to: invitation.email,
+        orgName: org?.name ?? orgId,
+        inviterName: inviterProfile?.name,
+        role: invitation.role,
+        expiresAt: invitation.expiresAt,
+        token: invitation.token,
+      });
+
+      emailSent = emailResult.sent;
+      emailError = emailResult.error;
+    } catch (error) {
+      emailSent = false;
+      emailError = error instanceof Error ? error.message : "이메일 발송 실패";
+    }
 
     return {
       success: true,
       data: { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt },
-      emailSent: emailResult.sent,
-      ...(emailResult.error && { emailError: emailResult.error }),
+      emailSent,
+      ...(emailError && { emailError }),
     };
   } catch (error) {
     return {

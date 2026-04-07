@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,25 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                   </Button>
                 </div>
               </form>
+            </section>
+
+            <Separator />
+
+            <section className="flex flex-col gap-4">
+              <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                멤버
+              </h2>
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-50">멤버 관리</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    멤버 초대, 재발송, 제거를 관리합니다.
+                  </p>
+                </div>
+                <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white">
+                  <Link href={`/org/${orgSlug}/settings/members`}>멤버 설정으로 이동</Link>
+                </Button>
+              </div>
             </section>
 
             <Separator />
