@@ -41,7 +41,7 @@ async function deleteOrg(id: string) {
 }
 
 // OrgMember
-async function addMember(orgId: string, userId: string, role: "OWNER" | "ADMIN" | "MEMBER") {
+async function addMember(orgId: string, userId: string, role: "OWNER" | "MEMBER") {
   return await prisma.orgMember.create({
     data: { orgId, userId, role },
   });
@@ -60,7 +60,7 @@ async function getOrgMembers(orgId: string) {
   });
 }
 
-async function updateMemberRole(orgId: string, userId: string, role: "OWNER" | "ADMIN" | "MEMBER") {
+async function updateMemberRole(orgId: string, userId: string, role: "OWNER" | "MEMBER") {
   return await prisma.orgMember.update({
     where: { orgId_userId: { orgId, userId } },
     data: { role },
@@ -74,7 +74,7 @@ async function removeMember(orgId: string, userId: string) {
 }
 
 // OrgInvitation
-async function createInvitation(orgId: string, email: string, role: "ADMIN" | "MEMBER") {
+async function createInvitation(orgId: string, email: string, role: "MEMBER") {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일
 

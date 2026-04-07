@@ -29,7 +29,7 @@ export const orgMemberSchema = z.object({
   id: z.uuid(),
   orgId: z.uuid(),
   userId: z.uuid(),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
+  role: z.enum(["OWNER", "MEMBER"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -39,7 +39,7 @@ export const orgInvitationSchema = z.object({
   orgId: z.uuid(),
   email: z.email(),
   token: z.string(),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
+  role: z.enum(["OWNER", "MEMBER"]),
   status: z.enum(["PENDING", "ACCEPTED", "EXPIRED", "CANCELLED"]),
   expiresAt: z.date(),
   createdAt: z.date(),
@@ -48,7 +48,7 @@ export const orgInvitationSchema = z.object({
 
 export const inviteMemberSchema = z.object({
   email: z.email(),
-  role: z.enum(["ADMIN", "MEMBER"]).default("MEMBER"),
+  role: z.enum(["MEMBER"]).default("MEMBER"),
 });
 
 export type Org = z.infer<typeof orgSchema>;
