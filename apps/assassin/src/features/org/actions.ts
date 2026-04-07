@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient } from "@libs/supabase/server";
+import { sendInviteEmail } from "@libs/email/sendInviteEmail";
 import OrgService from "./service";
 import {
   CreateOrgPayload,
@@ -50,7 +51,12 @@ export const inviteMemberAction = async (
   orgId: string,
   input: InviteMemberPayload,
 ): Promise<
-  | { success: true; data: { id: string; email: string; expiresAt: Date } }
+  | {
+      success: true;
+      data: { id: string; email: string; expiresAt: Date };
+      emailSent: boolean;
+      emailError?: string;
+    }
   | { success: false; error: string }
 > => {
   const parsed = inviteMemberSchema.safeParse(input);
@@ -61,9 +67,27 @@ export const inviteMemberAction = async (
   try {
     const userId = await getCurrentUserId();
     const invitation = await OrgService.inviteMember(orgId, userId, parsed.data);
+
+    // 이메일 발송에 필요한 조직명, 초대자 이름 조회
+    const [org, inviterProfile] = await Promise.all([
+      OrgService.getOrgById(orgId),
+      OrgService.getProfileById(userId),
+    ]);
+
+    const emailResult = await sendInviteEmail({
+      to: invitation.email,
+      orgName: org?.name ?? orgId,
+      inviterName: inviterProfile?.name,
+      role: invitation.role,
+      expiresAt: invitation.expiresAt,
+      token: invitation.token,
+    });
+
     return {
       success: true,
       data: { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt },
+      emailSent: emailResult.sent,
+      ...(emailResult.error && { emailError: emailResult.error }),
     };
   } catch (error) {
     return {

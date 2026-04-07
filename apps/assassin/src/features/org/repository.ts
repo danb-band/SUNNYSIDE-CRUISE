@@ -1,4 +1,5 @@
 import { prisma } from "@libs/prisma/client";
+import { Prisma } from "@prisma/client";
 import { CreateOrgPayload, UpdateOrgPayload } from "./schema";
 import crypto from "crypto";
 
@@ -41,8 +42,9 @@ async function deleteOrg(id: string) {
 }
 
 // OrgMember
-async function addMember(orgId: string, userId: string, role: "OWNER" | "MEMBER") {
-  return await prisma.orgMember.create({
+async function addMember(orgId: string, userId: string, role: "OWNER" | "MEMBER", tx?: Prisma.TransactionClient) {
+  const client = tx ?? prisma;
+  return await client.orgMember.create({
     data: { orgId, userId, role },
   });
 }
@@ -74,11 +76,12 @@ async function removeMember(orgId: string, userId: string) {
 }
 
 // OrgInvitation
-async function createInvitation(orgId: string, email: string, role: "MEMBER") {
+async function createInvitation(orgId: string, email: string, role: "MEMBER", tx?: Prisma.TransactionClient) {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일
+  const client = tx ?? prisma;
 
-  return await prisma.orgInvitation.create({
+  return await client.orgInvitation.create({
     data: {
       orgId,
       email,
@@ -100,11 +103,16 @@ async function getPendingInvitationsByOrg(orgId: string) {
   });
 }
 
-async function updateInvitationStatus(id: string, status: "ACCEPTED" | "EXPIRED" | "CANCELLED") {
-  return await prisma.orgInvitation.update({
+async function updateInvitationStatus(id: string, status: "ACCEPTED" | "EXPIRED" | "CANCELLED", tx?: Prisma.TransactionClient) {
+  const client = tx ?? prisma;
+  return await client.orgInvitation.update({
     where: { id },
     data: { status },
   });
+}
+
+async function getProfileById(userId: string) {
+  return await prisma.profile.findUnique({ where: { id: userId } });
 }
 
 // auth.users는 Prisma 스키마 외부(Supabase Auth 스키마)이므로 raw query 사용
@@ -116,8 +124,9 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
 }
 
 // 동일 (orgId, email)의 PENDING 초대를 모두 취소 — 재초대 시 호출
-async function cancelPendingInvitationsByEmail(orgId: string, email: string): Promise<void> {
-  await prisma.orgInvitation.updateMany({
+async function cancelPendingInvitationsByEmail(orgId: string, email: string, tx?: Prisma.TransactionClient): Promise<void> {
+  const client = tx ?? prisma;
+  await client.orgInvitation.updateMany({
     where: { orgId, email, status: "PENDING" },
     data: { status: "CANCELLED" },
   });
@@ -141,6 +150,7 @@ const OrgRepository = {
   updateInvitationStatus,
   findUserIdByEmail,
   cancelPendingInvitationsByEmail,
+  getProfileById,
 };
 
 export default OrgRepository;

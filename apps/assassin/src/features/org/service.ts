@@ -1,4 +1,5 @@
 import OrgRepository from "./repository";
+import { prisma } from "@libs/prisma/client";
 import { assertOrgMember } from "@libs/auth/assertOrgMember";
 import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
 
@@ -13,6 +14,10 @@ const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
   await OrgRepository.addMember(org.id, creatorUserId, "OWNER");
 
   return org;
+};
+
+const getOrgById = async (orgId: string) => {
+  return await OrgRepository.getOrgById(orgId);
 };
 
 const getOrgBySlug = async (slug: string) => {
@@ -56,10 +61,11 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
     }
   }
 
-  // 기존 PENDING 초대 취소 후 재생성 (재초대 정책: PENDING → CANCELLED + 신규 생성)
-  await OrgRepository.cancelPendingInvitationsByEmail(orgId, email);
-
-  return await OrgRepository.createInvitation(orgId, email, "MEMBER");
+  // 기존 PENDING 초대 취소 후 재생성 — 두 작업을 트랜잭션으로 묶어 원자성 보장
+  return await prisma.$transaction(async (tx) => {
+    await OrgRepository.cancelPendingInvitationsByEmail(orgId, email, tx);
+    return await OrgRepository.createInvitation(orgId, email, "MEMBER", tx);
+  });
 };
 
 const acceptInvitation = async (token: string, userId: string) => {
@@ -78,8 +84,11 @@ const acceptInvitation = async (token: string, userId: string) => {
     throw new Error("만료된 초대입니다.");
   }
 
-  await OrgRepository.addMember(invitation.orgId, userId, "MEMBER");
-  await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED");
+  // 멤버 추가와 초대 상태 업데이트를 트랜잭션으로 묶어 원자성 보장
+  await prisma.$transaction(async (tx) => {
+    await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
+  });
 
   return OrgRepository.getOrgById(invitation.orgId);
 };
@@ -100,8 +109,13 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
   await OrgRepository.removeMember(orgId, targetUserId);
 };
 
+const getProfileById = async (userId: string) => {
+  return await OrgRepository.getProfileById(userId);
+};
+
 const OrgService = {
   createOrg,
+  getOrgById,
   getOrgBySlug,
   getUserOrgs,
   updateOrg,
@@ -111,6 +125,7 @@ const OrgService = {
   acceptInvitation,
   cancelInvitation,
   removeMember,
+  getProfileById,
 };
 
 export default OrgService;
