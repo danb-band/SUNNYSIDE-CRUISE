@@ -5,6 +5,7 @@ import { c, ts, truncate } from '../utils/ansi.js'
 import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { CODEX_BIN, PROJECT_ROOT } from '../config.js'
+import { buildSharedAgentContextPrompt } from '../sharedAgentContext.js'
 
 const WORKFLOW_RULES = `[WORKFLOW RULES]
 
@@ -54,15 +55,23 @@ export function runCodexCode(
   const discordLogger = createDiscordLogger(
     logChannel ?? (message.channel as { send: SendFn }),
   )
-  const fullPrompt = WORKFLOW_RULES + prompt
+  const fullPrompt =
+    WORKFLOW_RULES + buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT }) + prompt
 
-  // --full-auto: on-request 승인 정책 + workspace-write 샌드박스
-  // stdin을 pipe로 열어 승인 응답을 write할 수 있도록 함
-  const child = spawn(CODEX_BIN, ['exec', '--full-auto', fullPrompt], {
-    cwd: PROJECT_ROOT,
-    env: { ...process.env },
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
+  // dangerously-bypass-approvals-and-sandbox: 샌드박스 없이 실행
+  // 이 봇은 전용 레포 안에서만 동작하므로 샌드박스 우회가 적합함
+  // (--full-auto의 workspace-write 샌드박스는 .git/ 쓰기를 막아 git pull이 불가)
+  const child = spawn(
+    CODEX_BIN,
+    ['exec', '--dangerously-bypass-approvals-and-sandbox', fullPrompt],
+    {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    },
+  )
+  // stdin을 즉시 닫아 codex가 "Reading additional input from stdin..." 상태에서 블로킹되지 않도록 함
+  child.stdin.end()
 
   let output = ''
 
