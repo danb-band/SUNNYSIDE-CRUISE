@@ -218,6 +218,8 @@ client.on('messageCreate', async (message: Message) => {
           commandChannel: getTextChannel(DISCORD_COMMAND_ID),
         })
       : runCodexCode(prompt, message, processingMsg, tempFiles, {
+          sessionId,
+          onSessionId: (id) => setSession(message.channelId, id),
           onDone: () => clearProcess(message.channelId),
           logChannel: getTextChannel(DISCORD_LOG_ID),
           resultChannel: getTextChannel(DISCORD_RESULT_ID),

@@ -32,10 +32,13 @@ const WORKFLOW_RULES = `[WORKFLOW RULES]
 
 // codex가 승인을 요청할 때 출력하는 패턴
 const APPROVAL_RE = /\[y\/n\]|\[Y\/n\]|\[y\/N\]|\(y\/n\)|\(Y\/n\)/i
+const SESSION_ID_RE = /session id:\s*([0-9a-f-]{36})/i
 
 type SendFn = (content: string) => Promise<unknown>
 
 type RunOptions = {
+  sessionId?: string
+  onSessionId?: (id: string) => void
   onDone?: () => void
   logChannel?: { send: SendFn }
   resultChannel?: { send: SendFn }
@@ -49,27 +52,28 @@ export function runCodexCode(
   message: Message,
   processingMsg: Message,
   tempFiles: string[],
-  { onDone, logChannel, resultChannel, commandChannel, onApprovalRequest }: RunOptions = {},
+  { sessionId, onSessionId, onDone, logChannel, resultChannel, commandChannel, onApprovalRequest }: RunOptions = {},
 ) {
   const start = Date.now()
   const discordLogger = createDiscordLogger(
     logChannel ?? (message.channel as { send: SendFn }),
   )
-  const fullPrompt =
-    WORKFLOW_RULES + buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT }) + prompt
+  const baseContext = sessionId ? '' : WORKFLOW_RULES + buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT })
+  const fullPrompt = baseContext + prompt
 
   // dangerously-bypass-approvals-and-sandbox: 샌드박스 없이 실행
   // 이 봇은 전용 레포 안에서만 동작하므로 샌드박스 우회가 적합함
   // (--full-auto의 workspace-write 샌드박스는 .git/ 쓰기를 막아 git pull이 불가)
-  const child = spawn(
-    CODEX_BIN,
-    ['exec', '--dangerously-bypass-approvals-and-sandbox', fullPrompt],
-    {
-      cwd: PROJECT_ROOT,
-      env: { ...process.env },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    },
-  )
+  const args = ['exec', '--dangerously-bypass-approvals-and-sandbox']
+  if (sessionId) {
+    args.push('resume', sessionId)
+  }
+  args.push(fullPrompt)
+  const child = spawn(CODEX_BIN, args, {
+    cwd: PROJECT_ROOT,
+    env: { ...process.env },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
   // stdin을 즉시 닫아 codex가 "Reading additional input from stdin..." 상태에서 블로킹되지 않도록 함
   child.stdin.end()
 
@@ -79,6 +83,11 @@ export function runCodexCode(
   rl.on('line', (line) => {
     output += line + '\n'
     discordLogger.log(`🧠 [codex] ${truncate(line, 500)}`)
+
+    const sessionMatch = line.match(SESSION_ID_RE)
+    if (sessionMatch?.[1] && onSessionId) {
+      onSessionId(sessionMatch[1])
+    }
 
     if (APPROVAL_RE.test(line)) {
       console.log(`${ts()} ${c.yellow}[codex 승인 요청]${c.reset} ${line}`)
