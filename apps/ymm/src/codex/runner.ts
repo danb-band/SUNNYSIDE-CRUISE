@@ -49,7 +49,7 @@ export function runCodexCode(
   )
   const fullPrompt = WORKFLOW_RULES + prompt
 
-  const child = spawn(CODEX_BIN, ['exec', fullPrompt], {
+  const child = spawn(CODEX_BIN, ['exec', '--dangerously-bypass-approvals-and-sandbox', fullPrompt], {
     cwd: PROJECT_ROOT,
     env: { ...process.env },
     stdio: ['ignore', 'pipe', 'pipe'],
