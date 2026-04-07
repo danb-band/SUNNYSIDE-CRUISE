@@ -1,4 +1,6 @@
+import crypto from "crypto";
 import OrgRepository from "./repository";
+import { prisma } from "@libs/prisma/client";
 import { assertOrgMember } from "@libs/auth/assertOrgMember";
 import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
 
@@ -60,10 +62,20 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
     }
   }
 
-  // 기존 PENDING 초대 취소 후 재생성 (재초대 정책: PENDING → CANCELLED + 신규 생성)
-  await OrgRepository.cancelPendingInvitationsByEmail(orgId, email);
+  // 기존 PENDING 초대 취소 후 재생성 — 두 작업을 트랜잭션으로 묶어 원자성 보장
+  return await prisma.$transaction(async (tx) => {
+    await tx.orgInvitation.updateMany({
+      where: { orgId, email, status: "PENDING" },
+      data: { status: "CANCELLED" },
+    });
 
-  return await OrgRepository.createInvitation(orgId, email, "MEMBER");
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    return await tx.orgInvitation.create({
+      data: { orgId, email, token, role: "MEMBER", status: "PENDING", expiresAt },
+    });
+  });
 };
 
 const acceptInvitation = async (token: string, userId: string) => {
@@ -82,8 +94,11 @@ const acceptInvitation = async (token: string, userId: string) => {
     throw new Error("만료된 초대입니다.");
   }
 
-  await OrgRepository.addMember(invitation.orgId, userId, "MEMBER");
-  await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED");
+  // 멤버 추가와 초대 상태 업데이트를 트랜잭션으로 묶어 원자성 보장
+  await prisma.$transaction(async (tx) => {
+    await tx.orgMember.create({ data: { orgId: invitation.orgId, userId, role: "MEMBER" } });
+    await tx.orgInvitation.update({ where: { id: invitation.id }, data: { status: "ACCEPTED" } });
+  });
 
   return OrgRepository.getOrgById(invitation.orgId);
 };
