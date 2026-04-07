@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import OrgService from "./service";
+import { sendInviteEmail } from "@libs/email/sendInviteEmail";
 import {
   CreateOrgPayload,
   InviteMemberPayload,
@@ -50,7 +51,7 @@ export const inviteMemberAction = async (
   orgId: string,
   input: InviteMemberPayload,
 ): Promise<
-  | { success: true; data: { id: string; email: string; expiresAt: Date } }
+  | { success: true; data: { id: string; email: string; expiresAt: Date }; emailSent: boolean; emailError?: string }
   | { success: false; error: string }
 > => {
   const parsed = inviteMemberSchema.safeParse(input);
@@ -61,9 +62,37 @@ export const inviteMemberAction = async (
   try {
     const userId = await getCurrentUserId();
     const invitation = await OrgService.inviteMember(orgId, userId, parsed.data);
+
+    let emailSent = false;
+    let emailError: string | undefined;
+
+    try {
+      const [org, inviterProfile] = await Promise.all([
+        OrgService.getOrgById(orgId),
+        OrgService.getProfileById(userId),
+      ]);
+
+      const emailResult = await sendInviteEmail({
+        to: invitation.email,
+        orgName: org?.name ?? orgId,
+        inviterName: inviterProfile?.name,
+        role: invitation.role,
+        expiresAt: invitation.expiresAt,
+        token: invitation.token,
+      });
+
+      emailSent = emailResult.sent;
+      emailError = emailResult.error;
+    } catch (error) {
+      emailSent = false;
+      emailError = error instanceof Error ? error.message : "이메일 발송 실패";
+    }
+
     return {
       success: true,
       data: { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt },
+      emailSent,
+      ...(emailError && { emailError }),
     };
   } catch (error) {
     return {
@@ -71,6 +100,11 @@ export const inviteMemberAction = async (
       error: error instanceof Error ? error.message : "초대 생성에 실패했습니다.",
     };
   }
+};
+
+export const getPendingInvitationsAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getPendingInvitations(orgId, userId);
 };
 
 export const acceptInvitationAction = async (token: string) => {

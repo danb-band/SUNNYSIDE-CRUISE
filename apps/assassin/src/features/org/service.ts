@@ -42,6 +42,19 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
   return await OrgRepository.getOrgMembers(orgId);
 };
 
+const getOrgById = async (orgId: string) => {
+  return await OrgRepository.getOrgById(orgId);
+};
+
+const getProfileById = async (userId: string) => {
+  return await OrgRepository.getProfileById(userId);
+};
+
+const getPendingInvitations = async (orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId);
+  return await OrgRepository.getPendingInvitationsByOrg(orgId);
+};
+
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
 
@@ -102,11 +115,14 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
 
 const OrgService = {
   createOrg,
+  getOrgById,
   getOrgBySlug,
   getUserOrgs,
   updateOrg,
   deleteOrg,
   getOrgMembers,
+  getProfileById,
+  getPendingInvitations,
   inviteMember,
   acceptInvitation,
   cancelInvitation,
