@@ -221,6 +221,21 @@ client.on('messageCreate', async (message: Message) => {
           onDone: () => clearProcess(message.channelId),
           logChannel: getTextChannel(DISCORD_LOG_ID),
           resultChannel: getTextChannel(DISCORD_RESULT_ID),
+          commandChannel: getTextChannel(DISCORD_COMMAND_ID),
+          onApprovalRequest: (_approvalPrompt) => {
+            const ch = getTextChannel(DISCORD_COMMAND_ID) ?? (message.channel as TextChannel)
+            return new Promise((resolve) => {
+              const collector = ch.createMessageCollector({
+                filter: (m: Message) => !m.author.bot && /^[yn]$/i.test(m.content.trim()),
+                max: 1,
+                time: 60_000,
+              })
+              collector.on('collect', (m: Message) => resolve(m.content.trim()))
+              collector.on('end', (_collected: unknown, reason: string) => {
+                if (reason === 'time') resolve('n')
+              })
+            })
+          },
         })
     setProcess(message.channelId, child)
   } catch (err) {
