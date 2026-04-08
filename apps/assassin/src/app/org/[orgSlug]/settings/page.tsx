@@ -31,7 +31,7 @@ export default async function SettingsPage({ params }: Props) {
 
   const members = await getOrgMembersAction(org.id).catch(() => []);
   const currentMember = members.find((member: OrgMember) => member.userId === user.id);
-  if (currentMember?.role !== "OWNER") {
+  if (!currentMember) {
     redirect(`/org/${orgSlug}`);
   }
 

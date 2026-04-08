@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useRealtimeOrgSync } from "@/features/org/hooks/useRealtimeOrgSync";
 import { useOrgBySlug } from "@/features/org/queries/useOrgBySlug";
+import { useOrgRole } from "@libs/org/OrgProvider";
 import { useUpdateOrg } from "../mutations/useUpdateOrg";
 import { DeleteOrgButton } from "./DeleteOrgButton";
+import { leaveOrgAction } from "../actions";
 
 interface OrgSettingsPageClientProps {
   orgSlug: string;
@@ -21,6 +24,10 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
   const [editedName, setEditedName] = useState<string | null>(null);
   const name = editedName ?? org.name;
   const updateOrgMutation = useUpdateOrg();
+  const role = useOrgRole();
+  const isOwner = role === "OWNER";
+  const router = useRouter();
+  const [isLeaving, startLeaveTransition] = useTransition();
 
   useRealtimeOrgSync(org.id);
 
@@ -47,71 +54,102 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
           <div className="max-w-lg flex flex-col gap-8 pt-4">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">설정</h1>
 
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                일반
-              </h2>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
-                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
-                  조직 이름
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    maxLength={100}
-                    value={name}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                  />
+            {!isOwner && (
+              <section className="flex flex-col gap-4">
+                <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 나가기</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      조직에서 나가면 더 이상 접근할 수 없습니다.
+                    </p>
+                  </div>
                   <Button
-                    type="submit"
-                    disabled={isSameName || updateOrgMutation.isPending}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    variant="destructive"
+                    size="sm"
+                    disabled={isLeaving}
+                    onClick={() => {
+                      if (!confirm("정말 조직에서 나가시겠습니까?")) return;
+                      startLeaveTransition(async () => {
+                        await leaveOrgAction(org.id);
+                        router.push("/");
+                      });
+                    }}
                   >
-                    {updateOrgMutation.isPending ? "저장 중..." : "저장"}
+                    {isLeaving ? "처리 중..." : "조직 나가기"}
                   </Button>
                 </div>
-              </form>
-            </section>
+              </section>
+            )}
 
-            <Separator />
+            {isOwner && (
+              <>
+                <section className="flex flex-col gap-4">
+                  <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    일반
+                  </h2>
+                  <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
+                    <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
+                      조직 이름
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        maxLength={100}
+                        value={name}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={isSameName || updateOrgMutation.isPending}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        {updateOrgMutation.isPending ? "저장 중..." : "저장"}
+                      </Button>
+                    </div>
+                  </form>
+                </section>
 
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                멤버
-              </h2>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-50">멤버 관리</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    멤버 초대, 재발송, 제거를 관리합니다.
-                  </p>
-                </div>
-                <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white">
-                  <Link href={`/org/${orgSlug}/settings/members`}>멤버 설정으로 이동</Link>
-                </Button>
-              </div>
-            </section>
+                <Separator />
 
-            <Separator />
+                <section className="flex flex-col gap-4">
+                  <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    멤버
+                  </h2>
+                  <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">멤버 관리</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        멤버 초대, 재발송, 제거를 관리합니다.
+                      </p>
+                    </div>
+                    <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white">
+                      <Link href={`/org/${orgSlug}/settings/members`}>멤버 설정으로 이동</Link>
+                    </Button>
+                  </div>
+                </section>
 
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
-                위험 구역
-              </h2>
-              <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 삭제</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    삭제하면 모든 데이터가 영구적으로 제거됩니다.
-                  </p>
-                </div>
-                <DeleteOrgButton orgId={org.id} orgName={org.name} />
-              </div>
-            </section>
+                <Separator />
+
+                <section className="flex flex-col gap-4">
+                  <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
+                    위험 구역
+                  </h2>
+                  <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 삭제</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        삭제하면 모든 데이터가 영구적으로 제거됩니다.
+                      </p>
+                    </div>
+                    <DeleteOrgButton orgId={org.id} orgName={org.name} />
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         </div>
       </div>

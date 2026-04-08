@@ -118,6 +118,13 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
   await OrgRepository.removeMember(orgId, targetUserId);
 };
 
+const leaveOrg = async (orgId: string, userId: string) => {
+  const member = await OrgRepository.getMember(orgId, userId);
+  if (!member) throw new Error("조직의 멤버가 아닙니다.");
+  if (member.role === "OWNER") throw new Error("OWNER는 조직을 나갈 수 없습니다.");
+  await OrgRepository.removeMember(orgId, userId);
+};
+
 const markInvitationEmailSent = async (invitationId: string) => {
   await OrgRepository.markInvitationEmailSent(invitationId);
 };
@@ -143,6 +150,7 @@ const OrgService = {
   acceptInvitation,
   cancelInvitation,
   removeMember,
+  leaveOrg,
   markInvitationEmailSent,
   getProfileById,
   getPendingInvitations,

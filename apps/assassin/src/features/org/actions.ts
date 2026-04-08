@@ -130,6 +130,11 @@ export const removeMemberAction = async (orgId: string, targetUserId: string) =>
   await OrgService.removeMember(orgId, targetUserId, userId);
 };
 
+export const leaveOrgAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  await OrgService.leaveOrg(orgId, userId);
+};
+
 export const getPendingInvitationsAction = async (orgId: string) => {
   const userId = await getCurrentUserId();
   return await OrgService.getPendingInvitations(orgId, userId);
