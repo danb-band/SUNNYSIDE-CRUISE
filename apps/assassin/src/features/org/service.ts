@@ -88,15 +88,13 @@ const acceptInvitation = async (token: string, userId: string, userEmail: string
     throw new Error("EMAIL_MISMATCH");
   }
 
-  // 멱등성: 이미 멤버라면 중복 생성하지 않음
-  const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
-  if (!existingMember) {
-    await OrgRepository.addMember(invitation.orgId, userId, "MEMBER");
-  }
-
   // 멤버 추가와 초대 상태 업데이트를 트랜잭션으로 묶어 원자성 보장
+  // 멱등성: 트랜잭션 안에서 이미 멤버인지 확인 후 추가
   await prisma.$transaction(async (tx) => {
-    await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
+    if (!existingMember) {
+      await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    }
     await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
   });
 
@@ -120,6 +118,10 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
   await OrgRepository.removeMember(orgId, targetUserId);
 };
 
+const markInvitationEmailSent = async (invitationId: string) => {
+  await OrgRepository.markInvitationEmailSent(invitationId);
+};
+
 const getProfileById = async (userId: string) => {
   return await OrgRepository.getProfileById(userId);
 };
@@ -141,6 +143,7 @@ const OrgService = {
   acceptInvitation,
   cancelInvitation,
   removeMember,
+  markInvitationEmailSent,
   getProfileById,
   getPendingInvitations,
 };

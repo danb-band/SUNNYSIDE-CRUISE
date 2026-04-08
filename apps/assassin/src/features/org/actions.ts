@@ -89,6 +89,9 @@ export const inviteMemberAction = async (
 
       emailSent = emailResult.sent;
       emailError = emailResult.error;
+      if (emailResult.sent) {
+        await OrgService.markInvitationEmailSent(invitation.id);
+      }
     } catch (error) {
       emailSent = false;
       emailError = error instanceof Error ? error.message : "이메일 발송 실패";

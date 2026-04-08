@@ -185,10 +185,11 @@ model OrgInvitation {
   token     String           @unique
   role      OrgRole          @default(MEMBER)
   status    InvitationStatus @default(PENDING)
-  expiresAt DateTime         @db.Timestamptz(6)
-  createdAt DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime         @default(now()) @db.Timestamptz(6)
-  org       Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime         @db.Timestamptz(6)
+  emailSentAt DateTime?        @db.Timestamptz(6)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime         @default(now()) @db.Timestamptz(6)
+  org         Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@map("org_invitation")
 }

@@ -73,7 +73,7 @@ export default async function InviteAcceptPage({
 
   // 미인증 → 로그인 후 이 페이지로 돌아오도록 next 파라미터 전달
   if (!user || !user.email) {
-    redirect(`/login?next=/invite/accept?token=${token}`);
+    redirect(`/login?next=${encodeURIComponent(`/invite/accept?token=${token}`)}`);
   }
 
   try {

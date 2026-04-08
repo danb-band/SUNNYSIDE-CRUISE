@@ -20,6 +20,7 @@ type PendingInvitation = {
   id: string;
   email: string;
   expiresAt: Date;
+  emailSentAt: Date | null;
 };
 
 type Org = {
@@ -161,6 +162,11 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             만료: {new Date(inv.expiresAt).toLocaleDateString("ko-KR")}
                           </p>
+                          {!inv.emailSentAt && (
+                            <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-0.5">
+                              이메일 미발송
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -170,7 +176,7 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
                             onClick={() => handleResendInvitation(inv.email)}
                             className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
                           >
-                            이메일 재발송
+                            {inv.emailSentAt ? "이메일 재발송" : "이메일 발송"}
                           </Button>
                           <Button
                             variant="ghost"
