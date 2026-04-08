@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import { useOrgBySlug } from "@/features/org/queries/useOrgBySlug";
 import { useOrgRole } from "@libs/org/OrgProvider";
 import { useUpdateOrg } from "../mutations/useUpdateOrg";
 import { DeleteOrgButton } from "./DeleteOrgButton";
-import { leaveOrgAction } from "../actions";
+import { LeaveOrgButton } from "./LeaveOrgButton";
 
 interface OrgSettingsPageClientProps {
   orgSlug: string;
@@ -26,9 +25,6 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
   const updateOrgMutation = useUpdateOrg();
   const role = useOrgRole();
   const isOwner = role === "OWNER";
-  const router = useRouter();
-  const [isLeaving, startLeaveTransition] = useTransition();
-
   useRealtimeOrgSync(org.id);
 
   const isSameName = name.trim() === org.name;
@@ -56,6 +52,9 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
 
             {!isOwner && (
               <section className="flex flex-col gap-4">
+                <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
+                  위험 구역
+                </h2>
                 <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 나가기</p>
@@ -63,20 +62,7 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                       조직에서 나가면 더 이상 접근할 수 없습니다.
                     </p>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={isLeaving}
-                    onClick={() => {
-                      if (!confirm("정말 조직에서 나가시겠습니까?")) return;
-                      startLeaveTransition(async () => {
-                        await leaveOrgAction(org.id);
-                        router.push("/");
-                      });
-                    }}
-                  >
-                    {isLeaving ? "처리 중..." : "조직 나가기"}
-                  </Button>
+                  <LeaveOrgButton orgId={org.id} />
                 </div>
               </section>
             )}
