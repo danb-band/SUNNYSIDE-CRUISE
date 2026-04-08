@@ -97,7 +97,10 @@ export default function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
             계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-blue-500 hover:text-blue-600 font-medium">
+            <Link
+              href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
+              className="text-blue-500 hover:text-blue-600 font-medium"
+            >
               회원가입
             </Link>
           </p>

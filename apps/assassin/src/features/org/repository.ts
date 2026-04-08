@@ -109,7 +109,7 @@ async function getInvitationByToken(token: string) {
 
 async function getPendingInvitationsByOrg(orgId: string) {
   return await prisma.orgInvitation.findMany({
-    where: { orgId, status: "PENDING" },
+    where: { orgId, status: "PENDING", expiresAt: { gt: new Date() } },
   });
 }
 
