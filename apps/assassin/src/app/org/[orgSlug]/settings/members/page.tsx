@@ -29,7 +29,7 @@ export default async function SettingsMembersPage({ params }: Props) {
   ]);
 
   // OWNER만 접근 가능
-  const currentMember = members.find((m) => m.userId === user.id);
+  const currentMember = members.find((m: { userId: string }) => m.userId === user.id);
   if (currentMember?.role !== "OWNER") redirect(`/org/${orgSlug}`);
 
   return (

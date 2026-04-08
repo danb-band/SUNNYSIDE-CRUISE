@@ -53,7 +53,7 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
             {!isOwner && (
               <section className="flex flex-col gap-4">
                 <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
-                  위험 구역
+                  주의
                 </h2>
                 <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                   <div>
@@ -122,7 +122,7 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
 
                 <section className="flex flex-col gap-4">
                   <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
-                    위험 구역
+                    주의
                   </h2>
                   <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                     <div>
