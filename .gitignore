@@ -55,3 +55,6 @@
 
 # omc
 .omc
+
+# poor-dev runtime context
+.poor-dev-context.json

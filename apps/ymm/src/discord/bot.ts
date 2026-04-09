@@ -16,6 +16,7 @@ import { runClaudeCode } from '../claude/runner.js'
 import { runCodexCode } from '../codex/runner.js'
 import { runPoorDev } from '../poorDev/runner.js'
 import { clearPhase, getPhase } from '../poorDev/stateStore.js'
+import { clearContext } from '../poorDev/contextStore.js'
 import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
 import { splitIntoChunks } from '../utils/ansi.js'
 import { getAgent, setAgent } from './agentStore.js'
@@ -69,6 +70,7 @@ client.on('messageCreate', async (message: Message) => {
     const killed = killProcess(message.channelId)
     clearSession(message.channelId)
     clearPhase(message.channelId)
+    clearContext(message.channelId)
     if (phase.phase === 'coding') {
       await message.reply(
         killed
@@ -87,6 +89,7 @@ client.on('messageCreate', async (message: Message) => {
   if (text === '!done') {
     clearSession(message.channelId)
     clearPhase(message.channelId)
+    clearContext(message.channelId)
     await message.reply('🔄 세션이 초기화되었습니다. 다음 메시지부터 새 작업으로 시작합니다.')
     return
   }

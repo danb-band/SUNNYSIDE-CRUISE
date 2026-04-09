@@ -1,7 +1,7 @@
 export type PoorDevPhase =
   | { phase: 'idle' }
   | { phase: 'designing'; originalPrompt: string }
-  | { phase: 'coding'; issueNumber: number; branchName: string; designDoc: string; workLog: string[] }
+  | { phase: 'coding'; issueNumber: number; branchName: string; designDoc: string; workLog: string[]; designSessionId?: string }
 
 const store = new Map<string, PoorDevPhase>()
 

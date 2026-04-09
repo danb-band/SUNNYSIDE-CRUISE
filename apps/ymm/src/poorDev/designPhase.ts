@@ -8,7 +8,7 @@ type SendFn = (content: string) => Promise<unknown>
 
 type RunDesignOptions = {
   logChannel?: { send: SendFn }
-  onDesignComplete: (designDoc: string) => Promise<void> | void
+  onDesignComplete: (designDoc: string, sessionId?: string) => Promise<void> | void
   onDone?: () => void
   onError?: (err: Error) => Promise<void> | void
 }
@@ -74,6 +74,7 @@ export function runPoorDevDesign(
   let stderr = ''
   let designDoc = ''
   let fallback = ''
+  let designSessionId: string | undefined
 
   const finish = () => {
     if (done) return
@@ -89,6 +90,14 @@ export function runPoorDevDesign(
     try {
       event = JSON.parse(line)
     } catch {
+      return
+    }
+
+    if (event.type === 'system') {
+      const sid = (event as { session_id?: unknown }).session_id
+      if (typeof sid === 'string' && sid.trim()) {
+        designSessionId = sid.trim()
+      }
       return
     }
 
@@ -152,7 +161,7 @@ export function runPoorDevDesign(
         return
       }
 
-      await onDesignComplete(finalDoc)
+      await onDesignComplete(finalDoc, designSessionId)
     } finally {
       finish()
     }

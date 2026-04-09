@@ -1,4 +1,4 @@
-import { ChildProcess, execSync } from 'child_process'
+import { ChildProcess, execFileSync, execSync } from 'child_process'
 import { Message, TextChannel } from 'discord.js'
 import { GITHUB_REPO, GITHUB_TOKEN, PROJECT_ROOT } from '../config.js'
 import { cleanup } from '../discord/attachments.js'
@@ -7,6 +7,7 @@ import { buildPRBody } from './prSummary.js'
 import { getPhase, setPhase } from './stateStore.js'
 import { runPoorDevDesign } from './designPhase.js'
 import { runPoorDevCoding } from './codingPhase.js'
+import { clearContext, loadContext, saveContext } from './contextStore.js'
 
 type Channels = {
   logChannel?: TextChannel
@@ -62,6 +63,24 @@ function buildIssueBodyFromDesign(designDocRaw: string): string {
   return `${trimmed.slice(0, 60000)}\n\n(자동 잘림: designDoc 길이가 너무 길어 60,000자로 제한됨)`
 }
 
+function commitPendingChanges(issueNumber: number, logChannel?: TextChannel): void {
+  try {
+    const status = execFileSync('git', ['-C', PROJECT_ROOT, 'status', '--porcelain'], { encoding: 'utf8' }).trim()
+    if (!status) return
+
+    execFileSync('git', ['-C', PROJECT_ROOT, 'add', '-A'], { stdio: 'pipe' })
+
+    const staged = execFileSync('git', ['-C', PROJECT_ROOT, 'diff', '--cached', '--name-only'], { encoding: 'utf8' }).trim()
+    if (!staged) return
+
+    const commitMessage = `feat(poor-dev): implement issue #${issueNumber}\n\ncloses #${issueNumber}`
+    execFileSync('git', ['-C', PROJECT_ROOT, 'commit', '-m', commitMessage], { stdio: 'pipe' })
+    logChannel?.send('✅ [poor-dev] 미커밋 변경사항을 자동 커밋했습니다.').catch(() => {})
+  } catch (err) {
+    logChannel?.send(`⚠️ [poor-dev] 자동 커밋 실패(계속 진행): ${(err as Error).message}`).catch(() => {})
+  }
+}
+
 export async function runPoorDev(
   prompt: string,
   message: Message,
@@ -76,6 +95,10 @@ export async function runPoorDev(
   }
 
   const channelId = message.channelId
+  const existingContext = loadContext()
+  if (existingContext) {
+    channels.logChannel?.send(`⚠️ [poor-dev] 이전 컨텍스트 발견, 새 실행으로 덮어씁니다. (branch: ${existingContext.branchName})`).catch(() => {})
+  }
   setPhase(channelId, { phase: 'designing', originalPrompt: prompt })
 
   const processingMsg = await message.reply('🧠 poor-dev 설계 단계 시작 (Claude stream-json)...')
@@ -87,17 +110,19 @@ export async function runPoorDev(
       // design 단계 종료만으로는 전체 파이프라인 종료가 아님
     },
     onError: async () => {
+      clearContext(channelId)
       setPhase(channelId, { phase: 'idle' })
       options.onDone?.()
       if (options.tempFiles) await cleanup(options.tempFiles)
     },
-    onDesignComplete: async (designDocRaw: string) => {
+    onDesignComplete: async (designDocRaw: string, designSessionId?: string) => {
       const designDocForPR = designDocRaw.trim()
       const designDocForCoding = designDocForPR.slice(0, 4000)
       const issueTitle = extractIssueTitle(designDocRaw, prompt)
       const issueLabel = extractIssueLabel(designDocRaw)
       let issueNumber = 0
       let branchName = ''
+      const startedAt = new Date().toISOString()
       const workLog: string[] = []
 
       try {
@@ -107,18 +132,44 @@ export async function runPoorDev(
         channels.logChannel?.send('🌿 [poor-dev] feature 브랜치 준비 중...').catch(() => {})
         branchName = checkoutFeatureBranch(issueNumber)
 
+        saveContext({
+          channelId,
+          originalPrompt: prompt,
+          designDoc: designDocForPR,
+          issueNumber,
+          branchName,
+          designSessionId,
+          startedAt,
+        })
+
         setPhase(channelId, {
           phase: 'coding',
           issueNumber,
           branchName,
           designDoc: designDocForPR,
           workLog,
+          designSessionId,
         })
 
         await processingMsg.edit(`🧠 poor-dev 코딩 단계 시작: \`${branchName}\` (Issue #${issueNumber})`).catch(() => {})
 
         const codingChild = runPoorDevCoding(issueNumber, designDocForCoding, prompt, processingMsg, {
           logChannel: channels.logChannel ? { send: (content: string) => channels.logChannel!.send(content) } : undefined,
+          sessionId: designSessionId,
+          onSessionId: (id) => {
+            const current = getPhase(channelId)
+            if (current.phase !== 'coding') return
+            setPhase(channelId, { ...current, designSessionId: id })
+            saveContext({
+              channelId,
+              originalPrompt: prompt,
+              designDoc: designDocForPR,
+              issueNumber,
+              branchName,
+              designSessionId: id,
+              startedAt,
+            })
+          },
           onDone: () => {},
           onWorkLogEntry: (line: string) => {
             const current = getPhase(channelId)
@@ -127,12 +178,23 @@ export async function runPoorDev(
             if (!normalized) return
             if (current.workLog[current.workLog.length - 1] === normalized) return
             if (current.workLog.length >= 20) return
+            const nextWorkLog = [...current.workLog, normalized]
             setPhase(channelId, {
               ...current,
-              workLog: [...current.workLog, normalized],
+              workLog: nextWorkLog,
+            })
+            saveContext({
+              channelId,
+              originalPrompt: prompt,
+              designDoc: designDocForPR,
+              issueNumber,
+              branchName,
+              designSessionId: current.designSessionId,
+              startedAt,
             })
           },
           onError: async () => {
+            clearContext(channelId)
             setPhase(channelId, { phase: 'idle' })
             options.onDone?.()
             if (options.tempFiles) await cleanup(options.tempFiles)
@@ -150,6 +212,7 @@ export async function runPoorDev(
 
             if (code !== 0) {
               await target.send(`❌ poor-dev 코딩 실패 (code=${code ?? 'null'}). 브랜치: \`${branchName}\``)
+              clearContext(channelId)
               setPhase(channelId, { phase: 'idle' })
               options.onDone?.()
               if (options.tempFiles) await cleanup(options.tempFiles)
@@ -157,10 +220,12 @@ export async function runPoorDev(
             }
 
             try {
+              commitPendingChanges(issueNumber, channels.logChannel)
               channels.logChannel?.send('⬆️ [poor-dev] 브랜치 push 중...').catch(() => {})
               pushBranch(branchName)
             } catch (err) {
               await target.send(`❌ 브랜치 push 실패: ${(err as Error).message}\n브랜치: \`${branchName}\``)
+              clearContext(channelId)
               setPhase(channelId, { phase: 'idle' })
               options.onDone?.()
               if (options.tempFiles) await cleanup(options.tempFiles)
@@ -191,6 +256,7 @@ export async function runPoorDev(
             } catch (err) {
               await target.send(`❌ PR 생성 실패: ${(err as Error).message}\n브랜치: \`${branchName}\``)
             } finally {
+              clearContext(channelId)
               setPhase(channelId, { phase: 'idle' })
               options.onDone?.()
               if (options.tempFiles) await cleanup(options.tempFiles)
@@ -201,6 +267,7 @@ export async function runPoorDev(
         options.onProcessSwitch?.(codingChild)
       } catch (err) {
         await processingMsg.edit(`❌ poor-dev 준비 단계 실패: ${(err as Error).message}`).catch(() => {})
+        clearContext(channelId)
         setPhase(channelId, { phase: 'idle' })
         options.onDone?.()
         if (options.tempFiles) await cleanup(options.tempFiles)
