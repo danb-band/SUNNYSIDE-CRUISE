@@ -1,4 +1,4 @@
-export type AgentType = 'claude' | 'codex'
+export type AgentType = 'claude' | 'codex' | 'poor-dev'
 
 const channelAgents = new Map<string, AgentType>()
 
