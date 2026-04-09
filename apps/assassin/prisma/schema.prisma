@@ -197,6 +197,8 @@ model OrgInvitation {
 enum OrgRole {
   OWNER
   MEMBER
+
+  @@map("org_role")
 }
 
 enum InvitationStatus {
@@ -204,4 +206,6 @@ enum InvitationStatus {
   ACCEPTED
   EXPIRED
   CANCELLED
+
+  @@map("invitation_status")
 }
