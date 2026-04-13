@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,14 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
   useRealtimeOrgSync(org.id);
 
   const isSameName = name.trim() === org.name;
+  const [savedFeedback, setSavedFeedback] = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,6 +47,8 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
       data: { name: nextName },
     });
     setEditedName(null);
+    setSavedFeedback(true);
+    savedTimerRef.current = setTimeout(() => setSavedFeedback(false), 2000);
   };
 
   return (
@@ -52,12 +62,12 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
 
             {!isOwner && (
               <section className="flex flex-col gap-4">
-                <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">
-                  주의
-                </h2>
+                <h2 className="text-xs font-medium text-red-500 uppercase tracking-wider">주의</h2>
                 <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 나가기</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                      조직 나가기
+                    </p>
                     <p className="text-sm text-muted-foreground mt-0.5">
                       조직에서 나가면 더 이상 접근할 수 없습니다.
                     </p>
@@ -93,7 +103,11 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                         disabled={isSameName || updateOrgMutation.isPending}
                         className="bg-blue-500 hover:bg-blue-600 text-white"
                       >
-                        {updateOrgMutation.isPending ? "저장 중..." : "저장"}
+                        {updateOrgMutation.isPending
+                          ? "저장 중..."
+                          : savedFeedback
+                            ? "저장됨 ✓"
+                            : "저장"}
                       </Button>
                     </div>
                   </form>
@@ -107,7 +121,9 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                   </h2>
                   <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">멤버 관리</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                        멤버 관리
+                      </p>
                       <p className="text-sm text-muted-foreground mt-0.5">
                         멤버 초대, 재발송, 제거를 관리합니다.
                       </p>
@@ -126,7 +142,9 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                   </h2>
                   <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">조직 삭제</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                        조직 삭제
+                      </p>
                       <p className="text-sm text-muted-foreground mt-0.5">
                         삭제하면 모든 데이터가 영구적으로 제거됩니다.
                       </p>
