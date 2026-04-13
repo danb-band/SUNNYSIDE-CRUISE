@@ -71,16 +71,18 @@ export default async function InviteAcceptPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 미인증 → 로그인 후 이 페이지로 돌아오도록 next 파라미터 전달
+  // 미인증 → 회원가입(신규) 또는 로그인(기존) 후 이 페이지로 돌아오도록 next 파라미터 전달
   if (!user || !user.email) {
-    redirect(`/login?next=${encodeURIComponent(`/invite/accept?token=${token}`)}`);
+    redirect(`/signup?next=${encodeURIComponent(`/invite/accept?token=${token}`)}`);
   }
 
+  let orgSlug: string;
   try {
     const org = await OrgService.acceptInvitation(token, user.id, user.email);
-    redirect(`/org/${org.slug}`);
+    orgSlug = org.slug;
   } catch (error) {
     const code = error instanceof Error ? error.message : "ERROR";
     return <InviteErrorCard code={code} />;
   }
+  redirect(`/org/${orgSlug}`);
 }
