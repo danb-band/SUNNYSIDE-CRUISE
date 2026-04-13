@@ -33,7 +33,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.refresh();
+    setIsLoading(false);
     router.push(next ?? "/");
   };
 

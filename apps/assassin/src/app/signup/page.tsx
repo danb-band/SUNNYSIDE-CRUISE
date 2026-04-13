@@ -55,7 +55,6 @@ export default function SignupPage() {
       return;
     }
 
-    router.refresh();
     router.push(next ?? "/");
   };
 
@@ -147,7 +146,10 @@ export default function SignupPage() {
           </form>
           <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
             이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="text-blue-500 hover:text-blue-600 font-medium">
+            <Link
+              href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+              className="text-blue-500 hover:text-blue-600 font-medium"
+            >
               로그인
             </Link>
           </p>
