@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { AppNav } from "@/components/navigation/AppNav";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,17 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteWarning, setInviteWarning] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [optimisticInvitations, addOptimisticInvitation] = useOptimistic(
+    pendingInvitations,
+    (
+      state,
+      action: { type: "add"; invitation: PendingInvitation } | { type: "remove"; id: string },
+    ) => {
+      if (action.type === "add") return [...state, action.invitation];
+      if (action.type === "remove") return state.filter((inv) => inv.id !== action.id);
+      return state;
+    },
+  );
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +65,15 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
         setInviteError(result.error);
         return;
       }
+      addOptimisticInvitation({
+        type: "add",
+        invitation: {
+          id: result.data.id,
+          email: result.data.email,
+          expiresAt: result.data.expiresAt,
+          emailSentAt: result.emailSent ? new Date() : null,
+        },
+      });
       setEmail("");
       if (!result.emailSent) {
         setInviteWarning(
@@ -66,6 +86,7 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
 
   const handleCancelInvitation = (invitationId: string) => {
     startTransition(async () => {
+      addOptimisticInvitation({ type: "remove", id: invitationId });
       await cancelInvitationAction(invitationId, org.id);
       router.refresh();
     });
@@ -143,14 +164,14 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
             <Separator />
 
             {/* 대기 중인 초대 */}
-            {pendingInvitations.length > 0 && (
+            {optimisticInvitations.length > 0 && (
               <>
                 <section className="flex flex-col gap-4">
                   <h2 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    초대 대기 중 ({pendingInvitations.length})
+                    초대 대기 중 ({optimisticInvitations.length})
                   </h2>
                   <ul className="flex flex-col gap-2">
-                    {pendingInvitations.map((inv) => (
+                    {optimisticInvitations.map((inv) => (
                       <li
                         key={inv.id}
                         className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-3"
