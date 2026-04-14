@@ -68,26 +68,40 @@ export const inviteMemberAction = async (
     const userId = await getCurrentUserId();
     const invitation = await OrgService.inviteMember(orgId, userId, parsed.data);
 
-    // 이메일 발송에 필요한 조직명, 초대자 이름 조회
-    const [org, inviterProfile] = await Promise.all([
-      OrgService.getOrgById(orgId),
-      OrgService.getProfileById(userId),
-    ]);
+    let emailSent = false;
+    let emailError: string | undefined;
 
-    const emailResult = await sendInviteEmail({
-      to: invitation.email,
-      orgName: org?.name ?? orgId,
-      inviterName: inviterProfile?.name,
-      role: invitation.role,
-      expiresAt: invitation.expiresAt,
-      token: invitation.token,
-    });
+    try {
+      // 이메일 발송에 필요한 조직명, 초대자 이름 조회
+      const [org, inviterProfile] = await Promise.all([
+        OrgService.getOrgById(orgId),
+        OrgService.getProfileById(userId),
+      ]);
+
+      const emailResult = await sendInviteEmail({
+        to: invitation.email,
+        orgName: org?.name ?? orgId,
+        inviterName: inviterProfile?.name,
+        role: invitation.role,
+        expiresAt: invitation.expiresAt,
+        token: invitation.token,
+      });
+
+      emailSent = emailResult.sent;
+      emailError = emailResult.error;
+      if (emailResult.sent) {
+        await OrgService.markInvitationEmailSent(invitation.id);
+      }
+    } catch (error) {
+      emailSent = false;
+      emailError = error instanceof Error ? error.message : "이메일 발송 실패";
+    }
 
     return {
       success: true,
       data: { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt },
-      emailSent: emailResult.sent,
-      ...(emailResult.error && { emailError: emailResult.error }),
+      emailSent,
+      ...(emailError && { emailError }),
     };
   } catch (error) {
     return {
@@ -98,8 +112,12 @@ export const inviteMemberAction = async (
 };
 
 export const acceptInvitationAction = async (token: string) => {
-  const userId = await getCurrentUserId();
-  return await OrgService.acceptInvitation(token, userId);
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !user.email) throw new Error("인증이 필요합니다.");
+  return await OrgService.acceptInvitation(token, user.id, user.email);
 };
 
 export const cancelInvitationAction = async (invitationId: string, orgId: string) => {
@@ -110,4 +128,14 @@ export const cancelInvitationAction = async (invitationId: string, orgId: string
 export const removeMemberAction = async (orgId: string, targetUserId: string) => {
   const userId = await getCurrentUserId();
   await OrgService.removeMember(orgId, targetUserId, userId);
+};
+
+export const leaveOrgAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  await OrgService.leaveOrg(orgId, userId);
+};
+
+export const getPendingInvitationsAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getPendingInvitations(orgId, userId);
 };

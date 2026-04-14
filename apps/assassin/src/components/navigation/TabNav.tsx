@@ -8,7 +8,6 @@ export function TabNav() {
   const pathname = usePathname();
   const currentOrg = pathname.split("/")[2]; // Assuming URL structure is /org/[orgSlug]/...
   const role = useOrgRole();
-  const isOwner = role === "OWNER";
 
   return (
     <div className="flex min-w-0">
@@ -32,7 +31,7 @@ export function TabNav() {
       >
         Calendar
       </Link>
-      {isOwner && (
+      {role !== null && (
         <Link
           href={`/org/${currentOrg}/settings`}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
