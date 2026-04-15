@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export type OrgRole = "OWNER" | "MEMBER";
+
+export const ROLE_HIERARCHY: Record<OrgRole, number> = {
+  OWNER: 2,
+  MEMBER: 1,
+};
+
 export const orgSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(100),
