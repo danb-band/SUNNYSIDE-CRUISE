@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import { getOrgBySlugAction, getOrgMembersAction } from "@features/org/actions";
-import { OrgProvider } from "@libs/org/OrgProvider";
-import type { OrgRole } from "@libs/org/OrgProvider";
+import { OrgProvider } from "@/components/org/OrgProvider";
+import type { OrgRole } from "@/features/org/schema";
 import type { OrgMember } from "@features/org/schema";
 
 interface OrgLayoutProps {

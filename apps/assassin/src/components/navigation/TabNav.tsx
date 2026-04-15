@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useOrgRole } from "@libs/org/OrgProvider";
+import { useOrgRole } from "@/components/org/OrgProvider";
 
 export function TabNav() {
   const pathname = usePathname();

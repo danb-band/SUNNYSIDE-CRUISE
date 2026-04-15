@@ -3,7 +3,7 @@ import { createSongAction } from "../actions";
 import { songKeys } from "../queries/keys";
 import type { SongFormData } from "../hooks/useSongForm";
 import type { Song } from "../schema";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useCreateSong = () => {
   const queryClient = useQueryClient();

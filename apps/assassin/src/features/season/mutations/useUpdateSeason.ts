@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSeasonAction } from "../actions";
 import { seasonKeys } from "../queries/keys";
 import type { Season, SeasonUpdatePayload } from "../schema";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useUpdateSeason = () => {
   const queryClient = useQueryClient();

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateCalendarEventAction } from "../actions";
 import { calendarEventKeys } from "../queries/keys";
 import type { CalendarEventUpdatePayload } from "../schema";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useUpdateCalendarEvent = () => {
   const queryClient = useQueryClient();

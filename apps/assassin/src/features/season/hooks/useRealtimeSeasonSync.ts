@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Season } from "@features/season/schema";
 import { seasonKeys } from "@features/season/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useRealtimeSeasonSync = () => {
   const queryClient = useQueryClient();
