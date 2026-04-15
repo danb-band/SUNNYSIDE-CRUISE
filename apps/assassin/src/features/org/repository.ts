@@ -2,6 +2,7 @@ import { prisma } from "@libs/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import { CreateOrgPayload, UpdateOrgPayload } from "./schema";
 import crypto from "crypto";
+import { TransactionClient } from "@/libs/prisma/types";
 
 async function getOrgById(id: string) {
   return await prisma.org.findUnique({ where: { id } });
@@ -21,8 +22,9 @@ async function getOrgsByUserId(userId: string) {
   });
 }
 
-async function createOrg(input: CreateOrgPayload) {
-  return await prisma.org.create({
+async function createOrg(input: CreateOrgPayload, tx?: TransactionClient) {
+  const client = tx ?? prisma;
+  return await client.org.create({
     data: {
       name: input.name,
       slug: input.slug,
@@ -85,7 +87,7 @@ async function createInvitation(
   orgId: string,
   email: string,
   role: "MEMBER",
-  tx?: Prisma.TransactionClient,
+  tx?: TransactionClient,
 ) {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일

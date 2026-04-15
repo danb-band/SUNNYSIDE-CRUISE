@@ -14,7 +14,11 @@ import {
  * minRole이 지정되면 해당 권한 이상인지도 검사한다.
  * 검사 실패 시 Error를 throw한다.
  */
-async function assertOrgMember(userId: string, orgId: string, minRole?: OrgRole): Promise<void> {
+export async function assertOrgMember(
+  userId: string,
+  orgId: string,
+  minRole?: OrgRole,
+): Promise<void> {
   const member = await prisma.orgMember.findUnique({
     where: {
       orgId_userId: { orgId, userId },
@@ -36,11 +40,12 @@ const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
     throw new Error("이미 사용 중인 slug입니다.");
   }
 
-  const org = await OrgRepository.createOrg(input);
-  // 생성자를 OWNER로 자동 등록
-  await OrgRepository.addMember(org.id, creatorUserId, "OWNER");
-
-  return org;
+  return await prisma.$transaction(async (tx) => {
+    const org = await OrgRepository.createOrg(input, tx);
+    // 생성자를 OWNER로 자동 등록
+    await OrgRepository.addMember(org.id, creatorUserId, "OWNER", tx);
+    return org;
+  });
 };
 
 const getOrgById = async (orgId: string) => {
