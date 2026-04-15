@@ -107,6 +107,12 @@ async function getInvitationByToken(token: string) {
   return await prisma.orgInvitation.findUnique({ where: { token } });
 }
 
+async function getInvitationByIdAndOrgId(id: string, orgId: string) {
+  return await prisma.orgInvitation.findFirst({
+    where: { id, orgId },
+  });
+}
+
 async function getPendingInvitationsByOrg(orgId: string) {
   return await prisma.orgInvitation.findMany({
     where: { orgId, status: "PENDING", expiresAt: { gt: new Date() } },
@@ -171,6 +177,7 @@ const OrgRepository = {
   removeMember,
   createInvitation,
   getInvitationByToken,
+  getInvitationByIdAndOrgId,
   getPendingInvitationsByOrg,
   updateInvitationStatus,
   findUserIdByEmail,

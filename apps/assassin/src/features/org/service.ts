@@ -33,6 +33,17 @@ export async function assertOrgMember(
   }
 }
 
+export async function assertInvitationBelongsToOrg(
+  invitationId: string,
+  orgId: string,
+): Promise<void> {
+  const invitation = await OrgRepository.getInvitationByIdAndOrgId(invitationId, orgId);
+
+  if (!invitation) {
+    throw new Error("해당 조직의 초대를 찾을 수 없습니다.");
+  }
+}
+
 const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
   const existing = await OrgRepository.getOrgBySlug(input.slug);
   if (existing) {
@@ -134,7 +145,8 @@ const acceptInvitation = async (token: string, userId: string, userEmail: string
 
 const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
-  // await assertInvitationBelongsToOrg(invitationId, orgId);
+  await assertInvitationBelongsToOrg(invitationId, orgId);
+
   await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
 };
 
