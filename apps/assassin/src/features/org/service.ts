@@ -3,6 +3,7 @@ import { prisma } from "@libs/prisma/client";
 import {
   CreateOrgPayload,
   InviteMemberPayload,
+  orgInvitationSchema,
   OrgRole,
   ROLE_HIERARCHY,
   UpdateOrgPayload,
@@ -13,11 +14,7 @@ import {
  * minRole이 지정되면 해당 권한 이상인지도 검사한다.
  * 검사 실패 시 Error를 throw한다.
  */
-export async function assertOrgMember(
-  userId: string,
-  orgId: string,
-  minRole?: OrgRole,
-): Promise<void> {
+async function assertOrgMember(userId: string, orgId: string, minRole?: OrgRole): Promise<void> {
   const member = await prisma.orgMember.findUnique({
     where: {
       orgId_userId: { orgId, userId },
@@ -30,17 +27,6 @@ export async function assertOrgMember(
 
   if (minRole && ROLE_HIERARCHY[member.role as OrgRole] < ROLE_HIERARCHY[minRole]) {
     throw new Error(`이 작업을 수행하려면 ${minRole} 이상의 권한이 필요합니다.`);
-  }
-}
-
-export async function assertInvitationBelongsToOrg(
-  invitationId: string,
-  orgId: string,
-): Promise<void> {
-  const invitation = await OrgRepository.getInvitationByIdAndOrgId(invitationId, orgId);
-
-  if (!invitation) {
-    throw new Error("해당 조직의 초대를 찾을 수 없습니다.");
   }
 }
 
@@ -145,9 +131,25 @@ const acceptInvitation = async (token: string, userId: string, userEmail: string
 
 const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
-  await assertInvitationBelongsToOrg(invitationId, orgId);
+  const invitation = await OrgRepository.getInvitationByIdAndOrgId(invitationId, orgId);
 
-  await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+  const parsedInvitation = orgInvitationSchema.safeParse(invitation); // 유효성 검사
+
+  if (!parsedInvitation.success) {
+    throw new Error("유효하지 않은 초대입니다.");
+  }
+
+  if (parsedInvitation.data.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+
+  const updated = await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+
+  const parsedUpdated = orgInvitationSchema.safeParse(updated);
+
+  if (!parsedUpdated.success) {
+    throw new Error("초대 상태 업데이트 실패");
+  }
+
+  return parsedUpdated.data;
 };
 
 const removeMember = async (orgId: string, targetUserId: string, requesterId: string) => {
