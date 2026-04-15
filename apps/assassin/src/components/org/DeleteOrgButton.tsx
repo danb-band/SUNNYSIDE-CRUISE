@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useDeleteOrg } from "../mutations/useDeleteOrg";
+import { useDeleteOrg } from "@/features/org/mutations/useDeleteOrg";
 
 export function DeleteOrgButton({ orgId, orgName }: { orgId: string; orgName: string }) {
   const [input, setInput] = useState("");

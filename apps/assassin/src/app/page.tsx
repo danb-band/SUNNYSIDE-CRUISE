@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import { getUserOrgsAction } from "@features/org/actions";
-import { OrgSelectPageClient } from "@/features/org/components/OrgSelectPageClient";
+import { OrgSelectPageClient } from "@/components/org/OrgSelectPageClient";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();

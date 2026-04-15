@@ -5,7 +5,7 @@ import { getQueryClient } from "@/libs/react-query/getQueryClient";
 import { getOrgBySlugAction, getOrgMembersAction } from "@features/org/actions";
 import type { Org, OrgMember } from "@features/org/schema";
 import { orgKeys } from "@/features/org/queries/keys";
-import { OrgSettingsPageClient } from "@/features/org/components/OrgSettingsPageClient";
+import { OrgSettingsPageClient } from "@/components/org/OrgSettingsPageClient";
 
 interface Props {
   params: Promise<{ orgSlug: string }>;

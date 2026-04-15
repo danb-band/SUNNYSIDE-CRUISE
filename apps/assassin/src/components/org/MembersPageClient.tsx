@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { inviteMemberAction, cancelInvitationAction, removeMemberAction } from "../actions";
+import { inviteMemberAction, cancelInvitationAction, removeMemberAction } from "@/features/org/actions";
 
 type MemberWithProfile = {
   id: string;
