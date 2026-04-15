@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@libs/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { Loader2, Music } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,8 +33,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.refresh();
-    router.push("/");
+    setIsLoading(false);
+    router.push(next ?? "/");
   };
 
   return (
@@ -95,7 +97,10 @@ export default function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
             계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-blue-500 hover:text-blue-600 font-medium">
+            <Link
+              href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
+              className="text-blue-500 hover:text-blue-600 font-medium"
+            >
               회원가입
             </Link>
           </p>

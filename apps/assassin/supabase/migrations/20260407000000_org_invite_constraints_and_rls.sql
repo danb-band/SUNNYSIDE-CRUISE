@@ -91,9 +91,9 @@ CREATE POLICY "Org owners can delete org"
 ALTER TABLE public.org_member ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Org members can view members"    ON public.org_member;
-DROP POLICY IF EXISTS "Org admins can add members"      ON public.org_member;
+DROP POLICY IF EXISTS "Org owners can add members"      ON public.org_member;
 DROP POLICY IF EXISTS "Org owners can update roles"     ON public.org_member;
-DROP POLICY IF EXISTS "Org admins can remove members"   ON public.org_member;
+DROP POLICY IF EXISTS "Org owners can remove members"   ON public.org_member;
 
 -- 같은 org 멤버라면 멤버 목록 조회 가능
 CREATE POLICY "Org members can view members"
@@ -106,8 +106,8 @@ CREATE POLICY "Org members can view members"
     )
   );
 
--- ADMIN 이상만 멤버 추가 가능
-CREATE POLICY "Org admins can add members"
+-- OWNER 이상만 멤버 추가 가능
+CREATE POLICY "Org owners can add members"
   ON public.org_member FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -130,8 +130,8 @@ CREATE POLICY "Org owners can update roles"
     )
   );
 
--- ADMIN 이상은 멤버 제거 가능, 또는 본인 스스로 탈퇴
-CREATE POLICY "Org admins can remove members"
+-- OWNER 이상은 멤버 제거 가능, 또는 본인 스스로 탈퇴
+CREATE POLICY "Org owners can remove members"
   ON public.org_member FOR DELETE
   USING (
     org_member."userId" = auth.uid()  -- 본인 탈퇴
@@ -149,14 +149,14 @@ CREATE POLICY "Org admins can remove members"
 
 ALTER TABLE public.org_invitation ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Org admins can view invitations"     ON public.org_invitation;
+DROP POLICY IF EXISTS "Org owners can view invitations"     ON public.org_invitation;
 DROP POLICY IF EXISTS "Invited user can view own invitation" ON public.org_invitation;
-DROP POLICY IF EXISTS "Org admins can create invitations"   ON public.org_invitation;
-DROP POLICY IF EXISTS "Org admins can cancel invitations"   ON public.org_invitation;
+DROP POLICY IF EXISTS "Org owners can create invitations"   ON public.org_invitation;
+DROP POLICY IF EXISTS "Org owners can cancel invitations"   ON public.org_invitation;
 DROP POLICY IF EXISTS "Invited user can accept invitation"  ON public.org_invitation;
 
--- ADMIN 이상은 해당 org의 초대 목록 조회 가능
-CREATE POLICY "Org admins can view invitations"
+-- OWNER 이상은 해당 org의 초대 목록 조회 가능
+CREATE POLICY "Org owners can view invitations"
   ON public.org_invitation FOR SELECT
   USING (
     EXISTS (
@@ -174,8 +174,8 @@ CREATE POLICY "Invited user can view own invitation"
     email = (SELECT email FROM auth.users WHERE id = auth.uid())
   );
 
--- ADMIN 이상만 초대 생성 가능
-CREATE POLICY "Org admins can create invitations"
+-- OWNER 이상만 초대 생성 가능
+CREATE POLICY "Org owners can create invitations"
   ON public.org_invitation FOR INSERT
   WITH CHECK (
     EXISTS (
@@ -186,8 +186,8 @@ CREATE POLICY "Org admins can create invitations"
     )
   );
 
--- ADMIN 이상은 초대 취소(status 업데이트) 가능
-CREATE POLICY "Org admins can cancel invitations"
+-- OWNER 이상은 초대 취소(status 업데이트) 가능
+CREATE POLICY "Org owners can cancel invitations"
   ON public.org_invitation FOR UPDATE
   USING (
     EXISTS (

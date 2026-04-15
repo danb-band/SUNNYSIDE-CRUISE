@@ -6,6 +6,7 @@ import type { Org } from "@/features/org/schema";
 import { useRealtimeOrgSync } from "@/features/org/hooks/useRealtimeOrgSync";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/components/navigation/LogoutButton";
 
 interface OrgSelectPageClientProps {
   orgs: Org[];
@@ -49,6 +50,7 @@ export function OrgSelectPageClient({ orgs }: OrgSelectPageClientProps) {
           <Button asChild className="w-full bg-blue-500 hover:bg-blue-600 text-white">
             <Link href="/org/create">새 조직 만들기</Link>
           </Button>
+          <LogoutButton />
         </CardContent>
       </Card>
     </div>
