@@ -1,19 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ChevronRight } from "lucide-react";
+import { Building2, ChevronRight, Mail } from "lucide-react";
 import type { Org } from "@/features/org/schema";
 import { useRealtimeOrgSync } from "@/features/org/hooks/useRealtimeOrgSync";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/navigation/LogoutButton";
 
+type PendingInvitation = {
+  id: string;
+  org: { name: string };
+};
+
 interface OrgSelectPageClientProps {
   orgs: Org[];
+  pendingInvitations: PendingInvitation[];
 }
 
-export function OrgSelectPageClient({ orgs }: OrgSelectPageClientProps) {
+export function OrgSelectPageClient({ orgs, pendingInvitations }: OrgSelectPageClientProps) {
   useRealtimeOrgSync();
+
+  const hasContent = orgs.length > 0 || pendingInvitations.length > 0;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
@@ -24,7 +32,7 @@ export function OrgSelectPageClient({ orgs }: OrgSelectPageClientProps) {
           </div>
           <CardTitle className="text-xl text-slate-900 dark:text-slate-50">시작하기</CardTitle>
           <CardDescription className="text-slate-500 dark:text-slate-400">
-            {orgs.length > 0
+            {hasContent
               ? "소속된 조직을 선택하세요."
               : "소속된 조직이 없습니다. 새 조직을 만들거나 초대를 확인하세요."}
           </CardDescription>
@@ -42,6 +50,28 @@ export function OrgSelectPageClient({ orgs }: OrgSelectPageClientProps) {
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-slate-400">{org.slug}</span>
                     <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          {pendingInvitations.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                초대받은 조직
+              </p>
+              {pendingInvitations.map((inv) => (
+                <Link
+                  key={inv.id}
+                  href={`/invite/accept?id=${inv.id}`}
+                  className="flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all"
+                >
+                  <span className="font-medium text-slate-900 dark:text-slate-50">
+                    {inv.org.name}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5 text-blue-500" />
+                    <span className="text-xs text-blue-500">초대 대기</span>
                   </div>
                 </Link>
               ))}
