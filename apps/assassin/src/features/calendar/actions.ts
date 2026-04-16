@@ -22,7 +22,7 @@ export const getCalendarEventsByMonthAction = async (
 export const createCalendarEventAction = async (data: CalendarEventPayload, orgId: string) => {
   const user = await getCurrentUser();
   const result = await CalendarEventService.createCalendarEvent(data, orgId, user.id);
-  revalidateCalendar();
+  revalidateCalendar(orgId);
   return result;
 };
 
@@ -33,12 +33,12 @@ export const updateCalendarEventAction = async (
 ) => {
   const user = await getCurrentUser();
   const result = await CalendarEventService.updateCalendarEvent(id, orgId, data, user.id);
-  revalidateCalendar();
+  revalidateCalendar(orgId);
   return result;
 };
 
 export const deleteCalendarEventAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
   await CalendarEventService.deleteCalendarEvent(id, orgId, user.id);
-  revalidateCalendar();
+  revalidateCalendar(orgId);
 };

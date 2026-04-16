@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
 import PlayerService from "./service";
 import { PlayerPayload, PlayerUpdatePayload } from "./schema";
@@ -15,23 +15,23 @@ export const getPlayersBySongAction = async (songId: string) => {
   return await PlayerService.getPlayersBySongId(songId, user.id);
 };
 
-export const createPlayerAction = async (data: PlayerPayload) => {
+export const createPlayerAction = async (data: PlayerPayload, orgId: string) => {
   const user = await getCurrentUser();
   const result = await PlayerService.createPlayer(data, user.id);
-  revalidatePath(`/song/${data.songId}`);
+  revalidateSeasonBoard(orgId);
   return result;
 };
 
-export const updatePlayerAction = async (id: string, data: PlayerUpdatePayload) => {
+export const updatePlayerAction = async (id: string, orgId: string, data: PlayerUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await PlayerService.updatePlayer(id, data, user.id);
-  revalidatePath(`/song/${data.songId}`);
+  revalidateSeasonBoard(orgId);
   return result;
 };
 
-export const deletePlayerAction = async (id: string, songId: string) => {
+export const deletePlayerAction = async (id: string, songId: string, orgId: string) => {
   const user = await getCurrentUser();
   const result = await PlayerService.deletePlayer(id, user.id);
-  revalidatePath(`/song/${songId}`);
+  revalidateSeasonBoard(orgId);
   return result;
 };

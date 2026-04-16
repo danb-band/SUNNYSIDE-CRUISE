@@ -35,7 +35,7 @@ async function OrgSeasonPageInner({ params }: Props) {
 
 async function OrgSeasonPageData({ orgId, userId }: { orgId: string; userId: string }) {
   "use cache";
-  cacheTag(SEASON_BOARD_CACHE_TAG);
+  cacheTag(`${SEASON_BOARD_CACHE_TAG}-${orgId}`);
   cacheLife("max");
 
   const queryClient = getQueryClient();

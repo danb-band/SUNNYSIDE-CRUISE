@@ -5,18 +5,21 @@ import { OrgProvider } from "@/components/org/OrgProvider";
 
 interface OrgLayoutProps {
   children: React.ReactNode;
+  modal: React.ReactNode;
   params: Promise<{ orgSlug: string }>;
 }
 
-export default function OrgLayout({ children, params }: OrgLayoutProps) {
+export default function OrgLayout({ children, modal, params }: OrgLayoutProps) {
   return (
     <Suspense>
-      <OrgLayoutContent params={params}>{children}</OrgLayoutContent>
+      <OrgLayoutContent params={params} modal={modal}>
+        {children}
+      </OrgLayoutContent>
     </Suspense>
   );
 }
 
-async function OrgLayoutContent({ params, children }: OrgLayoutProps) {
+async function OrgLayoutContent({ params, children, modal }: OrgLayoutProps) {
   const { orgSlug } = await params;
   const org = await getOrgBySlugAction(orgSlug).catch(() => null);
 
@@ -32,6 +35,7 @@ async function OrgLayoutContent({ params, children }: OrgLayoutProps) {
   return (
     <OrgProvider orgId={org.id} role={role}>
       {children}
+      {modal}
     </OrgProvider>
   );
 }

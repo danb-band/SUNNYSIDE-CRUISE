@@ -23,7 +23,7 @@ interface CalendarPageProps {
 
 async function getCachedCalendarEvents(year: number, month: number, orgId: string, userId: string) {
   "use cache";
-  cacheTag(CALENDAR_CACHE_TAG);
+  cacheTag(`${CALENDAR_CACHE_TAG}-${orgId}`);
   cacheLife("max");
   return CalendarEventService.getCalendarEventsByMonth(year, month, orgId, userId);
 }

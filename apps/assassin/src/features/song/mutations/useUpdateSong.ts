@@ -2,13 +2,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSongAction } from "../actions";
 import { songKeys } from "../queries/keys";
 import type { Song, SongUpdatePayload } from "../schema";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useUpdateSong = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SongUpdatePayload }) =>
-      updateSongAction(id, data),
+      updateSongAction(id, orgId, data),
     onSuccess: (updatedSong) => {
       if (!updatedSong) return;
 

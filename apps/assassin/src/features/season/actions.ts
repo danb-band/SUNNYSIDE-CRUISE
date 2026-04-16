@@ -18,7 +18,7 @@ export const getSeasonAction = async (id: string, orgId: string) => {
 export const createSeasonAction = async (data: SeasonPayload, orgId: string) => {
   const user = await getCurrentUser();
   const result = await SeasonService.createSeason(data, orgId, user.id);
-  revalidateSeasonBoard();
+  revalidateSeasonBoard(orgId);
 
   return result;
 };
@@ -26,7 +26,7 @@ export const createSeasonAction = async (data: SeasonPayload, orgId: string) => 
 export const updateSeasonAction = async (id: string, orgId: string, data: SeasonUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await SeasonService.updateSeason(id, orgId, data, user.id);
-  revalidateSeasonBoard();
+  revalidateSeasonBoard(orgId);
 
   return result;
 };
