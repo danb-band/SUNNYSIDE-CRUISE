@@ -7,7 +7,8 @@ import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
 
 export const getSongAction = async (id: string) => {
-  return await SongService.getSongById(id);
+  const user = await getCurrentUser();
+  return await SongService.getSongByIdForUser(id, user.id);
 };
 
 export const getSongsBySeasonAction = async (seasonId: string, orgId: string) => {

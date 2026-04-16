@@ -6,9 +6,9 @@ import SeasonService from "@features/season/service";
 import { seasonKeys } from "@features/season/queries/keys";
 import SongService from "@features/song/service";
 import { songKeys } from "@features/song/queries/keys";
-import { getPlayersBySongAction } from "@features/player/actions";
+import PlayerService from "@features/player/service";
 import { playerKeys } from "@features/player/queries/keys";
-import { getAllProfilesAction } from "@features/user/actions";
+import UserService from "@features/user/service";
 import { userKeys } from "@features/user/queries/keys";
 import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
@@ -54,7 +54,7 @@ async function OrgSongPageContent({
 
   const song = await queryClient.fetchQuery({
     queryKey: songKeys.detail(songId),
-    queryFn: () => SongService.getSongById(songId),
+    queryFn: () => SongService.getSongByIdInOrg(songId, orgId, userId),
   });
 
   if (!song) {
@@ -78,11 +78,11 @@ async function OrgSongPageContent({
   await Promise.all([
     queryClient.prefetchQuery({
       queryKey: playerKeys.bySong(songId),
-      queryFn: () => getPlayersBySongAction(songId),
+      queryFn: () => PlayerService.getPlayersBySongId(songId, userId),
     }),
     queryClient.prefetchQuery({
-      queryKey: userKeys.allProfiles(),
-      queryFn: getAllProfilesAction,
+      queryKey: userKeys.profilesBySong(songId),
+      queryFn: () => UserService.getProfilesBySong(songId, userId),
     }),
   ]);
 

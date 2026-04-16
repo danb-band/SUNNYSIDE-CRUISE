@@ -28,7 +28,8 @@ export const getOrgBySlugAction = async (slug: string) => {
   return await OrgService.getOrgBySlug(slug);
 };
 
-export const getUserOrgsAction = async (userId: string) => {
+export const getUserOrgsAction = async () => {
+  const userId = await getCurrentUserId();
   return await OrgService.getUserOrgs(userId);
 };
 

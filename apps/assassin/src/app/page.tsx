@@ -13,7 +13,7 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  const orgs = await getUserOrgsAction(user.id).catch((e) => {
+  const orgs = await getUserOrgsAction().catch((e) => {
     console.error("[Home] getUserOrgsAction 실패:", e);
     return [];
   });

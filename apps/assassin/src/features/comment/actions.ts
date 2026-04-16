@@ -6,11 +6,13 @@ import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
 
 export const getCommentAction = async (id: string) => {
-  return await CommentService.getCommentById(id);
+  const user = await getCurrentUser();
+  return await CommentService.getCommentById(id, user.id);
 };
 
 export const getCommentsBySongAction = async (songId: string) => {
-  return await CommentService.getCommentsBySongId(songId);
+  const user = await getCurrentUser();
+  return await CommentService.getCommentsBySongId(songId, user.id);
 };
 
 export const getCommentsBySongPaginatedAction = async (
@@ -18,12 +20,13 @@ export const getCommentsBySongPaginatedAction = async (
   limit: number,
   cursor?: string,
 ) => {
-  return await CommentService.getCommentsBySongIdPaginated(songId, limit, cursor);
+  const user = await getCurrentUser();
+  return await CommentService.getCommentsBySongIdPaginated(songId, limit, user.id, cursor);
 };
 
 export const createCommentAction = async (data: { songId: string; content: string }) => {
   const user = await getCurrentUser();
-  const result = await CommentService.createComment({ ...data, userId: user.id });
+  const result = await CommentService.createComment({ ...data, userId: user.id }, user.id);
   revalidatePath(`/song/${data.songId}`);
   return result;
 };

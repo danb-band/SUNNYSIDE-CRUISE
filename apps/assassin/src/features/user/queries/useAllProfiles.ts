@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { getAllProfilesAction } from "../actions";
+import { getProfilesBySongAction } from "../actions";
 import { userKeys } from "./keys";
 
-export const useAllProfiles = () => {
+export const useAllProfiles = (songId: string) => {
   return useSuspenseQuery({
-    queryKey: userKeys.allProfiles(),
-    queryFn: getAllProfilesAction,
+    queryKey: userKeys.profilesBySong(songId),
+    queryFn: () => getProfilesBySongAction(songId),
   });
 };

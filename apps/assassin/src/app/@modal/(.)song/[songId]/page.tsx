@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { getSongAction } from "@features/song/actions";
 import { songKeys } from "@features/song/queries/keys";
-import { getPlayersBySongAction } from "@features/player/actions";
+import SongService from "@features/song/service";
+import PlayerService from "@features/player/service";
 import { playerKeys } from "@features/player/queries/keys";
-import { getAllProfilesAction } from "@features/user/actions";
+import UserService from "@features/user/service";
 import { userKeys } from "@features/user/queries/keys";
 import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { SongModalRoute } from "@/components/song/SongModalRoute";
 import { notFound } from "next/navigation";
 import { cacheTag, cacheLife } from "next/cache";
 import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
+import { getCurrentUser } from "@libs/supabase/auth";
 
 interface Props {
   params: Promise<{ songId: string }>;
@@ -28,11 +29,12 @@ export default function SongModalPage({ params }: Props) {
 // Suspense 경계 안에서 동적 params 해석
 async function SongModalAsync({ params }: Props) {
   const { songId } = await params;
-  return <SongModalContent songId={songId} />;
+  const user = await getCurrentUser();
+  return <SongModalContent songId={songId} userId={user.id} />;
 }
 
 // 데이터 페칭 및 렌더링 with "use cache"
-async function SongModalContent({ songId }: { songId: string }) {
+async function SongModalContent({ songId, userId }: { songId: string; userId: string }) {
   "use cache";
   cacheTag(SEASON_BOARD_CACHE_TAG);
   cacheLife("max");
@@ -41,7 +43,7 @@ async function SongModalContent({ songId }: { songId: string }) {
 
   const song = await queryClient.fetchQuery({
     queryKey: songKeys.detail(songId),
-    queryFn: () => getSongAction(songId),
+    queryFn: () => SongService.getSongByIdForUser(songId, userId),
   });
 
   if (!song) {
@@ -51,11 +53,11 @@ async function SongModalContent({ songId }: { songId: string }) {
   await Promise.all([
     queryClient.prefetchQuery({
       queryKey: playerKeys.bySong(songId),
-      queryFn: () => getPlayersBySongAction(songId),
+      queryFn: () => PlayerService.getPlayersBySongId(songId, userId),
     }),
     queryClient.prefetchQuery({
-      queryKey: userKeys.allProfiles(),
-      queryFn: getAllProfilesAction,
+      queryKey: userKeys.profilesBySong(songId),
+      queryFn: () => UserService.getProfilesBySong(songId, userId),
     }),
   ]);
 

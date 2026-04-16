@@ -20,6 +20,54 @@ const assertSongExists = async (songId: string): Promise<void> => {
   }
 };
 
+const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
+  const orgId = await SongRepository.getSongOrgIdById(songId);
+  if (!orgId) {
+    throw new Error(`Song with ID ${songId} does not exist.`);
+  }
+  await assertOrgMember(userId, orgId);
+  return orgId;
+};
+
+const getSongByIdForUser = async (id: string, userId: string): Promise<Song | null> => {
+  const orgId = await SongRepository.getSongOrgIdById(id);
+  if (!orgId) return null;
+
+  try {
+    await assertOrgMember(userId, orgId);
+  } catch {
+    return null;
+  }
+
+  const song = await SongRepository.getSongByIdInOrg(id, orgId);
+  if (!song) return null;
+
+  const parsed = songSchema.safeParse(song);
+  if (!parsed.success) {
+    throw new Error("Invalid song response from DB");
+  }
+
+  return parsed.data;
+};
+
+const getSongByIdInOrg = async (
+  id: string,
+  orgId: string,
+  userId: string,
+): Promise<Song | null> => {
+  await assertOrgMember(userId, orgId);
+
+  const song = await SongRepository.getSongByIdInOrg(id, orgId);
+  if (!song) return null;
+
+  const parsed = songSchema.safeParse(song);
+  if (!parsed.success) {
+    throw new Error("Invalid song response from DB");
+  }
+
+  return parsed.data;
+};
+
 const createSong = async (song: SongPayload, orgId: string) => {
   await assertOrgMember(song.userId, orgId);
   await SeasonService.assertSeasonExists(song.seasonId, orgId);
@@ -98,18 +146,21 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
     throw new Error(`Song with ID ${id} does not exist.`);
   }
 
-  const season = await prisma.season.findFirst({
-    where: { id: existed.seasonId },
-    select: { orgId: true },
-  });
-  if (!season?.orgId) throw new Error("Season not found");
-  await assertOrgMember(userId, season.orgId);
+  await assertSongAccess(id, userId);
 
   const parsedInput = updateSongSchema.safeParse(song);
 
   if (!parsedInput.success) {
     throw new Error("Invalid song input");
   }
+
+  const targetSeasonId = parsedInput.data.seasonId ?? existed.seasonId;
+  const targetSeason = await prisma.season.findFirst({
+    where: { id: targetSeasonId },
+    select: { orgId: true },
+  });
+  if (!targetSeason?.orgId) throw new Error("Season not found");
+  await assertOrgMember(userId, targetSeason.orgId);
 
   const newSongData: Song = { ...existed, ...parsedInput.data };
 
@@ -131,12 +182,7 @@ const deleteSong = async (id: string, userId: string) => {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
 
-  const season = await prisma.season.findFirst({
-    where: { id: song.seasonId },
-    select: { orgId: true },
-  });
-  if (!season?.orgId) throw new Error("Season not found");
-  await assertOrgMember(userId, season.orgId);
+  await assertSongAccess(id, userId);
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -152,8 +198,11 @@ const deleteSong = async (id: string, userId: string) => {
 
 const SongService = {
   assertSongExists,
+  assertSongAccess,
   createSong,
   getSongById,
+  getSongByIdForUser,
+  getSongByIdInOrg,
   getSongsBySeasonId,
   updateSong,
   deleteSong,

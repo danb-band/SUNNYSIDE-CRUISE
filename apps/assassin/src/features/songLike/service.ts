@@ -1,7 +1,10 @@
+import SongService from "@features/song/service";
 import SongLikeRepository from "./repository";
 import { songLikeSchema } from "./schema";
 
 const getUserLikeIdForSong = async (songId: string, userId: string): Promise<string | null> => {
+  await SongService.assertSongAccess(songId, userId);
+
   const like = await SongLikeRepository.getLikeBySongAndUser(songId, userId);
 
   if (!like) {
@@ -19,6 +22,8 @@ const getUserLikeIdForSong = async (songId: string, userId: string): Promise<str
 };
 
 const toggleLike = async (songId: string, userId: string): Promise<{ likeId: string | null }> => {
+  await SongService.assertSongAccess(songId, userId);
+
   const existing = await SongLikeRepository.getLikeBySongAndUser(songId, userId);
 
   if (existing) {

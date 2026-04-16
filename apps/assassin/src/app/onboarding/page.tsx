@@ -26,7 +26,7 @@ async function OnboardingContent() {
   } = await supabase.auth.getUser();
 
   const orgs: OnboardingOrg[] = user
-    ? await getUserOrgsAction(user.id).catch((e) => {
+    ? await getUserOrgsAction().catch((e) => {
         console.error("[Onboarding] getUserOrgsAction 실패:", e);
         return [];
       })
