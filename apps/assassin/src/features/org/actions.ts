@@ -47,6 +47,11 @@ export const getOrgMembersAction = async (orgId: string) => {
   return await OrgService.getOrgMembers(orgId, userId);
 };
 
+export const getCurrentUserOrgRoleAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getOrgRole(orgId, userId);
+};
+
 export const inviteMemberAction = async (
   orgId: string,
   input: InviteMemberPayload,

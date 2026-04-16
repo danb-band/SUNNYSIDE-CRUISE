@@ -79,6 +79,11 @@ const getOrgMembers = async (orgId: string, requesterId: string) => {
   return await OrgRepository.getOrgMembers(orgId);
 };
 
+const getOrgRole = async (orgId: string, userId: string): Promise<OrgRole | null> => {
+  const member = await OrgRepository.getMember(orgId, userId);
+  return (member?.role as OrgRole) ?? null;
+};
+
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
 
@@ -196,6 +201,7 @@ const OrgService = {
   updateOrg,
   deleteOrg,
   getOrgMembers,
+  getOrgRole,
   inviteMember,
   acceptInvitation,
   cancelInvitation,
