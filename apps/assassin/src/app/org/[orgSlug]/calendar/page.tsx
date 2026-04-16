@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { CalendarPageClient } from "@/components/calendar/CalendarPageClient";
 import { CalendarPageSkeleton } from "@/components/calendar/CalendarPageSkeleton";
-import { getCalendarEventsByMonthAction } from "@features/calendar/actions";
+import CalendarEventService from "@features/calendar/service";
 import { calendarEventKeys } from "@features/calendar/queries/keys";
 import type { CalendarEvent } from "@features/calendar/schema";
 import { getRsvpAttendeesAction, getUserRsvpStatusAction } from "@features/rsvp/actions";
@@ -14,23 +14,25 @@ import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { CALENDAR_CACHE_TAG } from "@libs/cache/calendar";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
+import { getCurrentUser } from "@libs/supabase/auth";
 
 interface CalendarPageProps {
   params: Promise<{ orgSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getCachedCalendarEvents(year: number, month: number, orgId: string) {
+async function getCachedCalendarEvents(year: number, month: number, orgId: string, userId: string) {
   "use cache";
   cacheTag(CALENDAR_CACHE_TAG);
   cacheLife("max");
-  return getCalendarEventsByMonthAction(year, month, orgId);
+  return CalendarEventService.getCalendarEventsByMonth(year, month, orgId, userId);
 }
 
 async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
   const { orgSlug } = await params;
   const org = await getOrgBySlugAction(orgSlug).catch(() => null);
   if (!org) notFound();
+  const user = await getCurrentUser();
 
   const resolvedSearchParams = await searchParams;
   const dateParam =
@@ -47,7 +49,7 @@ async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
   const queryClient = getQueryClient();
   await queryClient.prefetchQuery({
     queryKey: calendarEventKeys.lists(org.id, year, month),
-    queryFn: () => getCachedCalendarEvents(year, month, org.id),
+    queryFn: () => getCachedCalendarEvents(year, month, org.id, user.id),
   });
 
   const events =
