@@ -1,4 +1,5 @@
 import SeasonService from "@features/season/service";
+import { assertOrgMember } from "@features/org/service";
 import SongRepository from "./repository";
 import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
@@ -20,6 +21,7 @@ const assertSongExists = async (songId: string): Promise<void> => {
 };
 
 const createSong = async (song: SongPayload, orgId: string) => {
+  await assertOrgMember(song.userId, orgId);
   await SeasonService.assertSeasonExists(song.seasonId, orgId);
 
   let result;
@@ -70,7 +72,12 @@ const getSongById = async (id: string): Promise<Song | null> => {
   return parsed.data;
 };
 
-const getSongsBySeasonId = async (seasonId: string, orgId: string): Promise<Array<Song>> => {
+const getSongsBySeasonId = async (
+  seasonId: string,
+  orgId: string,
+  userId: string,
+): Promise<Array<Song>> => {
+  await assertOrgMember(userId, orgId);
   await SeasonService.assertSeasonExists(seasonId, orgId);
 
   const songs = await SongRepository.getSongsBySeasonId(seasonId);
@@ -84,12 +91,19 @@ const getSongsBySeasonId = async (seasonId: string, orgId: string): Promise<Arra
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload) => {
+const updateSong = async (id: string, song: SongUpdatePayload, userId: string) => {
   const existed = await getSongById(id);
 
   if (!existed) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
+
+  const season = await prisma.season.findFirst({
+    where: { id: existed.seasonId },
+    select: { orgId: true },
+  });
+  if (!season?.orgId) throw new Error("Season not found");
+  await assertOrgMember(userId, season.orgId);
 
   const parsedInput = updateSongSchema.safeParse(song);
 
@@ -110,12 +124,19 @@ const updateSong = async (id: string, song: SongUpdatePayload) => {
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string) => {
+const deleteSong = async (id: string, userId: string) => {
   const song = await SongRepository.getSongById(id);
 
   if (!song) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
+
+  const season = await prisma.season.findFirst({
+    where: { id: song.seasonId },
+    select: { orgId: true },
+  });
+  if (!season?.orgId) throw new Error("Season not found");
+  await assertOrgMember(userId, season.orgId);
 
   try {
     await prisma.$transaction(async (tx) => {

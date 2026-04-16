@@ -11,17 +11,21 @@ export const getSongAction = async (id: string) => {
 };
 
 export const getSongsBySeasonAction = async (seasonId: string, orgId: string) => {
-  return await SongService.getSongsBySeasonId(seasonId, orgId);
+  const user = await getCurrentUser();
+  return await SongService.getSongsBySeasonId(seasonId, orgId, user.id);
 };
 
-export const createSongAction = async (orgId: string, data: {
-  seasonId: string;
-  name: string;
-  artist: string;
-  description: string;
-  youtubeUrl: string;
-  sortOrder: number;
-}) => {
+export const createSongAction = async (
+  orgId: string,
+  data: {
+    seasonId: string;
+    name: string;
+    artist: string;
+    description: string;
+    youtubeUrl: string;
+    sortOrder: number;
+  },
+) => {
   const user = await getCurrentUser();
   const result = await SongService.createSong({ ...data, userId: user.id }, orgId);
   revalidateSeasonBoard();
@@ -29,14 +33,16 @@ export const createSongAction = async (orgId: string, data: {
 };
 
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
-  const result = await SongService.updateSong(id, data);
+  const user = await getCurrentUser();
+  const result = await SongService.updateSong(id, data, user.id);
   revalidateSeasonBoard();
   revalidatePath(`/song/${id}`);
   return result;
 };
 
 export const deleteSongAction = async (id: string) => {
-  const result = await SongService.deleteSong(id);
+  const user = await getCurrentUser();
+  const result = await SongService.deleteSong(id, user.id);
   revalidateSeasonBoard();
   return result;
 };
