@@ -25,3 +25,8 @@ export const updateSeasonAction = async (id: string, orgId: string, data: Season
 
   return result;
 };
+
+export const deleteSeasonAction = async (id: string, orgId: string) => {
+  await SeasonService.deleteSeason(id, orgId);
+  revalidateSeasonBoard();
+};

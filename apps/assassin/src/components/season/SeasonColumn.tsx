@@ -5,9 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
+import { useDeleteSeason } from "@features/season/mutations/useDeleteSeason";
+import { useOrgRole } from "@libs/org/OrgProvider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore } from "lucide-react";
+import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -16,6 +18,7 @@ import { SortableSongItem } from "../song/SortableSongItem";
 import { SongItem } from "../song/SongItem";
 import { useSongLogic } from "@/features/song/hooks/useSongLogic";
 import { AddSongDialog } from "../song/AddSongDialog";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { cn } from "@/libs/shadcn/utils";
 import { getSeasonDroppableId } from "@/features/song/hooks/useSongDragDrop";
 
@@ -30,7 +33,10 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(season.name);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
+  const deleteSeason = useDeleteSeason();
+  const role = useOrgRole();
 
   const { songs } = useSongLogic(season.id);
   const songCount = songs.length;
@@ -176,6 +182,19 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
                 <Archive className="h-4 w-4" />
               )}
             </Button>
+
+            {role === "OWNER" && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={deleteSeason.isPending}
+                title="Delete season"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-3 flex flex-col flex-1 min-h-0">
@@ -213,6 +232,16 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSubmit={() => setIsAddDialogOpen(false)}
+      />
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="시즌 삭제"
+        description={`"${season.name}" 시즌을 삭제하면 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        onConfirm={() => deleteSeason.mutate(season.id)}
+        isConfirming={deleteSeason.isPending}
+        icon={<Trash2 className="h-4 w-4" />}
       />
     </div>
   );

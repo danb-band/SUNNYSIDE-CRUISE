@@ -75,12 +75,18 @@ const updateSeason = async (id: string, orgId: string, season: SeasonUpdatePaylo
   return parsedOutput.data;
 };
 
+const deleteSeason = async (id: string, orgId: string): Promise<void> => {
+  await assertSeasonExists(id, orgId);
+  await SeasonRepository.deleteSeason(id, orgId);
+};
+
 const SeasonService = {
   assertSeasonExists,
   createSeason,
   getSeasonById,
   getAllSeasons,
   updateSeason,
+  deleteSeason,
 };
 
 export default SeasonService;
