@@ -36,7 +36,7 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
   const deleteSeason = useDeleteSeason();
-  const role = useOrgRole();
+  const isOwner = useOrgRole() === "OWNER";
 
   const { songs } = useSongLogic(season.id);
   const songCount = songs.length;
@@ -168,22 +168,23 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
                 )}
               </div>
             </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0"
-              onClick={handleToggleArchive}
-              disabled={updateSeason.isPending}
-              title={isArchived ? "Unarchive season" : "Archive season"}
-            >
-              {isArchived ? (
-                <ArchiveRestore className="h-4 w-4" />
-              ) : (
-                <Archive className="h-4 w-4" />
-              )}
-            </Button>
-
-            {role === "OWNER" && (
+            {isOwner && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0"
+                onClick={handleToggleArchive}
+                disabled={updateSeason.isPending}
+                title={isArchived ? "Unarchive season" : "Archive season"}
+              >
+                {isArchived ? (
+                  <ArchiveRestore className="h-4 w-4" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            {isOwner && (
               <Button
                 size="icon"
                 variant="ghost"
