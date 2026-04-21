@@ -17,7 +17,8 @@ export const useCreateSeason = () => {
 
       queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
         if (!prev) return [createdSeason];
-        return [...prev, createdSeason];
+        const exists = prev.some((season) => season.id === createdSeason.id);
+        return exists ? prev : [...prev, createdSeason];
       });
     },
   });

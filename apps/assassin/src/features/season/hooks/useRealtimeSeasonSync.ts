@@ -31,9 +31,11 @@ export const useRealtimeSeasonSync = () => {
         if (!nextSeason) return;
 
         if (eventType === "INSERT") {
-          queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) =>
-            prev ? [...prev, nextSeason] : [nextSeason],
-          );
+          queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
+            if (!prev) return [nextSeason];
+            const exists = prev.some((season) => season.id === nextSeason.id);
+            return exists ? prev : [...prev, nextSeason];
+          });
           queryClient.setQueryData(seasonKeys.detail(nextSeason.id), nextSeason);
           return;
         }
