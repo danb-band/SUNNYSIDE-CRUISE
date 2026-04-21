@@ -4,6 +4,10 @@ import { CreateOrgPayload, UpdateOrgPayload } from "./schema";
 import crypto from "crypto";
 import { TransactionClient } from "@/libs/prisma/types";
 
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 async function getOrgById(id: string) {
   return await prisma.org.findUnique({ where: { id } });
 }
@@ -89,24 +93,47 @@ async function createInvitation(
   role: "MEMBER",
   tx?: TransactionClient,
 ) {
-  const token = crypto.randomBytes(32).toString("hex");
+  const plainToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashToken(plainToken);
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일
   const client = tx ?? prisma;
 
-  return await client.orgInvitation.create({
+  const record = await client.orgInvitation.create({
     data: {
       orgId,
       email,
-      token,
+      token: tokenHash,
       role,
       status: "PENDING",
       expiresAt,
     },
   });
+
+  // DB에는 해시 저장, 호출자에게는 평문 토큰 반환 (이메일 URL용)
+  return { ...record, token: plainToken };
 }
 
 async function getInvitationByToken(token: string) {
-  return await prisma.orgInvitation.findUnique({ where: { token } });
+  const tokenHash = hashToken(token);
+  return await prisma.orgInvitation.findUnique({ where: { token: tokenHash } });
+}
+
+async function getInvitationById(id: string) {
+  return await prisma.orgInvitation.findUnique({ where: { id } });
+}
+
+async function getPendingInvitationsByEmail(email: string) {
+  return await prisma.orgInvitation.findMany({
+    where: { email, status: "PENDING", expiresAt: { gt: new Date() } },
+    include: { org: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+async function getValidPendingInvitationByEmail(orgId: string, email: string) {
+  return await prisma.orgInvitation.findFirst({
+    where: { orgId, email, status: "PENDING", expiresAt: { gt: new Date() } },
+  });
 }
 
 async function getInvitationByIdAndOrgId(id: string, orgId: string) {
@@ -117,7 +144,21 @@ async function getInvitationByIdAndOrgId(id: string, orgId: string) {
 
 async function getPendingInvitationsByOrg(orgId: string) {
   return await prisma.orgInvitation.findMany({
-    where: { orgId, status: "PENDING", expiresAt: { gt: new Date() } },
+    where: { orgId, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// 만료된 PENDING 초대를 EXPIRED로 정리 — 재초대 전 호출
+async function markExpiredInvitations(
+  orgId: string,
+  email: string,
+  tx?: Prisma.TransactionClient,
+): Promise<void> {
+  const client = tx ?? prisma;
+  await client.orgInvitation.updateMany({
+    where: { orgId, email, status: "PENDING", expiresAt: { lte: new Date() } },
+    data: { status: "EXPIRED" },
   });
 }
 
@@ -152,19 +193,6 @@ async function markInvitationEmailSent(id: string): Promise<void> {
   });
 }
 
-// 동일 (orgId, email)의 PENDING 초대를 모두 취소 — 재초대 시 호출
-async function cancelPendingInvitationsByEmail(
-  orgId: string,
-  email: string,
-  tx?: Prisma.TransactionClient,
-): Promise<void> {
-  const client = tx ?? prisma;
-  await client.orgInvitation.updateMany({
-    where: { orgId, email, status: "PENDING" },
-    data: { status: "CANCELLED" },
-  });
-}
-
 const OrgRepository = {
   getOrgById,
   getOrgBySlug,
@@ -180,10 +208,13 @@ const OrgRepository = {
   createInvitation,
   getInvitationByToken,
   getInvitationByIdAndOrgId,
+  getInvitationById,
+  getValidPendingInvitationByEmail,
   getPendingInvitationsByOrg,
+  getPendingInvitationsByEmail,
+  markExpiredInvitations,
   updateInvitationStatus,
   findUserIdByEmail,
-  cancelPendingInvitationsByEmail,
   markInvitationEmailSent,
   getProfileById,
 };

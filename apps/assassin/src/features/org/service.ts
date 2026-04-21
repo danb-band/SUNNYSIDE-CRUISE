@@ -98,9 +98,15 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
     }
   }
 
-  // 기존 PENDING 초대 취소 후 재생성 — 두 작업을 트랜잭션으로 묶어 원자성 보장
+  // 유효한 초대가 이미 존재하면 중복 초대 차단
+  const validPending = await OrgRepository.getValidPendingInvitationByEmail(orgId, email);
+  if (validPending) {
+    throw new Error("ALREADY_INVITED");
+  }
+
+  // 만료된 PENDING 정리 후 새 초대 생성
   return await prisma.$transaction(async (tx) => {
-    await OrgRepository.cancelPendingInvitationsByEmail(orgId, email, tx);
+    await OrgRepository.markExpiredInvitations(orgId, email, tx);
     return await OrgRepository.createInvitation(orgId, email, "MEMBER", tx);
   });
 };
@@ -180,6 +186,70 @@ const leaveOrg = async (orgId: string, userId: string) => {
   await OrgRepository.removeMember(orgId, userId);
 };
 
+const getInvitationInfo = async (params: { token?: string; id?: string }, userEmail?: string) => {
+  let invitation;
+  if (params.token) {
+    invitation = await OrgRepository.getInvitationByToken(params.token);
+  } else if (params.id) {
+    invitation = await OrgRepository.getInvitationById(params.id);
+  } else {
+    throw new Error("INVALID_TOKEN");
+  }
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt)
+    throw new Error("EXPIRED");
+
+  if (params.id && userEmail && invitation.email !== userEmail.toLowerCase().trim()) {
+    throw new Error("EMAIL_MISMATCH");
+  }
+
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return { invitationId: invitation.id, orgName: org!.name };
+};
+
+const acceptInvitationById = async (invitationId: string, userId: string, userEmail: string) => {
+  const invitation = await OrgRepository.getInvitationById(invitationId);
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt) {
+    if (invitation.status !== "EXPIRED") {
+      await OrgRepository.updateInvitationStatus(invitation.id, "EXPIRED");
+    }
+    throw new Error("EXPIRED");
+  }
+  if (invitation.email !== userEmail.toLowerCase().trim()) throw new Error("EMAIL_MISMATCH");
+
+  await prisma.$transaction(async (tx) => {
+    const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
+    if (!existingMember) {
+      await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    }
+    await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
+  });
+
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return org!;
+};
+
+const cancelInvitationByInvitee = async (invitationId: string, userEmail: string) => {
+  const invitation = await OrgRepository.getInvitationById(invitationId);
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.email !== userEmail.toLowerCase().trim()) throw new Error("EMAIL_MISMATCH");
+  if (invitation.status !== "PENDING") throw new Error("REVOKED");
+
+  await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+};
+
+const getPendingInvitationsForUser = async (userEmail: string) => {
+  return await OrgRepository.getPendingInvitationsByEmail(userEmail.toLowerCase().trim());
+};
+
 const markInvitationEmailSent = async (invitationId: string) => {
   await OrgRepository.markInvitationEmailSent(invitationId);
 };
@@ -204,12 +274,16 @@ const OrgService = {
   getOrgRole,
   inviteMember,
   acceptInvitation,
+  acceptInvitationById,
+  getInvitationInfo,
   cancelInvitation,
+  cancelInvitationByInvitee,
   removeMember,
   leaveOrg,
   markInvitationEmailSent,
   getProfileById,
   getPendingInvitations,
+  getPendingInvitationsForUser,
 };
 
 export default OrgService;

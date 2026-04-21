@@ -92,20 +92,29 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
     });
   };
 
-  const handleResendInvitation = (targetEmail: string) => {
+  const handleReInvite = (invitationId: string, email: string) => {
     setInviteError(null);
     setInviteWarning(null);
 
     startTransition(async () => {
-      const result = await inviteMemberAction(org.id, { email: targetEmail, role: "MEMBER" });
+      addOptimisticInvitation({ type: "remove", id: invitationId });
+      const result = await inviteMemberAction(org.id, { email, role: "MEMBER" });
       if (!result.success) {
         setInviteError(result.error);
         return;
       }
-
+      addOptimisticInvitation({
+        type: "add",
+        invitation: {
+          id: result.data.id,
+          email: result.data.email,
+          expiresAt: result.data.expiresAt,
+          emailSentAt: result.emailSent ? new Date() : null,
+        },
+      });
       if (!result.emailSent) {
         setInviteWarning(
-          `재발송 초대가 생성되었지만 이메일 발송에 실패했습니다. (${result.emailError ?? "알 수 없는 오류"})`,
+          `초대가 재발급되었지만 이메일 발송에 실패했습니다. (${result.emailError ?? "알 수 없는 오류"})`,
         );
       }
       router.refresh();
@@ -171,46 +180,56 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
                     초대 대기 중 ({optimisticInvitations.length})
                   </h2>
                   <ul className="flex flex-col gap-2">
-                    {optimisticInvitations.map((inv) => (
-                      <li
-                        key={inv.id}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                            {inv.email}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            만료: {new Date(inv.expiresAt).toLocaleDateString("ko-KR")}
-                          </p>
-                          {!inv.emailSentAt && (
-                            <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-0.5">
-                              이메일 미발송
+                    {optimisticInvitations.map((inv) => {
+                      const isExpired = new Date(inv.expiresAt) <= new Date();
+                      return (
+                        <li
+                          key={inv.id}
+                          className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                              {inv.email}
                             </p>
+                            {isExpired ? (
+                              <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">
+                                만료됨 ({new Date(inv.expiresAt).toLocaleDateString("ko-KR")})
+                              </p>
+                            ) : (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                만료: {new Date(inv.expiresAt).toLocaleDateString("ko-KR")}
+                              </p>
+                            )}
+                            {!inv.emailSentAt && (
+                              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-0.5">
+                                이메일 미발송
+                              </p>
+                            )}
+                          </div>
+                          {isExpired ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() => handleReInvite(inv.id, inv.email)}
+                              className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                            >
+                              재초대
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() => handleCancelInvitation(inv.id)}
+                              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                            >
+                              취소
+                            </Button>
                           )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isPending}
-                            onClick={() => handleResendInvitation(inv.email)}
-                            className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-                          >
-                            {inv.emailSentAt ? "이메일 재발송" : "이메일 발송"}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={isPending}
-                            onClick={() => handleCancelInvitation(inv.id)}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                          >
-                            취소
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </section>
                 <Separator />
