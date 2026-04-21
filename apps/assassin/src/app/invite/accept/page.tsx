@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import OrgService from "@features/org/service";
+import { InviteAcceptClient } from "@features/org/components/InviteAcceptClient";
 
-// 에러 코드 → 유저에게 보여줄 메시지 매핑
 function getErrorContent(code: string): { title: string; description: string } {
   switch (code) {
     case "INVALID_TOKEN":
@@ -58,11 +58,11 @@ function InviteErrorCard({ code }: { code: string }) {
 export default async function InviteAcceptPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; id?: string }>;
 }) {
-  const { token } = await searchParams;
+  const { token, id } = await searchParams;
 
-  if (!token) {
+  if (!token && !id) {
     return <InviteErrorCard code="INVALID_TOKEN" />;
   }
 
@@ -71,18 +71,23 @@ export default async function InviteAcceptPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 미인증 → 회원가입(신규) 또는 로그인(기존) 후 이 페이지로 돌아오도록 next 파라미터 전달
   if (!user || !user.email) {
-    redirect(`/signup?next=${encodeURIComponent(`/invite/accept?token=${token}`)}`);
+    if (token) {
+      // 미인증 + 이메일 링크: 로그인 후 orga 선택 페이지로 이동
+      // (선택 페이지에서 pending 초대 목록을 이메일로 조회해 표시)
+      redirect("/signup");
+    } else {
+      redirect(`/signup?next=${encodeURIComponent(`/invite/accept?id=${id}`)}`);
+    }
   }
 
-  let orgSlug: string;
+  let info: { invitationId: string; orgName: string };
   try {
-    const org = await OrgService.acceptInvitation(token, user.id, user.email);
-    orgSlug = org.slug;
+    info = await OrgService.getInvitationInfo({ token, id }, user.email);
   } catch (error) {
     const code = error instanceof Error ? error.message : "ERROR";
     return <InviteErrorCard code={code} />;
   }
-  redirect(`/org/${orgSlug}`);
+
+  return <InviteAcceptClient invitationId={info.invitationId} orgName={info.orgName} />;
 }
