@@ -147,7 +147,7 @@ const getInvitationInfo = async (params: { token?: string; id?: string }, userEm
   if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt)
     throw new Error("EXPIRED");
 
-  if (params.id && userEmail && invitation.email !== userEmail.toLowerCase().trim()) {
+  if (userEmail && invitation.email !== userEmail.toLowerCase().trim()) {
     throw new Error("EMAIL_MISMATCH");
   }
 
