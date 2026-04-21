@@ -16,15 +16,25 @@ export const useUpdateSong = () => {
 
       queryClient.setQueryData(songKeys.detail(updatedSong.id), updatedSong);
 
-      queryClient.setQueryData(
-        songKeys.bySeason(updatedSong.seasonId),
-        (prev: Song[] | undefined) => {
-          if (!prev) return [updatedSong];
-          const exists = prev.some((song) => song.id === updatedSong.id);
-          if (!exists) return [...prev, updatedSong];
-          return prev.map((song) => (song.id === updatedSong.id ? updatedSong : song));
-        },
-      );
+      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
+
+      cachedLists.forEach(([key, data]) => {
+        if (!data) return;
+        if (!Array.isArray(key) || key[1] !== "bySeason") return;
+        const seasonId = key[2] as string | undefined;
+        if (!seasonId) return;
+
+        queryClient.setQueryData(songKeys.bySeason(seasonId), (prev: Song[] | undefined) =>
+          (prev ?? []).filter((song) => song.id !== updatedSong.id),
+        );
+      });
+
+      queryClient.setQueryData(songKeys.bySeason(updatedSong.seasonId), (prev: Song[] | undefined) => {
+        const next = [...(prev ?? []), updatedSong];
+        return next
+          .filter((song, index, arr) => arr.findIndex((it) => it.id === song.id) === index)
+          .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+      });
     },
   });
 };

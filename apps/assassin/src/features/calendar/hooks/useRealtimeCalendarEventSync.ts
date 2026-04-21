@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { CalendarEvent } from "@features/calendar/schema";
 import { calendarEventKeys } from "@features/calendar/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useRealtimeCalendarEventSync = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
@@ -19,15 +20,15 @@ export const useRealtimeCalendarEventSync = () => {
           if (!eventType) return;
 
           queryClient.invalidateQueries({
-            queryKey: ["calendarEvents", "list"],
+            queryKey: calendarEventKeys.lists(orgId),
             exact: false,
           });
-        }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(calendarEventChannel);
     };
-  }, [queryClient, supabase]);
+  }, [orgId, queryClient, supabase]);
 };

@@ -1,6 +1,5 @@
 import { Season } from "@features/season/schema";
 import { SeasonColumn } from "./SeasonColumn";
-import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { useSongDragDrop } from "@/features/song/hooks/useSongDragDrop";
 import { SongItem } from "../song/SongItem";
@@ -11,7 +10,6 @@ interface SeasonBoardProps {
 
 export function SeasonBoard({ seasons }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
-  useRealtimeSongSync();
   const { sensors, activeSong, handleDragStart, handleDragCancel, handleDragEnd } = useSongDragDrop(
     { seasonIds: sortedSeasons.map((season) => season.id) },
   );
