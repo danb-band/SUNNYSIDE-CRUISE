@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateCalendar } from "@libs/cache/calendar";
 import { getCurrentUser } from "@libs/supabase/auth";
 import RsvpService from "./service";
 import type { RsvpWithProfile } from "./schema";
@@ -19,9 +19,10 @@ export const getUserRsvpStatusAction = async (
 
 export const toggleRsvpAction = async (
   eventId: string,
+  orgId: string,
 ): Promise<{ status: "ATTENDING" | "NOT_ATTENDING" | null }> => {
   const user = await getCurrentUser();
   const result = await RsvpService.toggleAttending(eventId, user.id);
-  revalidatePath("/calendar");
+  revalidateCalendar(orgId);
   return result;
 };
