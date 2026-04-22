@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@libs/supabase/client";
+import { AUTH_BROADCAST_CHANNEL } from "@/hooks/useAuthSync";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { LogOut } from "lucide-react";
@@ -15,6 +16,9 @@ export function LogoutButton() {
     setOpen(false);
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
+    const channel = new BroadcastChannel(AUTH_BROADCAST_CHANNEL);
+    channel.postMessage({ event: "SIGNED_OUT" });
+    channel.close();
     router.push("/login");
   };
 
