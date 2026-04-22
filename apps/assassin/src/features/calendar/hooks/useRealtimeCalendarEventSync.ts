@@ -21,7 +21,6 @@ export const useRealtimeCalendarEventSync = () => {
 
           queryClient.invalidateQueries({
             queryKey: calendarEventKeys.lists(orgId),
-            exact: false,
           });
         },
       )

@@ -12,7 +12,7 @@ export const useUpdateCalendarEvent = () => {
     mutationFn: ({ id, data }: { id: string; data: CalendarEventUpdatePayload }) =>
       updateCalendarEventAction(id, orgId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId), exact: false });
+      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId) });
     },
   });
 };
