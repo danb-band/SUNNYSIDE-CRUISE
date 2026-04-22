@@ -19,6 +19,8 @@ export const useCreateSeason = () => {
         if (!prev) return [createdSeason];
         return [...prev, createdSeason];
       });
+
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
     },
   });
 };

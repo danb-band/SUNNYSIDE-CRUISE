@@ -35,18 +35,20 @@ export const useRealtimeSongSync = () => {
     const isTrackedSong = (songId: string) => {
       if (queryClient.getQueryData(songKeys.detail(orgId, songId))) return true;
 
-      const cachedSongLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
+      const cachedSongLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.org(orgId) });
       const existsInSongLists = cachedSongLists.some(([key, data]) => {
         if (!data) return false;
-        if (!Array.isArray(key) || key[1] !== "bySeason") return false;
-        const keyScope = key[2] as { orgId?: string; seasonId?: string } | undefined;
-        if (keyScope?.orgId !== orgId) return false;
+        if (!Array.isArray(key) || key[2] !== "bySeason") return false;
         return data.some((song) => song.id === songId);
       });
       if (existsInSongLists) return true;
 
-      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({ queryKey: eventSongKeys.all });
-      return cachedEventSongs.some(([, data]) => data?.some((eventSong) => eventSong.songId === songId));
+      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({
+        queryKey: eventSongKeys.all,
+      });
+      return cachedEventSongs.some(([, data]) =>
+        data?.some((eventSong) => eventSong.songId === songId),
+      );
     };
 
     const updateSeasonSongs = (seasonId: string, updater: (prev: Song[]) => Song[]) => {
@@ -64,14 +66,13 @@ export const useRealtimeSongSync = () => {
     };
 
     const removeSongFromAllSeasons = (songId: string, excludeSeasonId?: string) => {
-      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
+      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.org(orgId) });
 
       cachedLists.forEach(([key, data]) => {
         if (!data) return;
-        if (!Array.isArray(key) || key[1] !== "bySeason") return;
-        const keyScope = key[2] as { orgId?: string; seasonId?: string } | undefined;
-        if (keyScope?.orgId !== orgId || !keyScope.seasonId) return;
-        const seasonId = keyScope.seasonId;
+        if (!Array.isArray(key) || key[2] !== "bySeason") return;
+        const seasonId = (key[3] as { seasonId?: string } | undefined)?.seasonId;
+        if (!seasonId) return;
         if (excludeSeasonId && seasonId === excludeSeasonId) return;
 
         updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
@@ -79,17 +80,24 @@ export const useRealtimeSongSync = () => {
     };
 
     const removeEventSongReferences = (songId: string) => {
-      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({ queryKey: eventSongKeys.all });
+      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({
+        queryKey: eventSongKeys.all,
+      });
       cachedEventSongs.forEach(([key, data]) => {
         if (!data) return;
         if (!data.some((eventSong) => eventSong.songId === songId)) return;
 
-        queryClient.setQueryData(key, data.filter((eventSong) => eventSong.songId !== songId));
+        queryClient.setQueryData(
+          key,
+          data.filter((eventSong) => eventSong.songId !== songId),
+        );
       });
     };
 
     const updateEventSongReferences = (song: Song) => {
-      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({ queryKey: eventSongKeys.all });
+      const cachedEventSongs = queryClient.getQueriesData<EventSong[]>({
+        queryKey: eventSongKeys.all,
+      });
       cachedEventSongs.forEach(([key, data]) => {
         if (!data) return;
         if (!data.some((eventSong) => eventSong.songId === song.id)) return;
@@ -128,51 +136,59 @@ export const useRealtimeSongSync = () => {
       .channel(`realtime:song:${orgId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "song" }, (payload) => {
         const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
+        if (!eventType) return;
+
         const nextSong = payload.new as Song | undefined;
         const prevSong = payload.old as Song | undefined;
 
-        if (eventType === "DELETE") {
-          const deletedSongId = prevSong?.id;
-          if (!deletedSongId) return;
+        try {
+          if (eventType === "DELETE") {
+            const deletedSongId = prevSong?.id;
+            if (!deletedSongId) return;
 
-          if (!isCurrentOrgSong(prevSong) && !isTrackedSong(deletedSongId)) return;
+            if (!isCurrentOrgSong(prevSong) && !isTrackedSong(deletedSongId)) return;
 
-          if (prevSong?.seasonId && prevSong?.id) {
-            removeSeasonSongs(prevSong.seasonId, prevSong.id);
-          } else {
-            removeSongFromAllSeasons(deletedSongId);
-          }
-          removeEventSongReferences(deletedSongId);
-          return;
-        }
-
-        if (!nextSong?.seasonId || !nextSong?.id) return;
-        if (!isCurrentOrgSong(nextSong) && !isTrackedSong(nextSong.id)) return;
-
-        if (nextSong.deletedAt) {
-          removeSongFromAllSeasons(nextSong.id);
-          removeSeasonSongs(nextSong.seasonId, nextSong.id);
-          removeEventSongReferences(nextSong.id);
-          return;
-        }
-
-        if (eventType === "UPDATE") {
-          if (nextSong.id) {
-            removeSongFromAllSeasons(nextSong.id, nextSong.seasonId);
+            if (prevSong?.seasonId && prevSong?.id) {
+              removeSeasonSongs(prevSong.seasonId, prevSong.id);
+            } else {
+              removeSongFromAllSeasons(deletedSongId);
+            }
+            removeEventSongReferences(deletedSongId);
+            return;
           }
 
-          if (
-            prevSong?.seasonId &&
-            nextSong.seasonId &&
-            prevSong.seasonId !== nextSong.seasonId &&
-            prevSong.id
-          ) {
-            removeSeasonSongs(prevSong.seasonId, prevSong.id);
-          }
-        }
+          if (!nextSong?.seasonId || !nextSong?.id) return;
+          if (!isCurrentOrgSong(nextSong) && !isTrackedSong(nextSong.id)) return;
 
-        upsertSeasonSong(nextSong.seasonId, nextSong);
-        updateEventSongReferences(nextSong);
+          if (nextSong.deletedAt) {
+            removeSongFromAllSeasons(nextSong.id);
+            removeSeasonSongs(nextSong.seasonId, nextSong.id);
+            removeEventSongReferences(nextSong.id);
+            return;
+          }
+
+          if (eventType === "UPDATE") {
+            if (nextSong.id) {
+              removeSongFromAllSeasons(nextSong.id, nextSong.seasonId);
+            }
+
+            if (
+              prevSong?.seasonId &&
+              nextSong.seasonId &&
+              prevSong.seasonId !== nextSong.seasonId &&
+              prevSong.id
+            ) {
+              removeSeasonSongs(prevSong.seasonId, prevSong.id);
+            }
+          }
+
+
+          upsertSeasonSong(nextSong.seasonId, nextSong);
+          updateEventSongReferences(nextSong);
+        } finally {
+          // Keep realtime stable even if local merge logic misses a case.
+          queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
+        }
       })
       .subscribe();
 

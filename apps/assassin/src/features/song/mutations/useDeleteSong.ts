@@ -18,8 +18,9 @@ export const useDeleteSong = () => {
           songKeys.bySeason(orgId, variables.seasonId),
           (prev: Song[] | undefined) => prev?.filter((song) => song.id !== variables.id) ?? prev,
         );
-        return;
       }
+
+      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
     },
   });
 };

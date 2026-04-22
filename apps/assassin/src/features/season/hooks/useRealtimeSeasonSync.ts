@@ -14,13 +14,12 @@ export const useRealtimeSeasonSync = () => {
 
   useEffect(() => {
     const seasonsChannel = supabase
-      .channel("realtime:season")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "season", filter: `orgId=eq.${orgId}` },
-        (payload) => {
-          const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
+      .channel(`realtime:season:${orgId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "season" }, (payload) => {
+        const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
+        if (!eventType) return;
 
+        try {
           if (eventType === "DELETE") {
             const deletedId = (payload.old as Season | undefined)?.id;
             if (!deletedId) return;
@@ -51,8 +50,12 @@ export const useRealtimeSeasonSync = () => {
             );
           });
           queryClient.setQueryData(seasonKeys.detail(orgId, nextSeason.id), nextSeason);
-        },
-      )
+        } finally {
+          // Keep realtime stable even if local merge logic misses a case.
+          queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
+          queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
+        }
+      })
       .subscribe();
 
     return () => {

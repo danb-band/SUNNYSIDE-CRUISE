@@ -1,5 +1,7 @@
 import SeasonRepository from "./repository";
 import { assertOrgMember } from "@features/org/service";
+import SongRepository from "@features/song/repository";
+import { prisma } from "@libs/prisma/client";
 import {
   Season,
   SeasonPayload,
@@ -7,6 +9,8 @@ import {
   SeasonUpdatePayload,
   updateSeasonSchema,
 } from "./schema";
+import PlayerRepository from "../player/repository";
+import CommentRepository from "../comment/repository";
 
 const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void> => {
   const season = await SeasonRepository.getSeasonById(seasonId, orgId);
@@ -18,7 +22,11 @@ const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void
   }
 };
 
-const createSeason = async (season: SeasonPayload, orgId: string, userId: string): Promise<Season> => {
+const createSeason = async (
+  season: SeasonPayload,
+  orgId: string,
+  userId: string,
+): Promise<Season> => {
   await assertOrgMember(userId, orgId);
 
   const result = await SeasonRepository.createSeason(season, orgId);
@@ -60,7 +68,12 @@ const getAllSeasons = async (orgId: string, userId: string): Promise<Array<Seaso
   return parsed.data;
 };
 
-const updateSeason = async (id: string, orgId: string, season: SeasonUpdatePayload, userId: string) => {
+const updateSeason = async (
+  id: string,
+  orgId: string,
+  season: SeasonUpdatePayload,
+  userId: string,
+) => {
   await assertOrgMember(userId, orgId);
 
   const existing = await SeasonRepository.getSeasonById(id, orgId);
@@ -88,12 +101,41 @@ const updateSeason = async (id: string, orgId: string, season: SeasonUpdatePaylo
   return parsedOutput.data;
 };
 
+const deleteSeason = async (id: string, orgId: string, userId: string): Promise<void> => {
+  await assertOrgMember(userId, orgId, "OWNER");
+  await assertSeasonExists(id, orgId);
+
+  const activeSongs = await SongRepository.getSongsBySeasonId(id);
+
+  const parsedSongs = seasonSchema.array().safeParse(activeSongs);
+
+  if (!parsedSongs.success) {
+    throw new Error("Invalid song responses from DB");
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const song of parsedSongs.data) {
+        await PlayerRepository.deletePlayersBySongId(song.id, tx);
+        await CommentRepository.deleteCommentsBySongId(song.id, tx);
+        await SongRepository.deleteSong(song.id, tx);
+      }
+    });
+
+    await SeasonRepository.deleteSeason(id, orgId);
+  } catch (error) {
+    console.error(`Failed to delete season ${id}:`, error);
+    throw new Error("Season deletion failed");
+  }
+};
+
 const SeasonService = {
   assertSeasonExists,
   createSeason,
   getSeasonById,
   getAllSeasons,
   updateSeason,
+  deleteSeason,
 };
 
 export default SeasonService;

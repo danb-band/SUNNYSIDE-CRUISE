@@ -16,12 +16,12 @@ export const useUpdateSong = () => {
 
       queryClient.setQueryData(songKeys.detail(orgId, updatedSong.id), updatedSong);
 
-      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
+      const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.org(orgId) });
 
       cachedLists.forEach(([key, data]) => {
         if (!data) return;
-        if (!Array.isArray(key) || key[1] !== "bySeason") return;
-        const seasonId = (key[2] as { orgId?: string; seasonId?: string } | undefined)?.seasonId;
+        if (!Array.isArray(key) || key[2] !== "bySeason") return;
+        const seasonId = (key[3] as { seasonId?: string } | undefined)?.seasonId;
         if (!seasonId) return;
 
         queryClient.setQueryData(songKeys.bySeason(orgId, seasonId), (prev: Song[] | undefined) =>
@@ -35,6 +35,8 @@ export const useUpdateSong = () => {
           .filter((song, index, arr) => arr.findIndex((it) => it.id === song.id) === index)
           .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
       });
+
+      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
     },
   });
 };

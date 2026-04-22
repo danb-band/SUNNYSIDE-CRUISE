@@ -23,6 +23,7 @@ export const useCreateSong = () => {
           return [...next].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
         },
       );
+      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
     },
   });
 };

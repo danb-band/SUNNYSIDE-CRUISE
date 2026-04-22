@@ -22,6 +22,8 @@ export const useUpdateSeason = () => {
         if (!exists) return [...prev, updatedSeason];
         return prev.map((season) => (season.id === updatedSeason.id ? updatedSeason : season));
       });
+
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
     },
   });
 };
