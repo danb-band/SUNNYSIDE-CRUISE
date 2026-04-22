@@ -14,7 +14,7 @@ export const useUpdateSeason = () => {
     onSuccess: (updatedSeason) => {
       if (!updatedSeason) return;
 
-      queryClient.setQueryData(seasonKeys.detail(updatedSeason.id), updatedSeason);
+      queryClient.setQueryData(seasonKeys.detail(orgId, updatedSeason.id), updatedSeason);
 
       queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
         if (!prev) return [updatedSeason];

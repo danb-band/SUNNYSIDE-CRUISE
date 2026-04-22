@@ -10,7 +10,7 @@ export const useDeleteCalendarEvent = () => {
   return useMutation({
     mutationFn: (id: string) => deleteCalendarEventAction(id, orgId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarEventKeys.all });
+      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId), exact: false });
     },
   });
 };

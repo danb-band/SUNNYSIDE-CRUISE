@@ -11,7 +11,7 @@ export const useCreateCalendarEvent = () => {
   return useMutation({
     mutationFn: (data: CalendarEventPayload) => createCalendarEventAction(data, orgId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarEventKeys.all });
+      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId), exact: false });
     },
   });
 };

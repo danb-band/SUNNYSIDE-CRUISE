@@ -14,22 +14,22 @@ export const useUpdateSong = () => {
     onSuccess: (updatedSong) => {
       if (!updatedSong) return;
 
-      queryClient.setQueryData(songKeys.detail(updatedSong.id), updatedSong);
+      queryClient.setQueryData(songKeys.detail(orgId, updatedSong.id), updatedSong);
 
       const cachedLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
 
       cachedLists.forEach(([key, data]) => {
         if (!data) return;
         if (!Array.isArray(key) || key[1] !== "bySeason") return;
-        const seasonId = key[2] as string | undefined;
+        const seasonId = (key[2] as { orgId?: string; seasonId?: string } | undefined)?.seasonId;
         if (!seasonId) return;
 
-        queryClient.setQueryData(songKeys.bySeason(seasonId), (prev: Song[] | undefined) =>
+        queryClient.setQueryData(songKeys.bySeason(orgId, seasonId), (prev: Song[] | undefined) =>
           (prev ?? []).filter((song) => song.id !== updatedSong.id),
         );
       });
 
-      queryClient.setQueryData(songKeys.bySeason(updatedSong.seasonId), (prev: Song[] | undefined) => {
+      queryClient.setQueryData(songKeys.bySeason(orgId, updatedSong.seasonId), (prev: Song[] | undefined) => {
         const next = [...(prev ?? []), updatedSong];
         return next
           .filter((song, index, arr) => arr.findIndex((it) => it.id === song.id) === index)

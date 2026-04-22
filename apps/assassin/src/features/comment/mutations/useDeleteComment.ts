@@ -11,7 +11,7 @@ export const useDeleteComment = () => {
     mutationFn: ({ id, songId }: { id: string; songId: string }) =>
       deleteCommentAction(id, songId, orgId),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(variables.songId) });
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, variables.songId) });
     },
   });
 };

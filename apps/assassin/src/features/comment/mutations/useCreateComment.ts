@@ -11,7 +11,7 @@ export const useCreateComment = () => {
   return useMutation({
     mutationFn: (data: CommentFormData) => createCommentAction(data, orgId),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(data.songId) });
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, data.songId) });
     },
   });
 };

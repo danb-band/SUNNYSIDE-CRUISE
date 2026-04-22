@@ -13,7 +13,7 @@ export const useCreateSeason = () => {
     onSuccess: (createdSeason) => {
       if (!createdSeason) return;
 
-      queryClient.setQueryData(seasonKeys.detail(createdSeason.id), createdSeason);
+      queryClient.setQueryData(seasonKeys.detail(orgId, createdSeason.id), createdSeason);
 
       queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
         if (!prev) return [createdSeason];

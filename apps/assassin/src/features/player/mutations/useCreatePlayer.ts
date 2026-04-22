@@ -10,8 +10,8 @@ export const useCreatePlayer = () => {
 
   return useMutation({
     mutationFn: (data: PlayerPayload) => createPlayerAction(data, orgId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: playerKeys.all });
+    onSuccess: (createdPlayer) => {
+      queryClient.invalidateQueries({ queryKey: playerKeys.bySong(orgId, createdPlayer.songId) });
     },
   });
 };

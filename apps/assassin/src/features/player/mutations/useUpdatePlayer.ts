@@ -11,8 +11,8 @@ export const useUpdatePlayer = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: PlayerUpdatePayload }) =>
       updatePlayerAction(id, orgId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: playerKeys.all });
+    onSuccess: (updatedPlayer) => {
+      queryClient.invalidateQueries({ queryKey: playerKeys.bySong(orgId, updatedPlayer.songId) });
     },
   });
 };

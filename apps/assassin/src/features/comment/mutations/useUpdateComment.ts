@@ -14,7 +14,7 @@ export const useUpdateComment = () => {
     onSuccess: (data) => {
       if (!data) return;
 
-      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(data.songId) });
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, data.songId) });
     },
   });
 };

@@ -11,11 +11,11 @@ export const useDeleteSong = () => {
   return useMutation({
     mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id, orgId),
     onSuccess: (_result, variables) => {
-      queryClient.removeQueries({ queryKey: songKeys.detail(variables.id) });
+      queryClient.removeQueries({ queryKey: songKeys.detail(orgId, variables.id) });
 
       if (variables.seasonId) {
         queryClient.setQueryData(
-          songKeys.bySeason(variables.seasonId),
+          songKeys.bySeason(orgId, variables.seasonId),
           (prev: Song[] | undefined) => prev?.filter((song) => song.id !== variables.id) ?? prev,
         );
         return;
