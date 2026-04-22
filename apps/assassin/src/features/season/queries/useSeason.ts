@@ -7,7 +7,7 @@ export const useSeason = (id: string) => {
   const orgId = useOrgId();
 
   return useSuspenseQuery({
-    queryKey: seasonKeys.detail(id),
+    queryKey: seasonKeys.detail(orgId, id),
     queryFn: () => getSeasonAction(id, orgId),
   });
 };
