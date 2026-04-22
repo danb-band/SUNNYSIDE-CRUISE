@@ -55,7 +55,7 @@ async function SongModalContent({
   const queryClient = getQueryClient();
 
   const song = await queryClient.fetchQuery({
-    queryKey: songKeys.detail(songId),
+    queryKey: songKeys.detail(orgId, songId),
     queryFn: () => SongService.getSongByIdInOrg(songId, orgId, userId),
   });
 
@@ -65,11 +65,11 @@ async function SongModalContent({
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: playerKeys.bySong(songId),
+      queryKey: playerKeys.bySong(orgId, songId),
       queryFn: () => PlayerService.getPlayersBySongId(songId, userId),
     }),
     queryClient.prefetchQuery({
-      queryKey: userKeys.profilesBySong(songId),
+      queryKey: userKeys.profilesBySong(orgId, songId),
       queryFn: () => UserService.getProfilesBySong(songId, userId),
     }),
   ]);

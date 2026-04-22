@@ -23,7 +23,7 @@ export function OrgProvider({
 export function useOrgId(): string {
   const context = useContext(OrgContext);
 
-  if (!context) {
+  if (!context?.orgId) {
     throw new Error("useOrgId must be used within OrgProvider");
   }
 

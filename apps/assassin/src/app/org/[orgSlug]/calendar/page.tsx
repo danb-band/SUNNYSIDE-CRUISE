@@ -57,15 +57,15 @@ async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
   await Promise.all(
     events.flatMap((event) => [
       queryClient.prefetchQuery({
-        queryKey: rsvpKeys.byEvent(event.id),
+        queryKey: rsvpKeys.byEvent(org.id, event.id),
         queryFn: () => getRsvpAttendeesAction(event.id),
       }),
       queryClient.prefetchQuery({
-        queryKey: rsvpKeys.byUser(event.id),
+        queryKey: rsvpKeys.byUser(org.id, event.id),
         queryFn: () => getUserRsvpStatusAction(event.id),
       }),
       queryClient.prefetchQuery({
-        queryKey: eventSongKeys.byEvent(event.id),
+        queryKey: eventSongKeys.byEvent(org.id, event.id),
         queryFn: () => getSongsByEventAction(event.id),
       }),
     ]),

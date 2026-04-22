@@ -47,7 +47,7 @@ async function OrgSeasonPageData({ orgId, userId }: { orgId: string; userId: str
   await Promise.all(
     seasons.map((season) =>
       queryClient.prefetchQuery({
-        queryKey: songKeys.bySeason(season.id),
+        queryKey: songKeys.bySeason(orgId, season.id),
         queryFn: () => SongService.getSongsBySeasonId(season.id, orgId, userId),
       }),
     ),
