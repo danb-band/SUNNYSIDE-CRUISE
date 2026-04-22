@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { songLikeKeys } from "../queries/keys";
 import { useCurrentUserId } from "@/features/user/hooks/useCurrentUserId";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 type SongLikeRow = {
   id?: string;
@@ -13,6 +14,7 @@ type SongLikeRow = {
 export const useRealtimeSongLikeSync = (songId: string) => {
   const queryClient = useQueryClient();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const orgId = useOrgId();
 
   const userId = useCurrentUserId();
 
@@ -29,36 +31,36 @@ export const useRealtimeSongLikeSync = (songId: string) => {
         const affectedSongId = nextLike?.songId ?? prevLike?.songId;
         const affectedUserId = nextLike?.userId ?? prevLike?.userId;
         const affectedLikeId = nextLike?.id ?? prevLike?.id;
-        const cachedLikeId = queryClient.getQueryData<string | null>(songLikeKeys.byUser(songId));
+        const cachedLikeId = queryClient.getQueryData<string | null>(songLikeKeys.byUser(orgId, songId));
 
         if (eventType === "DELETE") {
           if (affectedLikeId && cachedLikeId && affectedLikeId === cachedLikeId) {
-            queryClient.setQueryData(songLikeKeys.byUser(songId), null);
+            queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), null);
             return;
           }
 
           if (affectedSongId === songId && affectedUserId === userId) {
-            queryClient.setQueryData(songLikeKeys.byUser(songId), null);
+            queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), null);
             return;
           }
 
-          queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(songId) });
+          queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
           return;
         }
 
         if (affectedSongId !== songId || affectedUserId !== userId) return;
 
         if (eventType === "INSERT") {
-          queryClient.setQueryData(songLikeKeys.byUser(songId), nextLike?.id ?? null);
+          queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), nextLike?.id ?? null);
           return;
         }
 
-        queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(songId) });
+        queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(likesChannel);
     };
-  }, [queryClient, songId, supabase, userId]);
+  }, [orgId, queryClient, songId, supabase, userId]);
 };

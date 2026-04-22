@@ -33,12 +33,14 @@ export const useRealtimeSongSync = () => {
     };
 
     const isTrackedSong = (songId: string) => {
-      if (queryClient.getQueryData(songKeys.detail(songId))) return true;
+      if (queryClient.getQueryData(songKeys.detail(orgId, songId))) return true;
 
       const cachedSongLists = queryClient.getQueriesData<Song[]>({ queryKey: songKeys.all });
       const existsInSongLists = cachedSongLists.some(([key, data]) => {
         if (!data) return false;
         if (!Array.isArray(key) || key[1] !== "bySeason") return false;
+        const keyScope = key[2] as { orgId?: string; seasonId?: string } | undefined;
+        if (keyScope?.orgId !== orgId) return false;
         return data.some((song) => song.id === songId);
       });
       if (existsInSongLists) return true;
@@ -48,7 +50,7 @@ export const useRealtimeSongSync = () => {
     };
 
     const updateSeasonSongs = (seasonId: string, updater: (prev: Song[]) => Song[]) => {
-      queryClient.setQueryData(songKeys.bySeason(seasonId), (prev: Song[] | undefined) => {
+      queryClient.setQueryData(songKeys.bySeason(orgId, seasonId), (prev: Song[] | undefined) => {
         const current = prev ?? [];
         const next = updater(current);
         return [...next].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
@@ -56,7 +58,7 @@ export const useRealtimeSongSync = () => {
     };
 
     const removeSeasonSongs = (seasonId: string, songId: string) => {
-      queryClient.removeQueries({ queryKey: songKeys.detail(songId) });
+      queryClient.removeQueries({ queryKey: songKeys.detail(orgId, songId) });
 
       updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
     };
@@ -67,8 +69,9 @@ export const useRealtimeSongSync = () => {
       cachedLists.forEach(([key, data]) => {
         if (!data) return;
         if (!Array.isArray(key) || key[1] !== "bySeason") return;
-        const seasonId = key[2] as string | undefined;
-        if (!seasonId) return;
+        const keyScope = key[2] as { orgId?: string; seasonId?: string } | undefined;
+        if (keyScope?.orgId !== orgId || !keyScope.seasonId) return;
+        const seasonId = keyScope.seasonId;
         if (excludeSeasonId && seasonId === excludeSeasonId) return;
 
         updateSeasonSongs(seasonId, (prev) => prev.filter((song) => song.id !== songId));
@@ -110,7 +113,7 @@ export const useRealtimeSongSync = () => {
     };
 
     const upsertSeasonSong = (seasonId: string, song: Song) => {
-      queryClient.setQueryData(songKeys.detail(song.id), song);
+      queryClient.setQueryData(songKeys.detail(orgId, song.id), song);
 
       updateSeasonSongs(seasonId, (prev) => {
         const index = prev.findIndex((item) => item.id === song.id);

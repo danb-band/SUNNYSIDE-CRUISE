@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Comment } from "@features/comment/schema";
 import { commentKeys } from "@features/comment/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 type RawComment = Omit<Comment, "profile"> & { profile?: Comment["profile"] };
 
 export const useRealtimeCommentSync = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
@@ -20,7 +22,7 @@ export const useRealtimeCommentSync = () => {
       ) => InfiniteData<{ comments: Comment[]; nextCursor: string | null }> | undefined,
     ) => {
       queryClient.setQueryData(
-        commentKeys.bySong(songId),
+        commentKeys.bySong(orgId, songId),
         (prev: InfiniteData<{ comments: Comment[]; nextCursor: string | null }> | undefined) =>
           prev ? updater(prev) : prev,
       );
@@ -113,5 +115,5 @@ export const useRealtimeCommentSync = () => {
     return () => {
       supabase.removeChannel(commentsChannel);
     };
-  }, [queryClient, supabase]);
+  }, [orgId, queryClient, supabase]);
 };

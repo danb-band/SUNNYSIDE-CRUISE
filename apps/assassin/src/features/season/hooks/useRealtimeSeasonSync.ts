@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Season } from "@features/season/schema";
 import { seasonKeys } from "@features/season/queries/keys";
+import { songKeys } from "@features/song/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { useOrgId } from "@/components/org/OrgProvider";
 
@@ -26,7 +27,8 @@ export const useRealtimeSeasonSync = () => {
             queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) =>
               prev ? prev.filter((season) => season.id !== deletedId) : prev,
             );
-            queryClient.removeQueries({ queryKey: seasonKeys.detail(deletedId) });
+            queryClient.removeQueries({ queryKey: seasonKeys.detail(orgId, deletedId) });
+            queryClient.removeQueries({ queryKey: songKeys.bySeason(orgId, deletedId) });
             return;
           }
 
@@ -37,7 +39,7 @@ export const useRealtimeSeasonSync = () => {
             queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) =>
               prev ? [...prev, nextSeason] : [nextSeason],
             );
-            queryClient.setQueryData(seasonKeys.detail(nextSeason.id), nextSeason);
+            queryClient.setQueryData(seasonKeys.detail(orgId, nextSeason.id), nextSeason);
             return;
           }
 
@@ -48,7 +50,7 @@ export const useRealtimeSeasonSync = () => {
               season.id === nextSeason.id ? { ...season, ...nextSeason } : season,
             );
           });
-          queryClient.setQueryData(seasonKeys.detail(nextSeason.id), nextSeason);
+          queryClient.setQueryData(seasonKeys.detail(orgId, nextSeason.id), nextSeason);
         },
       )
       .subscribe();
