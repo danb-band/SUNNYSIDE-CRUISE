@@ -11,7 +11,7 @@ export const useCreateSeason = () => {
   return useMutation({
     mutationFn: (data: SeasonPayload) => createSeasonAction(data, orgId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
     },
   });
 };

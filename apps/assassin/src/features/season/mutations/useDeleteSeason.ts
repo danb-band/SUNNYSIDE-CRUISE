@@ -12,9 +12,9 @@ export const useDeleteSeason = () => {
   return useMutation({
     mutationFn: ({ id }: { id: string }) => deleteSeasonAction(id, orgId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
-      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
-      queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId), exact: false });
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
+      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+      queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
     },
   });
 };

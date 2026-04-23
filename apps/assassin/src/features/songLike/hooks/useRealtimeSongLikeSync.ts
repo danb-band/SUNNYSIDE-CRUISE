@@ -35,7 +35,7 @@ export const useRealtimeSongLikeSync = (songId: string) => {
         if (affectedUserId && affectedUserId !== userId) return;
 
         queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
-        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
+        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
       })
       .subscribe();
 

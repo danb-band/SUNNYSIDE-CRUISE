@@ -16,9 +16,9 @@ export const useRealtimeSeasonSync = () => {
     const seasonsChannel = supabase
       .channel(`realtime:season:${orgId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "season" }, () => {
-        queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
-        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
-        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId), exact: false });
+        queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
       })
       .subscribe();
 

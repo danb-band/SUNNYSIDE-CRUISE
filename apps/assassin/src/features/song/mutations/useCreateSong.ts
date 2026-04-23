@@ -11,7 +11,7 @@ export const useCreateSong = () => {
   return useMutation({
     mutationFn: (data: SongFormData) => createSongAction(orgId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
+      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
     },
   });
 };

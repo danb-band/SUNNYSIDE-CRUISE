@@ -15,8 +15,8 @@ export const useRealtimeSongSync = () => {
     const songsChannel = supabase
       .channel(`realtime:song:${orgId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "song" }, () => {
-        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
-        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId), exact: false });
+        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
       })
       .subscribe();
 

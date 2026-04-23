@@ -12,7 +12,7 @@ export const useUpdateSeason = () => {
     mutationFn: ({ id, data }: { id: string; data: SeasonUpdatePayload }) =>
       updateSeasonAction(id, orgId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId), exact: false });
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
     },
   });
 };
