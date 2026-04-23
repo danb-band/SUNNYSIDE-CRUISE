@@ -1,5 +1,6 @@
 export const eventSongKeys = {
   all: ["eventSong"] as const,
+  org: (orgId: string) => [...eventSongKeys.all, { orgId }] as const,
   byEvent: (orgId: string, eventId: string) =>
-    [...eventSongKeys.all, "byEvent", { orgId, eventId }] as const,
+    [...eventSongKeys.org(orgId), "byEvent", { eventId }] as const,
 };

@@ -9,8 +9,8 @@ export const useToggleLike = (songId: string) => {
 
   return useMutation({
     mutationFn: () => toggleSongLikeAction(songId),
-    onSuccess: (result) => {
-      queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), result.likeId);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
     },
   });
 };

@@ -12,7 +12,7 @@ export const useDeleteSong = () => {
     mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id, orgId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
-      queryClient.invalidateQueries({ queryKey: eventSongKeys.all, exact: false });
+      queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId), exact: false });
     },
   });
 };

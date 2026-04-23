@@ -1,119 +1,40 @@
 import { useEffect, useMemo } from "react";
-import type { InfiniteData } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Comment } from "@features/comment/schema";
 import { commentKeys } from "@features/comment/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { useOrgId } from "@/components/org/OrgProvider";
 
-type RawComment = Omit<Comment, "profile"> & { profile?: Comment["profile"] };
+type CommentRow = {
+  songId?: string;
+  song_id?: string;
+};
 
-export const useRealtimeCommentSync = () => {
+const getSongId = (row: CommentRow | undefined): string | null => {
+  const songId = row?.songId ?? row?.song_id ?? null;
+  return typeof songId === "string" ? songId : null;
+};
+
+export const useRealtimeCommentSync = (songId: string) => {
   const queryClient = useQueryClient();
   const orgId = useOrgId();
 
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const updateQuery = (
-      songId: string,
-      updater: (
-        prev: InfiniteData<{ comments: Comment[]; nextCursor: string | null }>,
-      ) => InfiniteData<{ comments: Comment[]; nextCursor: string | null }> | undefined,
-    ) => {
-      queryClient.setQueryData(
-        commentKeys.bySong(orgId, songId),
-        (prev: InfiniteData<{ comments: Comment[]; nextCursor: string | null }> | undefined) =>
-          prev ? updater(prev) : prev,
-      );
-    };
-
-    const removeSongComment = (songId: string, commentId: string) => {
-      updateQuery(songId, (prev) => ({
-        ...prev,
-        pages: prev.pages.map((page) => ({
-          ...page,
-          comments: page.comments.filter((comment) => comment.id !== commentId),
-        })),
-      }));
-    };
-
-    const updateSongComments = (songId: string, commentId: string) => {
-      updateQuery(songId, (prev) => ({
-        ...prev,
-        pages: prev.pages.map((page) => ({
-          ...page,
-          comments: page.comments.map((comment) =>
-            comment.id === commentId ? { ...comment, ...comment } : comment,
-          ),
-        })),
-      }));
-    };
-
-    const insertSongComment = (songId: string, comment: Comment) => {
-      updateQuery(songId, (prev) => {
-        if (prev.pages.length === 0) {
-          return prev;
-        }
-
-        const firstPage = prev.pages[0];
-        const nextFirstPage = {
-          ...firstPage,
-          comments: [comment, ...firstPage.comments],
-        };
-
-        return {
-          ...prev,
-          pages: [nextFirstPage, ...prev.pages.slice(1)],
-        };
-      });
-    };
-
-    const fetchProfile = async (userId: string) => {
-      const { data } = await supabase.from("profiles").select("id, name").eq("id", userId).single();
-      return data;
-    };
-
     const commentsChannel = supabase
-      .channel("realtime:comment")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "comment" },
-        async (payload) => {
-          const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
-          const nextComment = payload.new as RawComment | undefined;
-          const prevComment = payload.old as RawComment | undefined;
+      .channel(`realtime:comment:${orgId}:${songId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "comment" }, (payload) => {
+        const nextRow = payload.new as CommentRow | undefined;
+        const prevRow = payload.old as CommentRow | undefined;
+        const affectedSongId = getSongId(nextRow) ?? getSongId(prevRow);
 
-          if (eventType === "DELETE") {
-            if (prevComment?.songId && prevComment?.id) {
-              removeSongComment(prevComment.songId, prevComment.id);
-            }
-            return;
-          }
-
-          if (!nextComment?.songId || !nextComment?.id) return;
-
-          if (nextComment.deletedAt) {
-            removeSongComment(nextComment.songId, nextComment.id);
-            return;
-          }
-
-          const profile = await fetchProfile(nextComment.userId);
-          if (!profile) return;
-
-          if (eventType === "UPDATE") {
-            updateSongComments(nextComment.songId, nextComment.id);
-            return;
-          }
-
-          // INSERT
-          insertSongComment(nextComment.songId, { ...nextComment, profile });
-        },
-      )
+        if (affectedSongId && affectedSongId !== songId) return;
+        queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, songId) });
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(commentsChannel);
     };
-  }, [orgId, queryClient, supabase]);
+  }, [orgId, queryClient, songId, supabase]);
 };
