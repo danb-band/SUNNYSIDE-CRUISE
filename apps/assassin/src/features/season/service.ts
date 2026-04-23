@@ -11,6 +11,7 @@ import {
 } from "./schema";
 import PlayerRepository from "../player/repository";
 import CommentRepository from "../comment/repository";
+import { songSchema } from "../song/schema";
 
 const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void> => {
   const season = await SeasonRepository.getSeasonById(seasonId, orgId);
@@ -107,7 +108,7 @@ const deleteSeason = async (id: string, orgId: string, userId: string): Promise<
 
   const activeSongs = await SongRepository.getSongsBySeasonId(id);
 
-  const parsedSongs = seasonSchema.array().safeParse(activeSongs);
+  const parsedSongs = songSchema.array().safeParse(activeSongs);
 
   if (!parsedSongs.success) {
     throw new Error("Invalid song responses from DB");
