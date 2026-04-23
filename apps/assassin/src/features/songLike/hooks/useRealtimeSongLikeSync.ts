@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { songLikeKeys } from "../queries/keys";
+import { songKeys } from "@features/song/queries/keys";
 import { useCurrentUserId } from "@/features/user/hooks/useCurrentUserId";
 import { useOrgId } from "@/components/org/OrgProvider";
 
@@ -29,8 +30,12 @@ export const useRealtimeSongLikeSync = (songId: string) => {
 
         const affectedSongId = nextLike?.songId ?? prevLike?.songId;
         const affectedUserId = nextLike?.userId ?? prevLike?.userId;
-        if (affectedSongId !== songId || affectedUserId !== userId) return;
+
+        if (affectedSongId && affectedSongId !== songId) return;
+        if (affectedUserId && affectedUserId !== userId) return;
+
         queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId), exact: false });
       })
       .subscribe();
 
