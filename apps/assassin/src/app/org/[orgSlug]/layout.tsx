@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUserOrgRoleAction, getOrgBySlugAction } from "@features/org/actions";
 import { OrgProvider } from "@/components/org/OrgProvider";
-import { OrgRealtimeSync } from "@/components/realtime/OrgRealtimeSync";
 
 interface OrgLayoutProps {
   children: React.ReactNode;
@@ -35,7 +34,6 @@ async function OrgLayoutContent({ params, children, modal }: OrgLayoutProps) {
 
   return (
     <OrgProvider orgId={org.id} role={role}>
-      <OrgRealtimeSync />
       {children}
       {modal}
     </OrgProvider>
