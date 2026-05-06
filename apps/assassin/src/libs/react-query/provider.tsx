@@ -3,6 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { getQueryClient } from "./getQueryClient";
+import { useAuthSync } from "@/hooks/useAuthSync";
 
 export default function Providers({ children }: { children: ReactNode }) {
   // NOTE: Avoid useState when initializing the query client if you don't
@@ -10,6 +11,8 @@ export default function Providers({ children }: { children: ReactNode }) {
   //       suspend because React will throw away the client on the initial
   //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
+
+  useAuthSync();
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
