@@ -1,5 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import { assertOrgMember } from "@features/org/service";
+import SongRepository from "@features/song/repository";
 import { CreateEventSongPayload, EventSong, eventSongSchema } from "./schema";
 import EventSongRepository from "./repository";
 
@@ -26,6 +27,15 @@ const getSongsByEvent = async (eventId: string, userId: string): Promise<EventSo
 const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Promise<EventSong> => {
   const orgId = await getEventOrgId(data.eventId);
   await assertOrgMember(userId, orgId);
+
+  const songOrgId = await SongRepository.getSongOrgIdById(data.songId);
+  if (!songOrgId) {
+    throw new Error(`Song with ID ${data.songId} does not exist.`);
+  }
+  if (songOrgId !== orgId) {
+    throw new Error("Cross-org event-song link is not allowed");
+  }
+
   const result = await EventSongRepository.addSongToEvent(data);
   const parsed = eventSongSchema.safeParse(result);
   if (!parsed.success) {

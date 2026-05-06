@@ -1,4 +1,5 @@
 import SongService from "@features/song/service";
+import SongRepository from "@features/song/repository";
 import CommentRepository from "./repository";
 import {
   Comment,
@@ -99,6 +100,21 @@ const updateComment = async (id: string, comment: CommentUpdatePayload, userId: 
 
   if (!parsedInput.success) {
     throw new Error("Invalid comment input");
+  }
+
+  const sourceOrgId = await SongRepository.getSongOrgIdById(existed.songId);
+  if (!sourceOrgId) {
+    throw new Error(`Song with ID ${existed.songId} does not exist.`);
+  }
+
+  const targetSongId = parsedInput.data.songId ?? existed.songId;
+  const targetOrgId =
+    targetSongId === existed.songId
+      ? sourceOrgId
+      : await SongService.assertSongAccess(targetSongId, userId);
+
+  if (targetOrgId !== sourceOrgId) {
+    throw new Error("Cross-org comment move is not allowed");
   }
 
   const newCommentData: Comment = { ...existed, ...parsedInput.data };

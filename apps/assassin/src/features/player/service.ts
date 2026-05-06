@@ -1,4 +1,5 @@
 import SongService from "@features/song/service";
+import SongRepository from "@features/song/repository";
 import { assertOrgMember } from "@features/org/service";
 import {
   PlayerPayload,
@@ -52,8 +53,19 @@ const updatePlayer = async (id: string, player: PlayerUpdatePayload, actorUserId
     throw new Error("Invalid player input");
   }
 
+  const sourceOrgId = await SongRepository.getSongOrgIdById(existed.songId);
+  if (!sourceOrgId) {
+    throw new Error(`Song with ID ${existed.songId} does not exist.`);
+  }
+
   const targetSongId = parsedInput.data.songId ?? existed.songId;
-  const targetOrgId = await SongService.assertSongAccess(targetSongId, actorUserId);
+  const targetOrgId =
+    targetSongId === existed.songId
+      ? sourceOrgId
+      : await SongService.assertSongAccess(targetSongId, actorUserId);
+  if (targetOrgId !== sourceOrgId) {
+    throw new Error("Cross-org player move is not allowed");
+  }
   const targetUserId = parsedInput.data.userId ?? existed.userId;
   await assertOrgMember(targetUserId, targetOrgId);
 

@@ -146,7 +146,7 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
     throw new Error(`Song with ID ${id} does not exist.`);
   }
 
-  await assertSongAccess(id, userId);
+  const sourceOrgId = await assertSongAccess(id, userId);
 
   const parsedInput = updateSongSchema.safeParse(song);
 
@@ -160,6 +160,9 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
     select: { orgId: true },
   });
   if (!targetSeason?.orgId) throw new Error("Season not found");
+  if (targetSeason.orgId !== sourceOrgId) {
+    throw new Error("Cross-org season move is not allowed");
+  }
   await assertOrgMember(userId, targetSeason.orgId);
 
   const newSongData: Song = { ...existed, ...parsedInput.data };
