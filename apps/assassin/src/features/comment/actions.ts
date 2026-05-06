@@ -5,7 +5,6 @@ import { getCurrentUser } from "@libs/supabase/auth";
 import OrgService from "@features/org/service";
 import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
-import CommentRepository from "./repository";
 
 const getOrgIdBySongId = async (songId: string): Promise<string> => {
   const orgId = await OrgService.getOrgIdBySongId(songId);
@@ -52,12 +51,8 @@ export const updateCommentAction = async (id: string, data: CommentUpdatePayload
 
 export const deleteCommentAction = async (id: string) => {
   const user = await getCurrentUser();
-  const existing = await CommentRepository.getCommentById(id);
-  if (!existing) {
-    throw new Error(`Comment with ID ${id} does not exist.`);
-  }
+  const existing = await CommentService.getCommentById(id, user.id);
   const orgId = await getOrgIdBySongId(existing.songId);
-  const result = await CommentService.deleteComment(id, user.id);
+  await CommentService.deleteComment(id, user.id);
   revalidateSeasonBoard(orgId);
-  return result;
 };
