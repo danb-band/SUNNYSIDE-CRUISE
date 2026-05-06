@@ -3,6 +3,7 @@ import { prisma } from "@libs/prisma/client";
 import {
   CreateOrgPayload,
   InviteMemberPayload,
+  orgMemberSchema,
   orgInvitationSchema,
   OrgRole,
   ROLE_HIERARCHY,
@@ -19,17 +20,13 @@ export async function assertOrgMember(
   orgId: string,
   minRole?: OrgRole,
 ): Promise<void> {
-  const member = await prisma.orgMember.findUnique({
-    where: {
-      orgId_userId: { orgId, userId },
-    },
-  });
-
-  if (!member) {
+  const member = await OrgRepository.getMember(orgId, userId);
+  const parsedMember = orgMemberSchema.safeParse(member);
+  if (!parsedMember.success) {
     throw new Error("이 조직의 멤버가 아닙니다.");
   }
 
-  if (minRole && ROLE_HIERARCHY[member.role as OrgRole] < ROLE_HIERARCHY[minRole]) {
+  if (minRole && ROLE_HIERARCHY[parsedMember.data.role] < ROLE_HIERARCHY[minRole]) {
     throw new Error(`이 작업을 수행하려면 ${minRole} 이상의 권한이 필요합니다.`);
   }
 }
@@ -86,6 +83,10 @@ const getOrgRole = async (orgId: string, userId: string): Promise<OrgRole | null
 
 const getOrgIdBySongId = async (songId: string): Promise<string | null> => {
   return await OrgRepository.getOrgIdBySongId(songId);
+};
+
+const getOrgIdByEvent = async (eventId: string): Promise<string | null> => {
+  return await OrgRepository.getOrgIdByEvent(eventId);
 };
 
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
@@ -277,6 +278,7 @@ const OrgService = {
   getOrgMembers,
   getOrgRole,
   getOrgIdBySongId,
+  getOrgIdByEvent,
   inviteMember,
   acceptInvitation,
   acceptInvitationById,

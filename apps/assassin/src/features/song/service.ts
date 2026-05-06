@@ -6,6 +6,7 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
+import { z } from "zod";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -156,15 +157,19 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
   }
 
   const targetSeasonId = parsedInput.data.seasonId ?? existed.seasonId;
-  const targetSeason = await prisma.season.findFirst({
-    where: { id: targetSeasonId },
-    select: { orgId: true },
-  });
-  if (!targetSeason?.orgId) throw new Error("Season not found");
-  if (targetSeason.orgId !== sourceOrgId) {
+  const targetSeasonOrgId = await OrgRepository.getOrgIdBySeasonId(targetSeasonId);
+  const parsedTargetSeasonOrg = z
+    .object({
+      orgId: z.uuid(),
+    })
+    .safeParse({ orgId: targetSeasonOrgId });
+  if (!parsedTargetSeasonOrg.success) {
+    throw new Error("Season not found");
+  }
+  if (parsedTargetSeasonOrg.data.orgId !== sourceOrgId) {
     throw new Error("Cross-org season move is not allowed");
   }
-  await assertOrgMember(userId, targetSeason.orgId);
+  await assertOrgMember(userId, parsedTargetSeasonOrg.data.orgId);
 
   const newSongData: Song = { ...existed, ...parsedInput.data };
 

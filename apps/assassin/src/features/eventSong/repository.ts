@@ -9,6 +9,15 @@ async function getSongsByEventId(eventId: string) {
   });
 }
 
+async function getEventIdByEventSongId(id: string): Promise<string | null> {
+  const eventSong = await prisma.calendarEventSong.findFirst({
+    where: { id },
+    select: { eventId: true },
+  });
+
+  return eventSong?.eventId ?? null;
+}
+
 async function addSongToEvent(data: CreateEventSongPayload) {
   return prisma.calendarEventSong.create({
     data: { eventId: data.eventId, songId: data.songId },
@@ -22,6 +31,7 @@ async function removeSongFromEvent(id: string) {
 
 const EventSongRepository = {
   getSongsByEventId,
+  getEventIdByEventSongId,
   addSongToEvent,
   removeSongFromEvent,
 };
