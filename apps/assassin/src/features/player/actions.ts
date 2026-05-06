@@ -2,13 +2,13 @@
 
 import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
+import OrgRepository from "@features/org/repository";
 import PlayerService from "./service";
 import { PlayerPayload, PlayerUpdatePayload } from "./schema";
-import SongRepository from "@features/song/repository";
 import PlayerRepository from "./repository";
 
 const getOrgIdBySongId = async (songId: string): Promise<string> => {
-  const orgId = await SongRepository.getSongOrgIdById(songId);
+  const orgId = await OrgRepository.getOrgIdBySongId(songId);
   if (!orgId) {
     throw new Error(`Song with ID ${songId} does not exist.`);
   }

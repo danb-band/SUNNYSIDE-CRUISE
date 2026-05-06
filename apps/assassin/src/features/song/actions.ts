@@ -2,9 +2,9 @@
 
 import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
+import OrgRepository from "@features/org/repository";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
-import SongRepository from "./repository";
 
 export const getSongAction = async (id: string) => {
   const user = await getCurrentUser();
@@ -36,7 +36,7 @@ export const createSongAction = async (
 export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await SongService.updateSong(id, data, user.id);
-  const orgId = await SongRepository.getSongOrgIdById(id);
+  const orgId = await OrgRepository.getOrgIdBySongId(id);
   if (!orgId) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
@@ -46,7 +46,7 @@ export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
 
 export const deleteSongAction = async (id: string) => {
   const user = await getCurrentUser();
-  const orgId = await SongRepository.getSongOrgIdById(id);
+  const orgId = await OrgRepository.getOrgIdBySongId(id);
   if (!orgId) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }

@@ -73,6 +73,24 @@ async function getOrgMembers(orgId: string) {
   });
 }
 
+async function getOrgIdBySongId(songId: string): Promise<string | null> {
+  const song = await prisma.song.findFirst({
+    where: {
+      id: songId,
+      deletedAt: null,
+    },
+    select: {
+      season: {
+        select: {
+          orgId: true,
+        },
+      },
+    },
+  });
+
+  return song?.season.orgId ?? null;
+}
+
 async function updateMemberRole(orgId: string, userId: string, role: "OWNER" | "MEMBER") {
   return await prisma.orgMember.update({
     where: { orgId_userId: { orgId, userId } },
@@ -203,6 +221,7 @@ const OrgRepository = {
   addMember,
   getMember,
   getOrgMembers,
+  getOrgIdBySongId,
   updateMemberRole,
   removeMember,
   createInvitation,

@@ -1,5 +1,5 @@
 import SongService from "@features/song/service";
-import SongRepository from "@features/song/repository";
+import OrgRepository from "@features/org/repository";
 import CommentRepository from "./repository";
 import {
   Comment,
@@ -102,7 +102,7 @@ const updateComment = async (id: string, comment: CommentUpdatePayload, userId: 
     throw new Error("Invalid comment input");
   }
 
-  const sourceOrgId = await SongRepository.getSongOrgIdById(existed.songId);
+  const sourceOrgId = await OrgRepository.getOrgIdBySongId(existed.songId);
   if (!sourceOrgId) {
     throw new Error(`Song with ID ${existed.songId} does not exist.`);
   }

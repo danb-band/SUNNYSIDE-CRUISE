@@ -1,5 +1,5 @@
 import SongService from "@features/song/service";
-import SongRepository from "@features/song/repository";
+import OrgRepository from "@features/org/repository";
 import { assertOrgMember } from "@features/org/service";
 import {
   PlayerPayload,
@@ -53,7 +53,7 @@ const updatePlayer = async (id: string, player: PlayerUpdatePayload, actorUserId
     throw new Error("Invalid player input");
   }
 
-  const sourceOrgId = await SongRepository.getSongOrgIdById(existed.songId);
+  const sourceOrgId = await OrgRepository.getOrgIdBySongId(existed.songId);
   if (!sourceOrgId) {
     throw new Error(`Song with ID ${existed.songId} does not exist.`);
   }

@@ -1,5 +1,6 @@
 import SeasonService from "@features/season/service";
 import { assertOrgMember } from "@features/org/service";
+import OrgRepository from "@features/org/repository";
 import SongRepository from "./repository";
 import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
@@ -21,7 +22,7 @@ const assertSongExists = async (songId: string): Promise<void> => {
 };
 
 const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
-  const orgId = await SongRepository.getSongOrgIdById(songId);
+  const orgId = await OrgRepository.getOrgIdBySongId(songId);
   if (!orgId) {
     throw new Error(`Song with ID ${songId} does not exist.`);
   }
@@ -30,7 +31,7 @@ const assertSongAccess = async (songId: string, userId: string): Promise<string>
 };
 
 const getSongByIdForUser = async (id: string, userId: string): Promise<Song | null> => {
-  const orgId = await SongRepository.getSongOrgIdById(id);
+  const orgId = await OrgRepository.getOrgIdBySongId(id);
   if (!orgId) return null;
 
   try {

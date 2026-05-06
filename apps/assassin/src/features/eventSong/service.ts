@@ -1,6 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import { assertOrgMember } from "@features/org/service";
-import SongRepository from "@features/song/repository";
+import OrgRepository from "@features/org/repository";
 import { CreateEventSongPayload, EventSong, eventSongSchema } from "./schema";
 import EventSongRepository from "./repository";
 
@@ -28,7 +28,7 @@ const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Pro
   const orgId = await getEventOrgId(data.eventId);
   await assertOrgMember(userId, orgId);
 
-  const songOrgId = await SongRepository.getSongOrgIdById(data.songId);
+  const songOrgId = await OrgRepository.getOrgIdBySongId(data.songId);
   if (!songOrgId) {
     throw new Error(`Song with ID ${data.songId} does not exist.`);
   }
