@@ -1,15 +1,20 @@
 import { Season } from "@features/season/schema";
 import { SeasonColumn } from "./SeasonColumn";
+import { AddSeasonCard } from "./AddSeasonCard";
+import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { useSongDragDrop } from "@/features/song/hooks/useSongDragDrop";
 import { SongItem } from "../song/SongItem";
 
 interface SeasonBoardProps {
   seasons: Season[];
+  canCreate?: boolean;
 }
 
-export function SeasonBoard({ seasons }: SeasonBoardProps) {
+export function SeasonBoard({ seasons, canCreate = false }: SeasonBoardProps) {
   const sortedSeasons = [...seasons].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  const nextSortOrder = sortedSeasons.length;
+  useRealtimeSongSync();
   const { sensors, activeSong, handleDragStart, handleDragCancel, handleDragEnd } = useSongDragDrop(
     { seasonIds: sortedSeasons.map((season) => season.id) },
   );
@@ -23,7 +28,7 @@ export function SeasonBoard({ seasons }: SeasonBoardProps) {
       onDragEnd={handleDragEnd}
     >
       <div className="h-full min-h-0 overflow-hidden">
-        {sortedSeasons.length === 0 ? (
+        {sortedSeasons.length === 0 && !canCreate ? (
           <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
             <div className="text-center space-y-3 sm:space-y-4 p-6 sm:p-8">
               <p className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100">
@@ -40,11 +45,13 @@ export function SeasonBoard({ seasons }: SeasonBoardProps) {
               {sortedSeasons.map((season) => (
                 <SeasonColumn key={season.id} season={season} variant="carousel" />
               ))}
+              {canCreate && <AddSeasonCard nextSortOrder={nextSortOrder} />}
             </div>
             <div className="hidden h-full min-h-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 auto-rows-fr sm:grid">
               {sortedSeasons.map((season) => (
                 <SeasonColumn key={season.id} season={season} />
               ))}
+              {canCreate && <AddSeasonCard nextSortOrder={nextSortOrder} />}
             </div>
           </div>
         )}

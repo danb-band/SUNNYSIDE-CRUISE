@@ -8,10 +8,13 @@ import { AppNav } from "@/components/navigation/AppNav";
 import { useSeasons } from "@/features/season/queries/useSeasons";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
 import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
+import { useOrgRole } from "../org/OrgProvider";
+
 export function SeasonPageClient() {
   const [showArchived, setShowArchived] = useState(false);
   const seasonsQuery = useSeasons();
   const seasons = seasonsQuery.data ?? [];
+  const role = useOrgRole();
   useRealtimeSeasonSync();
   useRealtimeSongSync();
 
@@ -44,7 +47,7 @@ export function SeasonPageClient() {
             </Button>
           </div>
           <div className="flex-1 min-h-0">
-            <SeasonBoard seasons={displayedSeasons} />
+            <SeasonBoard seasons={displayedSeasons} canCreate={role === "OWNER" && !showArchived} />
           </div>
         </div>
       </div>
