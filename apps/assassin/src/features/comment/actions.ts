@@ -4,6 +4,16 @@ import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
 import CommentService from "./service";
 import { CommentUpdatePayload } from "./schema";
+import SongRepository from "@features/song/repository";
+import CommentRepository from "./repository";
+
+const getOrgIdBySongId = async (songId: string): Promise<string> => {
+  const orgId = await SongRepository.getSongOrgIdById(songId);
+  if (!orgId) {
+    throw new Error(`Song with ID ${songId} does not exist.`);
+  }
+  return orgId;
+};
 
 export const getCommentAction = async (id: string) => {
   const user = await getCurrentUser();
@@ -24,29 +34,29 @@ export const getCommentsBySongPaginatedAction = async (
   return await CommentService.getCommentsBySongIdPaginated(songId, limit, user.id, cursor);
 };
 
-export const createCommentAction = async (
-  data: { songId: string; content: string },
-  orgId: string,
-) => {
+export const createCommentAction = async (data: { songId: string; content: string }) => {
   const user = await getCurrentUser();
   const result = await CommentService.createComment({ ...data, userId: user.id }, user.id);
+  const orgId = await getOrgIdBySongId(result.songId);
   revalidateSeasonBoard(orgId);
   return result;
 };
 
-export const updateCommentAction = async (
-  id: string,
-  orgId: string,
-  data: CommentUpdatePayload,
-) => {
+export const updateCommentAction = async (id: string, data: CommentUpdatePayload) => {
   const user = await getCurrentUser();
   const result = await CommentService.updateComment(id, data, user.id);
+  const orgId = await getOrgIdBySongId(result.songId);
   revalidateSeasonBoard(orgId);
   return result;
 };
 
-export const deleteCommentAction = async (id: string, songId: string, orgId: string) => {
+export const deleteCommentAction = async (id: string) => {
   const user = await getCurrentUser();
+  const existing = await CommentRepository.getCommentById(id);
+  if (!existing) {
+    throw new Error(`Comment with ID ${id} does not exist.`);
+  }
+  const orgId = await getOrgIdBySongId(existing.songId);
   const result = await CommentService.deleteComment(id, user.id);
   revalidateSeasonBoard(orgId);
   return result;

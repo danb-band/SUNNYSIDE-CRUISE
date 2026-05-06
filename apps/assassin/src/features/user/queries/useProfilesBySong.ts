@@ -3,7 +3,7 @@ import { getProfilesBySongAction } from "../actions";
 import { userKeys } from "./keys";
 import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useAllProfiles = (songId: string) => {
+export const useProfilesBySong = (songId: string) => {
   const orgId = useOrgId();
 
   return useSuspenseQuery({

@@ -9,7 +9,7 @@ export const useDeleteSong = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id, orgId),
+    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
       queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });

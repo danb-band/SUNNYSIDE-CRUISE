@@ -11,7 +11,7 @@ export const useUpdateSong = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SongUpdatePayload }) =>
-      updateSongAction(id, orgId, data),
+      updateSongAction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
       queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });

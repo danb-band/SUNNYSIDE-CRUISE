@@ -8,7 +8,7 @@ export const useToggleRsvp = (eventId: string) => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: () => toggleRsvpAction(eventId, orgId),
+    mutationFn: () => toggleRsvpAction(eventId),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: rsvpKeys.byUser(orgId, eventId) });
 

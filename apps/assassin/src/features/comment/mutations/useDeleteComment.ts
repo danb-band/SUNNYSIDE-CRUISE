@@ -8,9 +8,8 @@ export const useDeleteComment = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id, songId }: { id: string; songId: string }) =>
-      deleteCommentAction(id, songId, orgId),
-    onSuccess: (data, variables) => {
+    mutationFn: (variables: { id: string; songId: string }) => deleteCommentAction(variables.id),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, variables.songId) });
     },
   });

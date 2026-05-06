@@ -10,9 +10,20 @@ export const useUpdatePlayer = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: PlayerUpdatePayload }) =>
-      updatePlayerAction(id, orgId, data),
+      updatePlayerAction(id, data),
     onSuccess: (updatedPlayer) => {
       queryClient.invalidateQueries({ queryKey: playerKeys.bySong(orgId, updatedPlayer.songId) });
+      queryClient.invalidateQueries({
+        predicate: ({ queryKey }) =>
+          queryKey[0] === playerKeys.all[0] &&
+          queryKey.some(
+            (part) =>
+              typeof part === "object" &&
+              part !== null &&
+              "orgId" in part &&
+              (part as { orgId?: string }).orgId === orgId,
+          ),
+      });
     },
   });
 };

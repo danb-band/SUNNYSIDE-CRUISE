@@ -9,7 +9,7 @@ export const useCreateComment = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (data: CommentFormData) => createCommentAction(data, orgId),
+    mutationFn: (data: CommentFormData) => createCommentAction(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, data.songId) });
     },
