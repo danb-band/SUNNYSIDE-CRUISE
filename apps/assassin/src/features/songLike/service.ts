@@ -3,9 +3,9 @@ import SongLikeRepository from "./repository";
 import { songLikeSchema } from "./schema";
 
 const getUserLikeIdForSong = async (songId: string, userId: string): Promise<string | null> => {
-  await SongService.assertSongAccess(songId, userId);
+  const orgId = await SongService.assertSongAccess(songId, userId);
 
-  const like = await SongLikeRepository.getLikeBySongAndUser(songId, userId);
+  const like = await SongLikeRepository.getLikeBySongAndUser(songId, userId, orgId);
 
   if (!like) {
     return null;
@@ -21,17 +21,20 @@ const getUserLikeIdForSong = async (songId: string, userId: string): Promise<str
   return parsed.data.id;
 };
 
-const toggleLike = async (songId: string, userId: string): Promise<{ likeId: string | null }> => {
-  await SongService.assertSongAccess(songId, userId);
+const toggleLike = async (
+  songId: string,
+  userId: string,
+): Promise<{ likeId: string | null; orgId: string }> => {
+  const orgId = await SongService.assertSongAccess(songId, userId);
 
-  const existing = await SongLikeRepository.getLikeBySongAndUser(songId, userId);
+  const existing = await SongLikeRepository.getLikeBySongAndUser(songId, userId, orgId);
 
   if (existing) {
-    await SongLikeRepository.deleteLike(songId, userId);
-    return { likeId: null };
+    await SongLikeRepository.deleteLike(songId, userId, orgId);
+    return { likeId: null, orgId };
   }
 
-  const created = await SongLikeRepository.createLike(songId, userId);
+  const created = await SongLikeRepository.createLike(songId, userId, orgId);
 
   const parsed = songLikeSchema.safeParse(created);
 
@@ -40,7 +43,7 @@ const toggleLike = async (songId: string, userId: string): Promise<{ likeId: str
     throw new Error("Failed to create like");
   }
 
-  return { likeId: parsed.data.id };
+  return { likeId: parsed.data.id, orgId };
 };
 
 const SongLikeService = {
