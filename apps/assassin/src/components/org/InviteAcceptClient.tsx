@@ -4,7 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { acceptInvitationByIdAction, cancelInvitationByInviteeAction } from "../actions";
+import {
+  acceptInvitationByIdAction,
+  cancelInvitationByInviteeAction,
+} from "@/features/org/actions";
 
 interface Props {
   invitationId: string;
@@ -43,7 +46,9 @@ export function InviteAcceptClient({ invitationId, orgName }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">초대를 거절했습니다</h1>
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+            초대를 거절했습니다
+          </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {orgName} 조직의 초대를 거절했습니다.
           </p>
@@ -64,12 +69,7 @@ export function InviteAcceptClient({ invitationId, orgName }: Props) {
         </div>
         {error && <p className="text-sm text-red-500 text-center">{error}</p>}
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1"
-            disabled={isPending}
-            onClick={handleCancel}
-          >
+          <Button variant="outline" className="flex-1" disabled={isPending} onClick={handleCancel}>
             거절
           </Button>
           <Button

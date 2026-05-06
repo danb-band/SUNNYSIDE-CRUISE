@@ -1,7 +1,38 @@
 import OrgRepository from "./repository";
 import { prisma } from "@libs/prisma/client";
-import { assertOrgMember } from "@libs/auth/assertOrgMember";
-import { CreateOrgPayload, InviteMemberPayload, UpdateOrgPayload } from "./schema";
+import {
+  CreateOrgPayload,
+  InviteMemberPayload,
+  orgInvitationSchema,
+  OrgRole,
+  ROLE_HIERARCHY,
+  UpdateOrgPayload,
+} from "./schema";
+
+/**
+ * 현재 유저가 해당 org의 멤버인지 검사한다.
+ * minRole이 지정되면 해당 권한 이상인지도 검사한다.
+ * 검사 실패 시 Error를 throw한다.
+ */
+export async function assertOrgMember(
+  userId: string,
+  orgId: string,
+  minRole?: OrgRole,
+): Promise<void> {
+  const member = await prisma.orgMember.findUnique({
+    where: {
+      orgId_userId: { orgId, userId },
+    },
+  });
+
+  if (!member) {
+    throw new Error("이 조직의 멤버가 아닙니다.");
+  }
+
+  if (minRole && ROLE_HIERARCHY[member.role as OrgRole] < ROLE_HIERARCHY[minRole]) {
+    throw new Error(`이 작업을 수행하려면 ${minRole} 이상의 권한이 필요합니다.`);
+  }
+}
 
 const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
   const existing = await OrgRepository.getOrgBySlug(input.slug);
@@ -9,11 +40,12 @@ const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
     throw new Error("이미 사용 중인 slug입니다.");
   }
 
-  const org = await OrgRepository.createOrg(input);
-  // 생성자를 OWNER로 자동 등록
-  await OrgRepository.addMember(org.id, creatorUserId, "OWNER");
-
-  return org;
+  return await prisma.$transaction(async (tx) => {
+    const org = await OrgRepository.createOrg(input, tx);
+    // 생성자를 OWNER로 자동 등록
+    await OrgRepository.addMember(org.id, creatorUserId, "OWNER", tx);
+    return org;
+  });
 };
 
 const getOrgById = async (orgId: string) => {
@@ -45,6 +77,11 @@ const deleteOrg = async (orgId: string, requesterId: string) => {
 const getOrgMembers = async (orgId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId);
   return await OrgRepository.getOrgMembers(orgId);
+};
+
+const getOrgRole = async (orgId: string, userId: string): Promise<OrgRole | null> => {
+  const member = await OrgRepository.getMember(orgId, userId);
+  return (member?.role as OrgRole) ?? null;
 };
 
 const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
@@ -110,7 +147,25 @@ const acceptInvitation = async (token: string, userId: string, userEmail: string
 
 const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
-  await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+  const invitation = await OrgRepository.getInvitationByIdAndOrgId(invitationId, orgId);
+
+  const parsedInvitation = orgInvitationSchema.safeParse(invitation); // 유효성 검사
+
+  if (!parsedInvitation.success) {
+    throw new Error("유효하지 않은 초대입니다.");
+  }
+
+  if (parsedInvitation.data.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+
+  const updated = await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+
+  const parsedUpdated = orgInvitationSchema.safeParse(updated);
+
+  if (!parsedUpdated.success) {
+    throw new Error("초대 상태 업데이트 실패");
+  }
+
+  return parsedUpdated.data;
 };
 
 const removeMember = async (orgId: string, targetUserId: string, requesterId: string) => {
@@ -157,6 +212,7 @@ const getInvitationInfo = async (params: { token?: string; id?: string }, userEm
 
 const acceptInvitationById = async (invitationId: string, userId: string, userEmail: string) => {
   const invitation = await OrgRepository.getInvitationById(invitationId);
+
   if (!invitation) throw new Error("INVALID_TOKEN");
   if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
   if (invitation.status === "CANCELLED") throw new Error("REVOKED");
@@ -182,9 +238,11 @@ const acceptInvitationById = async (invitationId: string, userId: string, userEm
 
 const cancelInvitationByInvitee = async (invitationId: string, userEmail: string) => {
   const invitation = await OrgRepository.getInvitationById(invitationId);
+
   if (!invitation) throw new Error("INVALID_TOKEN");
   if (invitation.email !== userEmail.toLowerCase().trim()) throw new Error("EMAIL_MISMATCH");
   if (invitation.status !== "PENDING") throw new Error("REVOKED");
+
   await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
 };
 
@@ -213,6 +271,7 @@ const OrgService = {
   updateOrg,
   deleteOrg,
   getOrgMembers,
+  getOrgRole,
   inviteMember,
   acceptInvitation,
   acceptInvitationById,

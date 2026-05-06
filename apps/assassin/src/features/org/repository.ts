@@ -2,6 +2,7 @@ import { prisma } from "@libs/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import { CreateOrgPayload, UpdateOrgPayload } from "./schema";
 import crypto from "crypto";
+import { TransactionClient } from "@/libs/prisma/types";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -25,8 +26,9 @@ async function getOrgsByUserId(userId: string) {
   });
 }
 
-async function createOrg(input: CreateOrgPayload) {
-  return await prisma.org.create({
+async function createOrg(input: CreateOrgPayload, tx?: TransactionClient) {
+  const client = tx ?? prisma;
+  return await client.org.create({
     data: {
       name: input.name,
       slug: input.slug,
@@ -89,7 +91,7 @@ async function createInvitation(
   orgId: string,
   email: string,
   role: "MEMBER",
-  tx?: Prisma.TransactionClient,
+  tx?: TransactionClient,
 ) {
   const plainToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashToken(plainToken);
@@ -131,6 +133,12 @@ async function getPendingInvitationsByEmail(email: string) {
 async function getValidPendingInvitationByEmail(orgId: string, email: string) {
   return await prisma.orgInvitation.findFirst({
     where: { orgId, email, status: "PENDING", expiresAt: { gt: new Date() } },
+  });
+}
+
+async function getInvitationByIdAndOrgId(id: string, orgId: string) {
+  return await prisma.orgInvitation.findFirst({
+    where: { id, orgId },
   });
 }
 
@@ -199,6 +207,7 @@ const OrgRepository = {
   removeMember,
   createInvitation,
   getInvitationByToken,
+  getInvitationByIdAndOrgId,
   getInvitationById,
   getValidPendingInvitationByEmail,
   getPendingInvitationsByOrg,

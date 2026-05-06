@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { leaveOrgAction } from "../actions";
+import { leaveOrgAction } from "@/features/org/actions";
 
 export function LeaveOrgButton({ orgId }: { orgId: string }) {
   const router = useRouter();

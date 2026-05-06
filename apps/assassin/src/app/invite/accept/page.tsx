@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import OrgService from "@features/org/service";
-import { InviteAcceptClient } from "@features/org/components/InviteAcceptClient";
+import { InviteAcceptClient } from "@/components/org/InviteAcceptClient";
 
 function getErrorContent(code: string): { title: string; description: string } {
   switch (code) {

@@ -3,11 +3,7 @@
 import { useRouter } from "next/navigation";
 import { SongDetailModal } from "./SongDetailModal";
 
-export function SongModalRoute({
-  songId,
-}: {
-  songId: string;
-}) {
+export function SongModalRoute({ songId }: { songId: string }) {
   const router = useRouter();
 
   return (

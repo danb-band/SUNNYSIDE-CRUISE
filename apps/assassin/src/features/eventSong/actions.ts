@@ -1,20 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@libs/supabase/auth";
 import EventSongService from "./service";
 import { CreateEventSongPayload } from "./schema";
 
 export const getSongsByEventAction = async (eventId: string) => {
-  return EventSongService.getSongsByEvent(eventId);
+  const user = await getCurrentUser();
+  return EventSongService.getSongsByEvent(eventId, user.id);
 };
 
 export const addSongToEventAction = async (data: CreateEventSongPayload) => {
-  const result = await EventSongService.addSongToEvent(data);
-  revalidatePath("/calendar");
-  return result;
+  const user = await getCurrentUser();
+  return EventSongService.addSongToEvent(data, user.id);
 };
 
 export const removeEventSongAction = async (id: string) => {
-  await EventSongService.removeSongFromEvent(id);
-  revalidatePath("/calendar");
+  const user = await getCurrentUser();
+  await EventSongService.removeSongFromEvent(id, user.id);
 };

@@ -28,7 +28,8 @@ export const getOrgBySlugAction = async (slug: string) => {
   return await OrgService.getOrgBySlug(slug);
 };
 
-export const getUserOrgsAction = async (userId: string) => {
+export const getUserOrgsAction = async () => {
+  const userId = await getCurrentUserId();
   return await OrgService.getUserOrgs(userId);
 };
 
@@ -45,6 +46,11 @@ export const deleteOrgAction = async (orgId: string) => {
 export const getOrgMembersAction = async (orgId: string) => {
   const userId = await getCurrentUserId();
   return await OrgService.getOrgMembers(orgId, userId);
+};
+
+export const getCurrentUserOrgRoleAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getOrgRole(orgId, userId);
 };
 
 export const inviteMemberAction = async (

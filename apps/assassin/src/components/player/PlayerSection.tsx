@@ -15,7 +15,7 @@ interface PlayerSectionProps {
 export function PlayerSection({ songId }: PlayerSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const { players } = usePlayerLogic(songId);
-  useRealtimePlayerSync();
+  useRealtimePlayerSync(songId);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

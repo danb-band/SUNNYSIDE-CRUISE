@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventSongKeys } from "@features/eventSong/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 type EventSongRow = {
   id?: string;
@@ -11,6 +12,7 @@ type EventSongRow = {
 
 export const useRealtimeEventSongSync = (eventId: string) => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export const useRealtimeEventSongSync = (eventId: string) => {
           // DELETE payload에 eventId가 없는 것 — 어느 이벤트인지 모르므로 일단 invalidate
           if (affectedEventId !== undefined && affectedEventId !== eventId) return;
 
-          queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(eventId) });
+          queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, eventId) });
         },
       )
       .subscribe();
@@ -42,5 +44,5 @@ export const useRealtimeEventSongSync = (eventId: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, eventId, supabase]);
+  }, [orgId, queryClient, eventId, supabase]);
 };

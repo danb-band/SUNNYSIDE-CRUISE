@@ -15,7 +15,7 @@ interface CommentSectionProps {
 export function CommentSection({ songId }: CommentSectionProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteCommentsBySong(songId);
-  useRealtimeCommentSync();
+  useRealtimeCommentSync(songId);
   const currentUserId = useCurrentUserId();
   const sentinelRef = useRef<HTMLDivElement>(null);
 

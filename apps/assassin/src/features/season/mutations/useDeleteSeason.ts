@@ -1,16 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteSongAction } from "../actions";
-import { songKeys } from "../queries/keys";
+import { deleteSeasonAction } from "../actions";
+import { seasonKeys } from "../queries/keys";
+import { songKeys } from "@features/song/queries/keys";
 import { eventSongKeys } from "@features/eventSong/queries/keys";
 import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useDeleteSong = () => {
+export const useDeleteSeason = () => {
   const queryClient = useQueryClient();
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id),
+    mutationFn: ({ id }: { id: string }) => deleteSeasonAction(id, orgId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
       queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
       queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
     },

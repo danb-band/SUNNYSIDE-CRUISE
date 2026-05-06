@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@libs/supabase/server";
 import { getUserOrgsAction, getPendingInvitationsForUserAction } from "@features/org/actions";
-import { OrgSelectPageClient } from "@/features/org/components/OrgSelectPageClient";
+import { OrgSelectPageClient } from "@/components/org/OrgSelectPageClient";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
@@ -14,7 +14,7 @@ export default async function HomePage() {
   }
 
   const [orgs, pendingInvitations] = await Promise.all([
-    getUserOrgsAction(user.id).catch((e) => {
+    getUserOrgsAction().catch((e) => {
       console.error("[Home] getUserOrgsAction 실패:", e);
       return [];
     }),

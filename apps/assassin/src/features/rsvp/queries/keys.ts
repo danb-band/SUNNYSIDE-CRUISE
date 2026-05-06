@@ -1,5 +1,7 @@
 export const rsvpKeys = {
   all: ["rsvp"] as const,
-  byEvent: (eventId: string) => [...rsvpKeys.all, "byEvent", eventId] as const,
-  byUser: (eventId: string) => [...rsvpKeys.all, "byUser", eventId] as const,
+  byEvent: (orgId: string, eventId: string) =>
+    [...rsvpKeys.all, "byEvent", { orgId, eventId }] as const,
+  byUser: (orgId: string, eventId: string) =>
+    [...rsvpKeys.all, "byUser", { orgId, eventId }] as const,
 };

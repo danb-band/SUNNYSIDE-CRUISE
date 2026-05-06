@@ -2,12 +2,13 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getCalendarEventsByMonthAction } from "../actions";
 import { calendarEventKeys } from "./keys";
 import type { CalendarEvent } from "../schema";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useCalendarEvents = (year: number, month: number) => {
   const orgId = useOrgId();
   return useSuspenseQuery({
     queryKey: calendarEventKeys.lists(orgId, year, month),
+
     queryFn: () => getCalendarEventsByMonthAction(year, month, orgId),
     select: (data: CalendarEvent[]) =>
       [...data].sort((a, b) => {

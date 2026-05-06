@@ -8,6 +8,7 @@ import type { Song } from "../schema";
 import { songKeys } from "../queries/keys";
 import { useUpdateSong } from "../mutations/useUpdateSong";
 import { createSongSortOrderHelpers } from "../utils/songSortOrderHelpers";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 const SEASON_DROPPABLE_PREFIX = "season:";
 
@@ -24,6 +25,7 @@ interface UseSongDragDropOptions {
 
 export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const updateSong = useUpdateSong();
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
   const sortOrderGap = 100;
@@ -37,13 +39,13 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
   );
 
   const getSeasonSongs = useCallback(
-    (seasonId: string) => queryClient.getQueryData<Song[]>(songKeys.bySeason(seasonId)) ?? [],
-    [queryClient],
+    (seasonId: string) => queryClient.getQueryData<Song[]>(songKeys.bySeason(orgId, seasonId)) ?? [],
+    [orgId, queryClient],
   );
 
   const findSongById = useCallback(
     (songId: string) => {
-      const fromDetail = queryClient.getQueryData<Song>(songKeys.detail(songId));
+      const fromDetail = queryClient.getQueryData<Song>(songKeys.detail(orgId, songId));
       if (fromDetail) return fromDetail;
 
       for (const seasonId of seasonIds) {
@@ -54,7 +56,7 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
 
       return null;
     },
-    [getSeasonSongs, queryClient, seasonIds],
+    [getSeasonSongs, orgId, queryClient, seasonIds],
   );
 
   const findSeasonIdBySongId = useCallback(
@@ -76,16 +78,16 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
 
   const updateSeasonSongs = useCallback(
     (seasonId: string, updater: (songs: Song[]) => Song[]) => {
-      queryClient.setQueryData(songKeys.bySeason(seasonId), (prev: Song[] | undefined) => {
+      queryClient.setQueryData(songKeys.bySeason(orgId, seasonId), (prev: Song[] | undefined) => {
         return updater(prev ?? []);
       });
     },
-    [queryClient],
+    [orgId, queryClient],
   );
 
   const updateSongDetail = useCallback(
     (songId: string, data: Partial<Song>) => {
-      queryClient.setQueryData(songKeys.detail(songId), (prev: Song | undefined) => {
+      queryClient.setQueryData(songKeys.detail(orgId, songId), (prev: Song | undefined) => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -93,7 +95,7 @@ export const useSongDragDrop = ({ seasonIds }: UseSongDragDropOptions) => {
         };
       });
     },
-    [queryClient],
+    [orgId, queryClient],
   );
 
   const normalizeSeasonSortOrders = useCallback(

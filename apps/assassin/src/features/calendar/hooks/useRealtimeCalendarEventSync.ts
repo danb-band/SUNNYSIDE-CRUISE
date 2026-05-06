@@ -1,11 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { CalendarEvent } from "@features/calendar/schema";
 import { calendarEventKeys } from "@features/calendar/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
+import { useOrgId } from "@/components/org/OrgProvider";
+
+type RealtimeCalendarEventRow = { orgId?: string; org_id?: string };
 
 export const useRealtimeCalendarEventSync = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
@@ -18,16 +21,23 @@ export const useRealtimeCalendarEventSync = () => {
           const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
           if (!eventType) return;
 
+          const next = payload.new as RealtimeCalendarEventRow | null;
+          const prev = payload.old as RealtimeCalendarEventRow | null;
+          const payloadOrgId = next?.orgId ?? next?.org_id ?? prev?.orgId ?? prev?.org_id;
+
+          if (payloadOrgId && payloadOrgId !== orgId) {
+            return;
+          }
+
           queryClient.invalidateQueries({
-            queryKey: ["calendarEvents", "list"],
-            exact: false,
+            queryKey: calendarEventKeys.lists(orgId),
           });
-        }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(calendarEventChannel);
     };
-  }, [queryClient, supabase]);
+  }, [orgId, queryClient, supabase]);
 };

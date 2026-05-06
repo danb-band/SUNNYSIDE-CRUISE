@@ -1,8 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-
-export type OrgRole = "OWNER" | "MEMBER";
+import type { OrgRole } from "@/features/org/schema";
 
 const OrgContext = createContext<{ orgId: string; role: OrgRole | null }>({
   orgId: "",
@@ -24,7 +23,7 @@ export function OrgProvider({
 export function useOrgId(): string {
   const context = useContext(OrgContext);
 
-  if (!context) {
+  if (!context?.orgId) {
     throw new Error("useOrgId must be used within OrgProvider");
   }
 

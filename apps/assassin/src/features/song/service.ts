@@ -1,4 +1,5 @@
 import SeasonService from "@features/season/service";
+import { assertOrgMember } from "@features/org/service";
 import SongRepository from "./repository";
 import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
@@ -19,7 +20,56 @@ const assertSongExists = async (songId: string): Promise<void> => {
   }
 };
 
+const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
+  const orgId = await SongRepository.getSongOrgIdById(songId);
+  if (!orgId) {
+    throw new Error(`Song with ID ${songId} does not exist.`);
+  }
+  await assertOrgMember(userId, orgId);
+  return orgId;
+};
+
+const getSongByIdForUser = async (id: string, userId: string): Promise<Song | null> => {
+  const orgId = await SongRepository.getSongOrgIdById(id);
+  if (!orgId) return null;
+
+  try {
+    await assertOrgMember(userId, orgId);
+  } catch {
+    return null;
+  }
+
+  const song = await SongRepository.getSongByIdInOrg(id, orgId);
+  if (!song) return null;
+
+  const parsed = songSchema.safeParse(song);
+  if (!parsed.success) {
+    throw new Error("Invalid song response from DB");
+  }
+
+  return parsed.data;
+};
+
+const getSongByIdInOrg = async (
+  id: string,
+  orgId: string,
+  userId: string,
+): Promise<Song | null> => {
+  await assertOrgMember(userId, orgId);
+
+  const song = await SongRepository.getSongByIdInOrg(id, orgId);
+  if (!song) return null;
+
+  const parsed = songSchema.safeParse(song);
+  if (!parsed.success) {
+    throw new Error("Invalid song response from DB");
+  }
+
+  return parsed.data;
+};
+
 const createSong = async (song: SongPayload, orgId: string) => {
+  await assertOrgMember(song.userId, orgId);
   await SeasonService.assertSeasonExists(song.seasonId, orgId);
 
   let result;
@@ -70,7 +120,12 @@ const getSongById = async (id: string): Promise<Song | null> => {
   return parsed.data;
 };
 
-const getSongsBySeasonId = async (seasonId: string, orgId: string): Promise<Array<Song>> => {
+const getSongsBySeasonId = async (
+  seasonId: string,
+  orgId: string,
+  userId: string,
+): Promise<Array<Song>> => {
+  await assertOrgMember(userId, orgId);
   await SeasonService.assertSeasonExists(seasonId, orgId);
 
   const songs = await SongRepository.getSongsBySeasonId(seasonId);
@@ -84,18 +139,31 @@ const getSongsBySeasonId = async (seasonId: string, orgId: string): Promise<Arra
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload) => {
+const updateSong = async (id: string, song: SongUpdatePayload, userId: string) => {
   const existed = await getSongById(id);
 
   if (!existed) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
 
+  const sourceOrgId = await assertSongAccess(id, userId);
+
   const parsedInput = updateSongSchema.safeParse(song);
 
   if (!parsedInput.success) {
     throw new Error("Invalid song input");
   }
+
+  const targetSeasonId = parsedInput.data.seasonId ?? existed.seasonId;
+  const targetSeason = await prisma.season.findFirst({
+    where: { id: targetSeasonId },
+    select: { orgId: true },
+  });
+  if (!targetSeason?.orgId) throw new Error("Season not found");
+  if (targetSeason.orgId !== sourceOrgId) {
+    throw new Error("Cross-org season move is not allowed");
+  }
+  await assertOrgMember(userId, targetSeason.orgId);
 
   const newSongData: Song = { ...existed, ...parsedInput.data };
 
@@ -110,12 +178,14 @@ const updateSong = async (id: string, song: SongUpdatePayload) => {
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string) => {
+const deleteSong = async (id: string, userId: string) => {
   const song = await SongRepository.getSongById(id);
 
   if (!song) {
     throw new Error(`Song with ID ${id} does not exist.`);
   }
+
+  await assertSongAccess(id, userId);
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -131,8 +201,11 @@ const deleteSong = async (id: string) => {
 
 const SongService = {
   assertSongExists,
+  assertSongAccess,
   createSong,
   getSongById,
+  getSongByIdForUser,
+  getSongByIdInOrg,
   getSongsBySeasonId,
   updateSong,
   deleteSong,

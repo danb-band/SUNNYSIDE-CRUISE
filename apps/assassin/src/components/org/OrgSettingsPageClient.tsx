@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useRealtimeOrgSync } from "@/features/org/hooks/useRealtimeOrgSync";
 import { useOrgBySlug } from "@/features/org/queries/useOrgBySlug";
-import { useOrgRole } from "@libs/org/OrgProvider";
-import { useUpdateOrg } from "../mutations/useUpdateOrg";
-import { DeleteOrgButton } from "./DeleteOrgButton";
-import { LeaveOrgButton } from "./LeaveOrgButton";
+import { useOrgRole } from "@/components/org/OrgProvider";
+import { useUpdateOrg } from "@/features/org/mutations/useUpdateOrg";
+import { DeleteOrgButton } from "@/components/org/DeleteOrgButton";
+import { LeaveOrgButton } from "@/components/org/LeaveOrgButton";
 
 interface OrgSettingsPageClientProps {
   orgSlug: string;
