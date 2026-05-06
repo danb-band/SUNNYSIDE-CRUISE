@@ -7,13 +7,16 @@ import { SeasonBoard } from "./SeasonBoard";
 import { AppNav } from "@/components/navigation/AppNav";
 import { useSeasons } from "@/features/season/queries/useSeasons";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
-import { useOrgRole } from "@/libs/org/OrgProvider";
+import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
+import { useOrgRole } from "../org/OrgProvider";
+
 export function SeasonPageClient() {
   const [showArchived, setShowArchived] = useState(false);
   const seasonsQuery = useSeasons();
   const seasons = seasonsQuery.data ?? [];
   const role = useOrgRole();
   useRealtimeSeasonSync();
+  useRealtimeSongSync();
 
   const activeSeasons = seasons.filter((s) => !s.isArchived);
   const archivedSeasons = seasons.filter((s) => s.isArchived);

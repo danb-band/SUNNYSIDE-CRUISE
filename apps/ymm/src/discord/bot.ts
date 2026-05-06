@@ -1,11 +1,22 @@
 import { Client, GatewayIntentBits, Message, TextChannel } from 'discord.js'
 import { execSync } from 'child_process'
-import { DISCORD_TOKEN, PROJECT_ROOT, DISCORD_COMMAND_ID, DISCORD_RESULT_ID, DISCORD_LOG_ID } from '../config.js'
+import {
+  DISCORD_TOKEN,
+  PROJECT_ROOT,
+  DISCORD_COMMAND_ID,
+  DISCORD_RESULT_ID,
+  DISCORD_LOG_ID,
+  GITHUB_REPO,
+  GITHUB_TOKEN,
+} from '../config.js'
 import { downloadAttachments, buildPrompt, cleanup } from './attachments.js'
 import { getSession, setSession, clearSession } from './sessionStore.js'
 import { killProcess, getProcess, setProcess, clearProcess } from './processStore.js'
 import { runClaudeCode } from '../claude/runner.js'
 import { runCodexCode } from '../codex/runner.js'
+import { runPoorDev } from '../poorDev/runner.js'
+import { clearPhase, getPhase } from '../poorDev/stateStore.js'
+import { clearContext } from '../poorDev/contextStore.js'
 import { fetchIssue, buildIssuePrompt, createPR } from '../github/client.js'
 import { splitIntoChunks } from '../utils/ansi.js'
 import { getAgent, setAgent } from './agentStore.js'
@@ -14,7 +25,7 @@ const COMMANDS = [
   { name: '!done',         desc: '현재 세션 종료 (다음 메시지부터 새 작업으로 시작)' },
   { name: '!stop',         desc: '실행 중인 작업 강제 종료 + 세션 초기화' },
   { name: '!session',      desc: '현재 활성 세션 ID 확인' },
-  { name: '!agent',        desc: '현재 에이전트 확인 또는 변경 (!agent claude | !agent codex)' },
+  { name: '!agent',        desc: '현재 에이전트 확인 또는 변경 (!agent claude | !agent codex | !agent poor-dev)' },
   { name: '!cost',         desc: 'Claude Code 세션의 토큰 사용량 확인' },
   { name: '#숫자',         desc: 'GitHub 이슈 번호로 Claude Code 작업 시작 (예: #42)' },
   { name: 'team N:작업',  desc: 'N개 워커로 멀티 에이전트 병렬 실행 (예: team 3:버튼 컴포넌트 리팩터)' },
@@ -55,8 +66,19 @@ client.on('messageCreate', async (message: Message) => {
 
   // !stop — 실행 중인 Claude 프로세스 강제 종료 + 세션 초기화
   if (text === '!stop') {
+    const phase = getPhase(message.channelId)
     const killed = killProcess(message.channelId)
     clearSession(message.channelId)
+    clearPhase(message.channelId)
+    clearContext(message.channelId)
+    if (phase.phase === 'coding') {
+      await message.reply(
+        killed
+          ? `🛑 작업을 중단했습니다. 브랜치 \`${phase.branchName}\` 에서 이어서 작업할 수 있습니다.`
+          : `ℹ️ 실행 중인 프로세스는 없지만, 브랜치 \`${phase.branchName}\` 에서 이어서 작업할 수 있습니다.`,
+      )
+      return
+    }
     await message.reply(killed
       ? '🛑 실행 중인 작업을 중단했습니다. 세션도 초기화되었습니다.'
       : '실행 중인 작업이 없습니다.')
@@ -66,6 +88,8 @@ client.on('messageCreate', async (message: Message) => {
   // !done — 현재 채널의 세션 종료
   if (text === '!done') {
     clearSession(message.channelId)
+    clearPhase(message.channelId)
+    clearContext(message.channelId)
     await message.reply('🔄 세션이 초기화되었습니다. 다음 메시지부터 새 작업으로 시작합니다.')
     return
   }
@@ -78,12 +102,21 @@ client.on('messageCreate', async (message: Message) => {
   }
 
   // !agent — 현재 에이전트 확인 / 변경
-  if (text === '!agent' || text === '!agent claude' || text === '!agent codex') {
+  if (text === '!agent' || text.startsWith('!agent ')) {
     if (text === '!agent') {
       await message.reply(`현재 에이전트: **${getAgent(message.channelId)}**`)
       return
     }
-    const nextAgent = text.endsWith('codex') ? 'codex' : 'claude'
+    const next = text.replace('!agent', '').trim().toLowerCase()
+    if (!['claude', 'codex', 'poor-dev'].includes(next)) {
+      await message.reply('사용법: `!agent claude` | `!agent codex` | `!agent poor-dev`')
+      return
+    }
+    if (next === 'poor-dev' && (!GITHUB_REPO || !GITHUB_TOKEN)) {
+      await message.reply('❌ `poor-dev` 모드는 `GITHUB_REPO`와 `GITHUB_TOKEN` 설정이 필요합니다.')
+      return
+    }
+    const nextAgent = next as 'claude' | 'codex' | 'poor-dev'
     setAgent(message.channelId, nextAgent)
     await message.reply(`✅ 현재 채널 에이전트가 **${nextAgent}** 로 변경되었습니다.`)
     return
@@ -198,18 +231,21 @@ client.on('messageCreate', async (message: Message) => {
   if (!text && !hasAttachments) return
 
   const agent = getAgent(message.channelId)
-  const processingMsg = await message.reply(
-    agent === 'claude' ? '⏳ Claude Code가 작업 중입니다...' : '⏳ Codex가 작업 중입니다...',
-  )
-
   const sessionId = getSession(message.channelId)
 
   const tempFiles: string[] = []
   try {
     const attachmentPaths = await downloadAttachments(message, tempFiles)
     const prompt = buildPrompt(text, attachmentPaths)
+    const processingMsg = agent === 'poor-dev'
+      ? null
+      : await message.reply(
+          agent === 'claude'
+            ? '⏳ Claude Code가 작업 중입니다...'
+            : '⏳ Codex가 작업 중입니다...',
+        )
     const child = agent === 'claude'
-      ? runClaudeCode(prompt, message, processingMsg, tempFiles, {
+      ? runClaudeCode(prompt, message, processingMsg!, tempFiles, {
           sessionId,
           onSessionId: (id) => setSession(message.channelId, id),
           onDone: () => clearProcess(message.channelId),
@@ -217,29 +253,40 @@ client.on('messageCreate', async (message: Message) => {
           resultChannel: getTextChannel(DISCORD_RESULT_ID),
           commandChannel: getTextChannel(DISCORD_COMMAND_ID),
         })
-      : runCodexCode(prompt, message, processingMsg, tempFiles, {
-          onDone: () => clearProcess(message.channelId),
-          logChannel: getTextChannel(DISCORD_LOG_ID),
-          resultChannel: getTextChannel(DISCORD_RESULT_ID),
-          commandChannel: getTextChannel(DISCORD_COMMAND_ID),
-          onApprovalRequest: (_approvalPrompt) => {
-            const ch = getTextChannel(DISCORD_COMMAND_ID) ?? (message.channel as TextChannel)
-            return new Promise((resolve) => {
-              const collector = ch.createMessageCollector({
-                filter: (m: Message) => !m.author.bot && /^[yn]$/i.test(m.content.trim()),
-                max: 1,
-                time: 60_000,
+      : agent === 'codex'
+        ? runCodexCode(prompt, message, processingMsg!, tempFiles, {
+            onDone: () => clearProcess(message.channelId),
+            logChannel: getTextChannel(DISCORD_LOG_ID),
+            resultChannel: getTextChannel(DISCORD_RESULT_ID),
+            commandChannel: getTextChannel(DISCORD_COMMAND_ID),
+            onApprovalRequest: (_approvalPrompt) => {
+              const ch = getTextChannel(DISCORD_COMMAND_ID) ?? (message.channel as TextChannel)
+              return new Promise((resolve) => {
+                const collector = ch.createMessageCollector({
+                  filter: (m: Message) => !m.author.bot && /^[yn]$/i.test(m.content.trim()),
+                  max: 1,
+                  time: 60_000,
+                })
+                collector.on('collect', (m: Message) => resolve(m.content.trim()))
+                collector.on('end', (_collected: unknown, reason: string) => {
+                  if (reason === 'time') resolve('n')
+                })
               })
-              collector.on('collect', (m: Message) => resolve(m.content.trim()))
-              collector.on('end', (_collected: unknown, reason: string) => {
-                if (reason === 'time') resolve('n')
-              })
-            })
-          },
-        })
-    setProcess(message.channelId, child)
+            },
+          })
+        : await runPoorDev(prompt, message, {
+            logChannel: getTextChannel(DISCORD_LOG_ID),
+            resultChannel: getTextChannel(DISCORD_RESULT_ID),
+            commandChannel: getTextChannel(DISCORD_COMMAND_ID),
+          }, {
+            tempFiles,
+            onDone: () => clearProcess(message.channelId),
+            onProcessSwitch: (nextChild) => setProcess(message.channelId, nextChild),
+          })
+    if (child) setProcess(message.channelId, child)
+    else await cleanup(tempFiles)
   } catch (err) {
-    await processingMsg.edit(`❌ 첨부파일 다운로드 실패: ${(err as Error).message}`)
+    await message.reply(`❌ 작업 시작 실패: ${(err as Error).message}`)
     await cleanup(tempFiles)
   }
 })

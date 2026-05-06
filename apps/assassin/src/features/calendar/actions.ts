@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidateCalendar } from "@libs/cache/calendar";
+import { getCurrentUser } from "@libs/supabase/auth";
 import CalendarEventService from "./service";
 import type { CalendarEventPayload, CalendarEventUpdatePayload } from "./schema";
 
 export const getCalendarEventsAction = async (orgId: string) => {
-  return await CalendarEventService.getAllCalendarEvents(orgId);
+  const user = await getCurrentUser();
+  return await CalendarEventService.getAllCalendarEvents(orgId, user.id);
 };
 
 export const getCalendarEventsByMonthAction = async (
@@ -13,12 +15,14 @@ export const getCalendarEventsByMonthAction = async (
   month: number,
   orgId: string,
 ) => {
-  return await CalendarEventService.getCalendarEventsByMonth(year, month, orgId);
+  const user = await getCurrentUser();
+  return await CalendarEventService.getCalendarEventsByMonth(year, month, orgId, user.id);
 };
 
 export const createCalendarEventAction = async (data: CalendarEventPayload, orgId: string) => {
-  const result = await CalendarEventService.createCalendarEvent(data, orgId);
-  revalidateCalendar();
+  const user = await getCurrentUser();
+  const result = await CalendarEventService.createCalendarEvent(data, orgId, user.id);
+  revalidateCalendar(orgId);
   return result;
 };
 
@@ -27,12 +31,14 @@ export const updateCalendarEventAction = async (
   orgId: string,
   data: CalendarEventUpdatePayload,
 ) => {
-  const result = await CalendarEventService.updateCalendarEvent(id, orgId, data);
-  revalidateCalendar();
+  const user = await getCurrentUser();
+  const result = await CalendarEventService.updateCalendarEvent(id, orgId, data, user.id);
+  revalidateCalendar(orgId);
   return result;
 };
 
 export const deleteCalendarEventAction = async (id: string, orgId: string) => {
-  await CalendarEventService.deleteCalendarEvent(id, orgId);
-  revalidateCalendar();
+  const user = await getCurrentUser();
+  await CalendarEventService.deleteCalendarEvent(id, orgId, user.id);
+  revalidateCalendar(orgId);
 };

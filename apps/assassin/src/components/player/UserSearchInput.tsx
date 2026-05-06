@@ -5,12 +5,13 @@ import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/libs/shadcn/utils";
-import { useAllProfiles } from "@/features/user/queries/useAllProfiles";
+import { useProfilesBySong } from "@/features/user/queries/useProfilesBySong";
 
 const MAX_VISIBLE_ITEMS = 4;
 const ITEM_HEIGHT = 38;
 
 interface UserSearchInputProps {
+  songId: string;
   value: string;
   onChange: (userId: string, realName: string) => void;
   placeholder?: string;
@@ -18,12 +19,13 @@ interface UserSearchInputProps {
 }
 
 export function UserSearchInput({
+  songId,
   value,
   onChange,
   placeholder = "이름 검색",
   className,
 }: UserSearchInputProps) {
-  const { data: profiles } = useAllProfiles();
+  const { data: profiles } = useProfilesBySong(songId);
 
   const selectedProfile = profiles?.find((p) => p.id === value);
   const selectedRealName = selectedProfile?.realName ?? "";

@@ -1,9 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Season } from "@features/season/schema";
 import { seasonKeys } from "@features/season/queries/keys";
+import { songKeys } from "@features/song/queries/keys";
+import { eventSongKeys } from "@features/eventSong/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
+
+type RealtimeSeasonRow = { orgId?: string; org_id?: string };
 
 export const useRealtimeSeasonSync = () => {
   const queryClient = useQueryClient();
@@ -13,41 +16,19 @@ export const useRealtimeSeasonSync = () => {
 
   useEffect(() => {
     const seasonsChannel = supabase
-      .channel("realtime:season")
+      .channel(`realtime:season:${orgId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "season" }, (payload) => {
-        const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE" | undefined;
+        const next = payload.new as RealtimeSeasonRow | null;
+        const prev = payload.old as RealtimeSeasonRow | null;
+        const payloadOrgId = next?.orgId ?? next?.org_id ?? prev?.orgId ?? prev?.org_id;
 
-        if (eventType === "DELETE") {
-          const deletedId = (payload.old as Season | undefined)?.id;
-          if (!deletedId) return;
-          queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) =>
-            prev ? prev.filter((season) => season.id !== deletedId) : prev,
-          );
-          queryClient.removeQueries({ queryKey: seasonKeys.detail(deletedId) });
+        if (payloadOrgId && payloadOrgId !== orgId) {
           return;
         }
 
-        const nextSeason = payload.new as Season | undefined;
-        if (!nextSeason) return;
-
-        if (eventType === "INSERT") {
-          queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
-            if (!prev) return [nextSeason];
-            const exists = prev.some((season) => season.id === nextSeason.id);
-            return exists ? prev : [...prev, nextSeason];
-          });
-          queryClient.setQueryData(seasonKeys.detail(nextSeason.id), nextSeason);
-          return;
-        }
-
-        // UPDATE
-        queryClient.setQueryData(seasonKeys.lists(orgId), (prev: Season[] | undefined) => {
-          if (!prev) return prev;
-          return prev.map((season) =>
-            season.id === nextSeason.id ? { ...season, ...nextSeason } : season,
-          );
-        });
-        queryClient.setQueryData(seasonKeys.detail(nextSeason.id), nextSeason);
+        queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
       })
       .subscribe();
 

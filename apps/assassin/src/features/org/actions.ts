@@ -28,7 +28,8 @@ export const getOrgBySlugAction = async (slug: string) => {
   return await OrgService.getOrgBySlug(slug);
 };
 
-export const getUserOrgsAction = async (userId: string) => {
+export const getUserOrgsAction = async () => {
+  const userId = await getCurrentUserId();
   return await OrgService.getUserOrgs(userId);
 };
 
@@ -45,6 +46,11 @@ export const deleteOrgAction = async (orgId: string) => {
 export const getOrgMembersAction = async (orgId: string) => {
   const userId = await getCurrentUserId();
   return await OrgService.getOrgMembers(orgId, userId);
+};
+
+export const getCurrentUserOrgRoleAction = async (orgId: string) => {
+  const userId = await getCurrentUserId();
+  return await OrgService.getOrgRole(orgId, userId);
 };
 
 export const inviteMemberAction = async (
@@ -104,9 +110,10 @@ export const inviteMemberAction = async (
       ...(emailError && { emailError }),
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : "초대 생성에 실패했습니다.";
     return {
       success: false,
-      error: error instanceof Error ? error.message : "초대 생성에 실패했습니다.",
+      error: message === "ALREADY_INVITED" ? "이미 유효한 초대가 진행 중입니다." : message,
     };
   }
 };
@@ -138,4 +145,39 @@ export const leaveOrgAction = async (orgId: string) => {
 export const getPendingInvitationsAction = async (orgId: string) => {
   const userId = await getCurrentUserId();
   return await OrgService.getPendingInvitations(orgId, userId);
+};
+
+export const getInvitationInfoAction = async (params: { token?: string; id?: string }) => {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return await OrgService.getInvitationInfo(params, user?.email ?? undefined);
+};
+
+export const acceptInvitationByIdAction = async (invitationId: string) => {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !user.email) throw new Error("인증이 필요합니다.");
+  return await OrgService.acceptInvitationById(invitationId, user.id, user.email);
+};
+
+export const cancelInvitationByInviteeAction = async (invitationId: string) => {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !user.email) throw new Error("인증이 필요합니다.");
+  await OrgService.cancelInvitationByInvitee(invitationId, user.email);
+};
+
+export const getPendingInvitationsForUserAction = async () => {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return [];
+  return await OrgService.getPendingInvitationsForUser(user.email);
 };

@@ -1,25 +1,25 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { createServerSupabaseClient } from "@libs/supabase/server";
-import { getOrgBySlugAction, getOrgMembersAction } from "@features/org/actions";
-import { OrgProvider } from "@libs/org/OrgProvider";
-import type { OrgRole } from "@libs/org/OrgProvider";
-import type { OrgMember } from "@features/org/schema";
+import { getCurrentUserOrgRoleAction, getOrgBySlugAction } from "@features/org/actions";
+import { OrgProvider } from "@/components/org/OrgProvider";
 
 interface OrgLayoutProps {
   children: React.ReactNode;
+  modal: React.ReactNode;
   params: Promise<{ orgSlug: string }>;
 }
 
-export default function OrgLayout({ children, params }: OrgLayoutProps) {
+export default function OrgLayout({ children, modal, params }: OrgLayoutProps) {
   return (
     <Suspense>
-      <OrgLayoutContent params={params}>{children}</OrgLayoutContent>
+      <OrgLayoutContent params={params} modal={modal}>
+        {children}
+      </OrgLayoutContent>
     </Suspense>
   );
 }
 
-async function OrgLayoutContent({ params, children }: OrgLayoutProps) {
+async function OrgLayoutContent({ params, children, modal }: OrgLayoutProps) {
   const { orgSlug } = await params;
   const org = await getOrgBySlugAction(orgSlug).catch(() => null);
 
@@ -27,20 +27,15 @@ async function OrgLayoutContent({ params, children }: OrgLayoutProps) {
     notFound();
   }
 
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let role: OrgRole | null = null;
-  if (user) {
-    const members = await getOrgMembersAction(org.id).catch(() => [] as OrgMember[]);
-    role = (members.find((m: OrgMember) => m.userId === user.id)?.role as OrgRole) ?? null;
+  const role = await getCurrentUserOrgRoleAction(org.id).catch(() => null);
+  if (!role) {
+    notFound();
   }
 
   return (
     <OrgProvider orgId={org.id} role={role}>
       {children}
+      {modal}
     </OrgProvider>
   );
 }

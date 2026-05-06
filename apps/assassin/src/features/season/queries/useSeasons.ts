@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSeasonsAction } from "../actions";
 import { seasonKeys } from "./keys";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useSeasons = () => {
   const orgId = useOrgId();

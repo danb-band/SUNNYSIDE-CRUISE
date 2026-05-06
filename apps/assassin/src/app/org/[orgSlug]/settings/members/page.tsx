@@ -5,7 +5,7 @@ import {
   getOrgMembersAction,
   getPendingInvitationsAction,
 } from "@features/org/actions";
-import { MembersPageClient } from "@features/org/components/MembersPageClient";
+import { MembersPageClient } from "@/components/org/MembersPageClient";
 
 interface Props {
   params: Promise<{ orgSlug: string }>;

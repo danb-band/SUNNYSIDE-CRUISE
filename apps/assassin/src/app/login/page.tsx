@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@libs/supabase/client";
+import { AUTH_BROADCAST_CHANNEL } from "@/hooks/useAuthSync";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,9 @@ export default function LoginPage() {
       return;
     }
 
+    const channel = new BroadcastChannel(AUTH_BROADCAST_CHANNEL);
+    channel.postMessage({ event: "SIGNED_IN" });
+    channel.close();
     setIsLoading(false);
     router.push(next ?? "/");
   };

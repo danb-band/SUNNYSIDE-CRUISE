@@ -1,13 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSongsBySeasonAction } from "../actions";
 import { songKeys } from "./keys";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useSongsBySeason = (seasonId: string) => {
   const orgId = useOrgId();
 
   return useSuspenseQuery({
-    queryKey: songKeys.bySeason(seasonId),
+    queryKey: songKeys.bySeason(orgId, seasonId),
     queryFn: () => getSongsBySeasonAction(seasonId, orgId),
   });
 };

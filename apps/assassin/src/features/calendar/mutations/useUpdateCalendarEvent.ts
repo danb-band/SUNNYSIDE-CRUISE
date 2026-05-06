@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateCalendarEventAction } from "../actions";
 import { calendarEventKeys } from "../queries/keys";
 import type { CalendarEventUpdatePayload } from "../schema";
-import { useOrgId } from "@libs/org/OrgProvider";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useUpdateCalendarEvent = () => {
   const queryClient = useQueryClient();
@@ -12,7 +12,7 @@ export const useUpdateCalendarEvent = () => {
     mutationFn: ({ id, data }: { id: string; data: CalendarEventUpdatePayload }) =>
       updateCalendarEventAction(id, orgId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarEventKeys.all });
+      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId) });
     },
   });
 };

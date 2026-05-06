@@ -11,6 +11,7 @@ import { CommentSection } from "@/components/comment/CommentSection";
 import { PlayerSection } from "@/components/player/PlayerSection";
 import { PlayerSectionSkeleton } from "@/components/player/PlayerSectionSkeleton";
 import { useSong } from "@/features/song/queries/useSong";
+import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 
 interface SongDetailModalProps {
   songId: string;
@@ -23,6 +24,7 @@ export function SongDetailModal({ songId, open, onOpenChange }: SongDetailModalP
   const params = useParams<{ orgSlug?: string }>();
 
   const song = useSong(songId).data;
+  useRealtimeSongSync();
 
   if (!song) {
     return null;
