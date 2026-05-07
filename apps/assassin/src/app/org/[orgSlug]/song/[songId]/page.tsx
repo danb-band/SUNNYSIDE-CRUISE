@@ -15,6 +15,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import { cacheLife, cacheTag } from "next/cache";
 import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
+import { SONG_DETAIL_CACHE_TAG } from "@/libs/cache/songDetail";
 import { getCurrentUser } from "@libs/supabase/auth";
 
 interface Props {
@@ -48,6 +49,7 @@ async function OrgSongPageContent({
 }) {
   "use cache";
   cacheTag(`${SEASON_BOARD_CACHE_TAG}-${orgId}`);
+  cacheTag(`${SONG_DETAIL_CACHE_TAG}-${songId}`);
   cacheLife("max");
 
   const queryClient = getQueryClient();
