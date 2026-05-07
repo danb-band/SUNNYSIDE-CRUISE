@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSongAction } from "../actions";
 import { songKeys } from "../queries/keys";
-import { eventSongKeys } from "@features/eventSong/queries/keys";
-import type { SongUpdatePayload } from "../schema";
+import type { Song, SongUpdatePayload } from "../schema";
 import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useUpdateSong = () => {
@@ -12,9 +11,16 @@ export const useUpdateSong = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SongUpdatePayload }) =>
       updateSongAction(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
-      queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
+
+    onSuccess: (song) => {
+      queryClient.setQueryData(songKeys.detail(orgId, song.id), song);
+
+      queryClient.setQueriesData<Song[]>(
+        { queryKey: songKeys.bySeason(orgId, song.seasonId) },
+        (old) => old?.map((s) => (s.id === song.id ? song : s)),
+      );
+
+      queryClient.invalidateQueries({ queryKey: songKeys.byOrg(orgId) });
     },
   });
 };

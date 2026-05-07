@@ -67,7 +67,8 @@ export const useRealtimeSongSync = () => {
           return;
         }
 
-        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.byOrg(orgId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.bySeason(orgId, seasonId) });
         queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
       })
       .subscribe();

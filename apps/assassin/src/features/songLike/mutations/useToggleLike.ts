@@ -20,7 +20,7 @@ export const useToggleLike = (songId: string) => {
         old ? { ...old, likeCount: old.likeCount + delta } : old,
       );
 
-      queryClient.setQueriesData<Song[]>({ queryKey: songKeys.lists(orgId) }, (old) =>
+      queryClient.setQueriesData<Song[]>({ queryKey: songKeys.byOrg(orgId) }, (old) =>
         old?.map((s) => (s.id === songId ? { ...s, likeCount: s.likeCount + delta } : s)),
       );
     },
