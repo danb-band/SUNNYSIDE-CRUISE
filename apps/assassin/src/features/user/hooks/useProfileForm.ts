@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { updateProfileSchema, UpdateProfilePayload } from "../schema";
 
 export type ProfileFormData = {
+  userId: string;
   name: string;
 };
 
@@ -17,6 +18,7 @@ interface UseProfileFormProps {
 
 export const useProfileForm = ({ initialData, onSubmit }: UseProfileFormProps) => {
   const [formData, setFormData] = useState<ProfileFormData>({
+    userId: initialData.userId || "",
     name: initialData.name || "",
   });
 
