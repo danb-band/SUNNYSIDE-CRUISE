@@ -119,7 +119,7 @@ const deleteSeason = async (id: string, orgId: string, userId: string): Promise<
       for (const song of parsedSongs.data) {
         await PlayerRepository.deletePlayersBySongId(song.id, tx);
         await CommentRepository.deleteCommentsBySongId(song.id, tx);
-        await SongRepository.deleteSong(song.id, tx);
+        await SongRepository.deleteSong(song.id, orgId, tx);
       }
     });
 

@@ -9,7 +9,7 @@ export const useDeleteSong = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id),
+    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id, orgId),
 
     onSuccess: (_, { id, seasonId }) => {
       if (seasonId) {

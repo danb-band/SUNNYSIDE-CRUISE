@@ -139,59 +139,44 @@ const getSongsBySeasonId = async (
   return parsed.data;
 };
 
-const updateSong = async (id: string, song: SongUpdatePayload, userId: string) => {
-  const existed = await getSongById(id);
+const updateSong = async (id: string, orgId: string, song: SongUpdatePayload, userId: string) => {
+  await assertOrgMember(userId, orgId);
 
-  if (!existed) {
-    throw new Error(`Song with ID ${id} does not exist.`);
-  }
+  const existed = await SongRepository.getSongByIdInOrg(id, orgId);
+  if (!existed) throw new Error("Song not found");
 
-  const sourceOrgId = await assertSongAccess(id, userId);
+  const parsedExisted = songSchema.safeParse(existed);
+  if (!parsedExisted.success) throw new Error("Invalid song data");
 
   const parsedInput = updateSongSchema.safeParse(song);
+  if (!parsedInput.success) throw new Error("Invalid song input");
 
-  if (!parsedInput.success) {
-    throw new Error("Invalid song input");
-  }
-
-  const targetSeasonId = parsedInput.data.seasonId ?? existed.seasonId;
+  const targetSeasonId = parsedInput.data.seasonId ?? parsedExisted.data.seasonId;
   const targetSeason = await prisma.season.findFirst({
     where: { id: targetSeasonId },
     select: { orgId: true },
   });
   if (!targetSeason?.orgId) throw new Error("Season not found");
-  if (targetSeason.orgId !== sourceOrgId) {
-    throw new Error("Cross-org season move is not allowed");
-  }
-  await assertOrgMember(userId, targetSeason.orgId);
+  if (targetSeason.orgId !== orgId) throw new Error("Cross-org season move is not allowed");
 
-  const newSongData: Song = { ...existed, ...parsedInput.data };
+  const newSongData: Song = { ...parsedExisted.data, ...parsedInput.data };
 
   const updatedSong = await SongRepository.updateSong(id, newSongData);
 
   const parsedOutput = songSchema.safeParse(updatedSong);
-
-  if (!parsedOutput.success) {
-    throw new Error("Invalid song response from DB");
-  }
+  if (!parsedOutput.success) throw new Error("Invalid song response from DB");
 
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, userId: string) => {
-  const song = await SongRepository.getSongById(id);
-
-  if (!song) {
-    throw new Error(`Song with ID ${id} does not exist.`);
-  }
-
-  await assertSongAccess(id, userId);
+const deleteSong = async (id: string, orgId: string, userId: string) => {
+  await assertOrgMember(userId, orgId);
 
   try {
     await prisma.$transaction(async (tx) => {
       await PlayerRepository.deletePlayersBySongId(id, tx);
       await CommentRepository.deleteCommentsBySongId(id, tx);
-      await SongRepository.deleteSong(id, tx);
+      await SongRepository.deleteSong(id, orgId, tx);
     });
   } catch (error) {
     console.error(`Failed to delete song ${id}:`, error);

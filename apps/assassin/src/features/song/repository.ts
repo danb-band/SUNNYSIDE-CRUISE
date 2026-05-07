@@ -106,7 +106,7 @@ async function createSong(input: SongPayload, tx?: TransactionClient): Promise<S
 }
 
 async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
-  const song = await prisma.song.update({
+  return prisma.song.update({
     where: { id },
     data: {
       name: input.name,
@@ -117,13 +117,12 @@ async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
       seasonId: input.seasonId,
     },
   });
-  return song;
 }
 
-async function deleteSong(id: string, tx?: TransactionClient) {
+async function deleteSong(id: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
-  await prismaClient.song.update({
-    where: { id },
+  await prismaClient.song.updateMany({
+    where: { id, season: { orgId }, deletedAt: null },
     data: { deletedAt: new Date() },
   });
 }

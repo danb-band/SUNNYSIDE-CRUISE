@@ -10,7 +10,7 @@ export const useUpdateSong = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SongUpdatePayload }) =>
-      updateSongAction(id, data),
+      updateSongAction(id, orgId, data),
 
     onSuccess: (song) => {
       queryClient.setQueryData(songKeys.detail(orgId, song.id), song);
