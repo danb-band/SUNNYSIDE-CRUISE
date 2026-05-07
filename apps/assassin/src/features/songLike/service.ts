@@ -1,9 +1,13 @@
-import SongService from "@features/song/service";
+import { assertOrgMember } from "@features/org/service";
 import SongLikeRepository from "./repository";
 import { songLikeSchema } from "./schema";
 
-const getUserLikeIdForSong = async (songId: string, userId: string): Promise<string | null> => {
-  const orgId = await SongService.assertSongAccess(songId, userId);
+const getUserLikeIdForSong = async (
+  songId: string,
+  orgId: string,
+  userId: string,
+): Promise<string | null> => {
+  await assertOrgMember(userId, orgId);
 
   const like = await SongLikeRepository.getLikeBySongAndUser(songId, userId, orgId);
 
@@ -23,15 +27,16 @@ const getUserLikeIdForSong = async (songId: string, userId: string): Promise<str
 
 const toggleLike = async (
   songId: string,
+  orgId: string,
   userId: string,
-): Promise<{ likeId: string | null; orgId: string }> => {
-  const orgId = await SongService.assertSongAccess(songId, userId);
+): Promise<{ likeId: string | null }> => {
+  await assertOrgMember(userId, orgId);
 
   const existing = await SongLikeRepository.getLikeBySongAndUser(songId, userId, orgId);
 
   if (existing) {
     await SongLikeRepository.deleteLike(songId, userId, orgId);
-    return { likeId: null, orgId };
+    return { likeId: null };
   }
 
   const created = await SongLikeRepository.createLike(songId, userId, orgId);
@@ -43,7 +48,7 @@ const toggleLike = async (
     throw new Error("Failed to create like");
   }
 
-  return { likeId: parsed.data.id, orgId };
+  return { likeId: parsed.data.id };
 };
 
 const SongLikeService = {

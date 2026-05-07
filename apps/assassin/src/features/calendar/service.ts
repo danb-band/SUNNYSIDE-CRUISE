@@ -34,7 +34,11 @@ const getCalendarEventsByMonth = async (
   return parsed.data;
 };
 
-const getCalendarEventById = async (id: string, orgId: string, userId: string): Promise<CalendarEvent> => {
+const getCalendarEventById = async (
+  id: string,
+  orgId: string,
+  userId: string,
+): Promise<CalendarEvent> => {
   await assertOrgMember(userId, orgId);
   const event = await CalendarEventRepository.getCalendarEventById(id, orgId);
   const parsed = calendarEventSchema.safeParse(event);
@@ -61,17 +65,14 @@ const updateCalendarEvent = async (
   userId: string,
 ): Promise<CalendarEvent> => {
   await assertOrgMember(userId, orgId);
-  const existing = await CalendarEventRepository.getCalendarEventById(id, orgId);
-  const parsedExisting = calendarEventSchema.safeParse(existing);
-  if (!parsedExisting.success) throw new Error("Invalid calendar event response from DB");
+
   const parsedInput = updateCalendarEventSchema.safeParse(input);
   if (!parsedInput.success) throw new Error("Invalid calendar event input");
-  const result = await CalendarEventRepository.updateCalendarEvent(id, orgId, {
-    ...parsedExisting.data,
-    ...parsedInput.data,
-  });
+
+  const result = await CalendarEventRepository.updateCalendarEvent(id, orgId, parsedInput.data);
   const parsed = calendarEventSchema.safeParse(result);
   if (!parsed.success) throw new Error("Invalid calendar event response from DB");
+
   return parsed.data;
 };
 

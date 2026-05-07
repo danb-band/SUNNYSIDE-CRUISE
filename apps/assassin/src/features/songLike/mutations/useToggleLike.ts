@@ -10,7 +10,7 @@ export const useToggleLike = (songId: string) => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: () => toggleSongLikeAction(songId),
+    mutationFn: () => toggleSongLikeAction(songId, orgId),
     onSuccess: (data) => {
       const delta = data.likeId !== null ? 1 : -1;
 

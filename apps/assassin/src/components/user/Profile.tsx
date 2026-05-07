@@ -14,7 +14,7 @@ export function Profile() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { formState, isProcessing, handleSubmit, handleChangeField } = useProfileHandlers({
-    initialData: { name: profile?.name ?? "" },
+    initialData: { userId: profile?.id ?? "", name: profile?.name ?? "" },
     onSuccess: (message) => {
       setSuccessMessage(message);
     },

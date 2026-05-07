@@ -8,6 +8,6 @@ export const useSongLiked = (songId: string) => {
 
   return useQuery({
     queryKey: songLikeKeys.byUser(orgId, songId),
-    queryFn: () => getSongLikedByUserAction(songId),
+    queryFn: () => getSongLikedByUserAction(songId, orgId),
   });
 };

@@ -1,20 +1,18 @@
-import { prisma } from "@libs/prisma/client";
 import { assertOrgMember } from "@features/org/service";
-import SongRepository from "@features/song/repository";
+import OrgRepository from "@features/org/repository";
 import { CreateEventSongPayload, EventSong, eventSongSchema } from "./schema";
 import EventSongRepository from "./repository";
+import { z } from "zod";
 
-const getEventOrgId = async (eventId: string): Promise<string> => {
-  const event = await prisma.calendarEvent.findFirst({
-    where: { id: eventId },
-    select: { orgId: true },
-  });
-  if (!event?.orgId) throw new Error("CalendarEvent not found");
-  return event.orgId;
+const getOrgIdByEvent = async (eventId: string): Promise<string> => {
+  const orgId = await OrgRepository.getOrgIdByEvent(eventId);
+  const parsedOrgId = z.uuid().safeParse(orgId);
+  if (!parsedOrgId.success) throw new Error("CalendarEvent not found");
+  return parsedOrgId.data;
 };
 
 const getSongsByEvent = async (eventId: string, userId: string): Promise<EventSong[]> => {
-  const orgId = await getEventOrgId(eventId);
+  const orgId = await getOrgIdByEvent(eventId);
   await assertOrgMember(userId, orgId);
   const results = await EventSongRepository.getSongsByEventId(eventId);
   const parsed = eventSongSchema.array().safeParse(results);
@@ -25,10 +23,10 @@ const getSongsByEvent = async (eventId: string, userId: string): Promise<EventSo
 };
 
 const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Promise<EventSong> => {
-  const orgId = await getEventOrgId(data.eventId);
+  const orgId = await getOrgIdByEvent(data.eventId);
   await assertOrgMember(userId, orgId);
 
-  const songOrgId = await SongRepository.getSongOrgIdById(data.songId);
+  const songOrgId = await OrgRepository.getOrgIdBySongId(data.songId);
   if (!songOrgId) {
     throw new Error(`Song with ID ${data.songId} does not exist.`);
   }
@@ -45,12 +43,12 @@ const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Pro
 };
 
 const removeSongFromEvent = async (id: string, userId: string): Promise<void> => {
-  const eventSong = await prisma.calendarEventSong.findFirst({
-    where: { id },
-    select: { event: { select: { orgId: true } } },
-  });
-  if (!eventSong?.event.orgId) throw new Error("EventSong not found");
-  await assertOrgMember(userId, eventSong.event.orgId);
+  const eventId = await EventSongRepository.getEventIdByEventSongId(id);
+  const parsedEventId = z.uuid().safeParse(eventId);
+  if (!parsedEventId.success) throw new Error("EventSong not found");
+
+  const orgId = await getOrgIdByEvent(parsedEventId.data);
+  await assertOrgMember(userId, orgId);
   await EventSongRepository.removeSongFromEvent(id);
 };
 

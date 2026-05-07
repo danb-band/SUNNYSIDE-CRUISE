@@ -2,13 +2,12 @@
 
 import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
+import OrgService from "@features/org/service";
 import PlayerService from "./service";
 import { PlayerPayload, PlayerUpdatePayload } from "./schema";
-import SongRepository from "@features/song/repository";
-import PlayerRepository from "./repository";
 
 const getOrgIdBySongId = async (songId: string): Promise<string> => {
-  const orgId = await SongRepository.getSongOrgIdById(songId);
+  const orgId = await OrgService.getOrgIdBySongId(songId);
   if (!orgId) {
     throw new Error(`Song with ID ${songId} does not exist.`);
   }
@@ -43,12 +42,8 @@ export const updatePlayerAction = async (id: string, data: PlayerUpdatePayload) 
 
 export const deletePlayerAction = async (id: string) => {
   const user = await getCurrentUser();
-  const existing = await PlayerRepository.getPlayerById(id);
-  if (!existing) {
-    throw new Error(`Player with ID ${id} does not exist.`);
-  }
+  const existing = await PlayerService.getPlayerById(id, user.id);
   const orgId = await getOrgIdBySongId(existing.songId);
-  const result = await PlayerService.deletePlayer(id, user.id);
+  await PlayerService.deletePlayer(id, user.id);
   revalidateSeasonBoard(orgId);
-  return result;
 };

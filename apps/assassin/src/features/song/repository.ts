@@ -33,24 +33,6 @@ async function getSongByIdInOrg(id: string, orgId: string): Promise<Song | null>
   });
 }
 
-async function getSongOrgIdById(id: string): Promise<string | null> {
-  const song = await prisma.song.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
-    select: {
-      season: {
-        select: {
-          orgId: true,
-        },
-      },
-    },
-  });
-
-  return song?.season.orgId ?? null;
-}
-
 async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
   const songs = await prisma.song.findMany({
     where: {
@@ -105,7 +87,13 @@ async function createSong(input: SongPayload, tx?: TransactionClient): Promise<S
   return song;
 }
 
-async function updateSong(id: string, input: SongUpdatePayload): Promise<Song> {
+async function updateSong(id: string, orgId: string, input: SongUpdatePayload): Promise<Song> {
+  const existing = await prisma.song.findFirst({
+    where: { id, season: { orgId }, deletedAt: null },
+    select: { id: true },
+  });
+  if (!existing) throw new Error("Song not found in org");
+
   return prisma.song.update({
     where: { id },
     data: {
@@ -131,7 +119,6 @@ const SongRepository = {
   getAllSongs,
   getSongById,
   getSongByIdInOrg,
-  getSongOrgIdById,
   getSongsBySeasonId,
   getMaxSortOrderBySeasonId,
   lockSeasonForUpdate: lockSeasonSongsForUpdate,
