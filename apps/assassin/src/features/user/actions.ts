@@ -22,7 +22,7 @@ export const getProfilesBySongAction = async (songId: string) => {
 
 export const updateProfileAction = async (payload: UpdateProfilePayload) => {
   const user = await getCurrentUser();
-  const result = await UserService.updateProfile(user.id, payload);
+  const result = await UserService.updateProfile(payload, user.id);
   revalidatePath("/profile");
   return result;
 };

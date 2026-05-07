@@ -19,9 +19,9 @@ async function getProfilesByOrg(orgId: string): Promise<Profile[]> {
   });
 }
 
-async function updateProfile(id: string, input: UpdateProfilePayload): Promise<Profile> {
+async function updateProfile(input: UpdateProfilePayload): Promise<Profile> {
   return await prisma.profile.update({
-    where: { id },
+    where: { id: input.userId },
     data: { name: input.name },
   });
 }

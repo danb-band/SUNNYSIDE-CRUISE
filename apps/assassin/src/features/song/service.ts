@@ -1,10 +1,12 @@
 import SeasonService from "@features/season/service";
 import { assertOrgMember } from "@features/org/service";
+import OrgRepository from "@features/org/repository";
 import SongRepository from "./repository";
 import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } from "./schema";
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
+import { z } from "zod";
 
 const assertSongExists = async (songId: string): Promise<void> => {
   const song = await SongRepository.getSongById(songId);
@@ -21,7 +23,7 @@ const assertSongExists = async (songId: string): Promise<void> => {
 };
 
 const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
-  const orgId = await SongRepository.getSongOrgIdById(songId);
+  const orgId = await OrgRepository.getOrgIdBySongId(songId);
   if (!orgId) {
     throw new Error(`Song with ID ${songId} does not exist.`);
   }
@@ -30,7 +32,7 @@ const assertSongAccess = async (songId: string, userId: string): Promise<string>
 };
 
 const getSongByIdForUser = async (id: string, userId: string): Promise<Song | null> => {
-  const orgId = await SongRepository.getSongOrgIdById(id);
+  const orgId = await OrgRepository.getOrgIdBySongId(id);
   if (!orgId) return null;
 
   try {
@@ -155,15 +157,19 @@ const updateSong = async (id: string, song: SongUpdatePayload, userId: string) =
   }
 
   const targetSeasonId = parsedInput.data.seasonId ?? existed.seasonId;
-  const targetSeason = await prisma.season.findFirst({
-    where: { id: targetSeasonId },
-    select: { orgId: true },
-  });
-  if (!targetSeason?.orgId) throw new Error("Season not found");
-  if (targetSeason.orgId !== sourceOrgId) {
+  const targetSeasonOrgId = await OrgRepository.getOrgIdBySeasonId(targetSeasonId);
+  const parsedTargetSeasonOrg = z
+    .object({
+      orgId: z.uuid(),
+    })
+    .safeParse({ orgId: targetSeasonOrgId });
+  if (!parsedTargetSeasonOrg.success) {
+    throw new Error("Season not found");
+  }
+  if (parsedTargetSeasonOrg.data.orgId !== sourceOrgId) {
     throw new Error("Cross-org season move is not allowed");
   }
-  await assertOrgMember(userId, targetSeason.orgId);
+  await assertOrgMember(userId, parsedTargetSeasonOrg.data.orgId);
 
   const newSongData: Song = { ...existed, ...parsedInput.data };
 
