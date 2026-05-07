@@ -10,7 +10,6 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { SongModalRoute } from "@/components/song/SongModalRoute";
 import { notFound } from "next/navigation";
 import { cacheTag, cacheLife } from "next/cache";
-import { SEASON_BOARD_CACHE_TAG } from "@/libs/cache/seasonBoard";
 import { SONG_DETAIL_CACHE_TAG } from "@/libs/cache/songDetail";
 import { getCurrentUser } from "@libs/supabase/auth";
 import { getOrgBySlugAction } from "@features/org/actions";
@@ -50,7 +49,6 @@ async function SongModalContent({
   userId: string;
 }) {
   "use cache";
-  cacheTag(`${SEASON_BOARD_CACHE_TAG}-${orgId}`);
   cacheTag(`${SONG_DETAIL_CACHE_TAG}-${songId}`);
   cacheLife("max");
 
