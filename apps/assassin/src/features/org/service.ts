@@ -264,7 +264,7 @@ const getProfileById = async (userId: string) => {
 };
 
 const getPendingInvitations = async (orgId: string, requesterId: string) => {
-  await assertOrgMember(requesterId, orgId);
+  await assertOrgMember(requesterId, orgId, "OWNER");
   return await OrgRepository.getPendingInvitationsByOrg(orgId);
 };
 
