@@ -7,20 +7,6 @@ import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
 
-const assertSongExists = async (songId: string): Promise<void> => {
-  const song = await SongRepository.getSongById(songId);
-
-  if (!song) {
-    throw new Error(`Song with ID ${songId} does not exist.`);
-  }
-
-  const parsed = songSchema.safeParse(song);
-
-  if (!parsed.success) {
-    throw new Error(`Invalid song response from DB for ID ${songId}.`);
-  }
-};
-
 const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
   const orgId = await OrgRepository.getOrgIdBySongId(songId);
   if (!orgId) {
@@ -76,9 +62,9 @@ const createSong = async (song: SongPayload, orgId: string) => {
   let result;
   try {
     result = await prisma.$transaction(async (tx) => {
-      await SongRepository.lockSeasonForUpdate(song.seasonId, tx);
+      await SongRepository.lockSeasonForUpdate(song.seasonId, orgId, tx);
 
-      const maxSortOrder = await SongRepository.getMaxSortOrderBySeasonId(song.seasonId, tx);
+      const maxSortOrder = await SongRepository.getMaxSortOrderBySeasonId(song.seasonId, orgId, tx);
       const nextSortOrder = (maxSortOrder ? Number(maxSortOrder) : 0) + 1;
 
       return await SongRepository.createSong(
@@ -107,20 +93,6 @@ const createSong = async (song: SongPayload, orgId: string) => {
   return parsed.data;
 };
 
-const getSongById = async (id: string): Promise<Song | null> => {
-  const song = await SongRepository.getSongById(id);
-
-  if (!song) return null;
-
-  const parsed = songSchema.safeParse(song);
-
-  if (!parsed.success) {
-    throw new Error("Invalid song response from DB");
-  }
-
-  return parsed.data;
-};
-
 const getSongsBySeasonId = async (
   seasonId: string,
   orgId: string,
@@ -129,7 +101,7 @@ const getSongsBySeasonId = async (
   await assertOrgMember(userId, orgId);
   await SeasonService.assertSeasonExists(seasonId, orgId);
 
-  const songs = await SongRepository.getSongsBySeasonId(seasonId);
+  const songs = await SongRepository.getSongsBySeasonId(seasonId, orgId);
 
   const parsed = songSchema.array().safeParse(songs);
 
@@ -186,10 +158,8 @@ const deleteSong = async (id: string, orgId: string, userId: string) => {
 };
 
 const SongService = {
-  assertSongExists,
   assertSongAccess,
   createSong,
-  getSongById,
   getSongByIdForUser,
   getSongByIdInOrg,
   getSongsBySeasonId,

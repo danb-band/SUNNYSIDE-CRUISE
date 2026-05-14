@@ -14,7 +14,6 @@ async function createLike(songId: string, userId: string, orgId: string, tx?: Tr
     where: { id: songId, season: { orgId }, deletedAt: null },
     select: { id: true },
   });
-
   if (!song) throw new Error("Song not found in org");
 
   return prismaClient.songLike.create({

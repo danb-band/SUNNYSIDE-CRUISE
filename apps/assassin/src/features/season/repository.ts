@@ -29,12 +29,15 @@ async function createSeason(input: SeasonPayload, orgId: string): Promise<Season
   return season;
 }
 
-async function updateSeason(id: string, orgId: string, input: SeasonUpdatePayload): Promise<Season> {
+async function updateSeason(
+  id: string,
+  orgId: string,
+  input: SeasonUpdatePayload,
+): Promise<Season> {
   const existing = await prisma.season.findFirst({ where: { id, orgId } });
-  if (!existing) {
-    throw new Error(`Season with ID ${id} not found in this org.`);
-  }
-  const season = await prisma.season.update({
+  if (!existing) throw new Error("Season not found in org");
+
+  return prisma.season.update({
     where: { id },
     data: {
       name: input.name,
@@ -42,16 +45,11 @@ async function updateSeason(id: string, orgId: string, input: SeasonUpdatePayloa
       isArchived: input.isArchived,
     },
   });
-  return season;
 }
 
 async function deleteSeason(id: string, orgId: string): Promise<void> {
-  const existing = await prisma.season.findFirst({ where: { id, orgId } });
-  if (!existing) {
-    throw new Error(`Season with ID ${id} not found in this org.`);
-  }
-  await prisma.season.delete({
-    where: { id },
+  await prisma.season.deleteMany({
+    where: { id, orgId },
   });
 }
 

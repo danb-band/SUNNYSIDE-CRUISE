@@ -106,7 +106,7 @@ const deleteSeason = async (id: string, orgId: string, userId: string): Promise<
   await assertOrgMember(userId, orgId, "OWNER");
   await assertSeasonExists(id, orgId);
 
-  const activeSongs = await SongRepository.getSongsBySeasonId(id);
+  const activeSongs = await SongRepository.getSongsBySeasonId(id, orgId);
 
   const parsedSongs = songSchema.array().safeParse(activeSongs);
 

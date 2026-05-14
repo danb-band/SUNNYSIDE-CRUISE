@@ -3,24 +3,6 @@ import type { Song } from "@generated/prisma/client";
 import { SongPayload, SongUpdatePayload } from "./schema";
 import { TransactionClient } from "@libs/prisma/types";
 
-async function getAllSongs(): Promise<Song[]> {
-  const songs = await prisma.song.findMany({
-    where: { deletedAt: null },
-    orderBy: { createdAt: "desc" },
-  });
-  return songs;
-}
-
-async function getSongById(id: string): Promise<Song | null> {
-  const song = await prisma.song.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
-  });
-  return song;
-}
-
 async function getSongByIdInOrg(id: string, orgId: string): Promise<Song | null> {
   return await prisma.song.findFirst({
     where: {
@@ -33,11 +15,12 @@ async function getSongByIdInOrg(id: string, orgId: string): Promise<Song | null>
   });
 }
 
-async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
+async function getSongsBySeasonId(seasonId: string, orgId: string): Promise<Song[]> {
   const songs = await prisma.song.findMany({
     where: {
-      seasonId: seasonId,
+      seasonId,
       deletedAt: null,
+      season: { orgId },
     },
   });
   return songs;
@@ -45,6 +28,7 @@ async function getSongsBySeasonId(seasonId: string): Promise<Song[]> {
 
 async function getMaxSortOrderBySeasonId(
   seasonId: string,
+  orgId: string,
   tx?: TransactionClient,
 ): Promise<bigint | number | null> {
   const prismaClient = tx || prisma;
@@ -52,6 +36,7 @@ async function getMaxSortOrderBySeasonId(
     where: {
       seasonId,
       deletedAt: null,
+      season: { orgId },
     },
     _max: {
       sortOrder: true,
@@ -61,12 +46,17 @@ async function getMaxSortOrderBySeasonId(
   return result._max.sortOrder ?? null;
 }
 
-async function lockSeasonSongsForUpdate(seasonId: string, tx?: TransactionClient): Promise<void> {
+async function lockSeasonSongsForUpdate(
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+): Promise<void> {
   const prismaClient = tx || prisma;
   await prismaClient.$queryRaw`
     SELECT id
     FROM season
     WHERE id = ${seasonId}
+    AND "orgId" = ${orgId}
     FOR UPDATE
   `;
 }
@@ -116,8 +106,6 @@ async function deleteSong(id: string, orgId: string, tx?: TransactionClient) {
 }
 
 const SongRepository = {
-  getAllSongs,
-  getSongById,
   getSongByIdInOrg,
   getSongsBySeasonId,
   getMaxSortOrderBySeasonId,
