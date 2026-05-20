@@ -27,7 +27,7 @@ export const useRealtimeSeasonSync = () => {
         }
 
         queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
-        queryClient.invalidateQueries({ queryKey: songKeys.org(orgId) });
+        queryClient.invalidateQueries({ queryKey: songKeys.byOrg(orgId) });
         queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
       })
       .subscribe();

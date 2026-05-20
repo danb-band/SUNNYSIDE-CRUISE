@@ -10,7 +10,7 @@ export const usePlayersBySong = (songId: string) => {
 
   return useSuspenseQuery({
     queryKey: playerKeys.bySong(orgId, songId),
-    queryFn: () => getPlayersBySongAction(songId),
+    queryFn: () => getPlayersBySongAction(songId, orgId),
     select: (data) =>
       [...data].sort(
         (a, b) => INSTRUMENT_ORDER.indexOf(a.instrument) - INSTRUMENT_ORDER.indexOf(b.instrument),

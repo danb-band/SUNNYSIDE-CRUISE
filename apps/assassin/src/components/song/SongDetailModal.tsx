@@ -24,7 +24,7 @@ export function SongDetailModal({ songId, open, onOpenChange }: SongDetailModalP
   const params = useParams<{ orgSlug?: string }>();
 
   const song = useSong(songId).data;
-  useRealtimeSongSync();
+  useRealtimeSongSync(songId);
 
   if (!song) {
     return null;

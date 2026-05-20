@@ -4,17 +4,17 @@ import { getCurrentUser } from "@libs/supabase/auth";
 import EventSongService from "./service";
 import { CreateEventSongPayload } from "./schema";
 
-export const getSongsByEventAction = async (eventId: string) => {
+export const getSongsByEventAction = async (eventId: string, orgId: string) => {
   const user = await getCurrentUser();
-  return EventSongService.getSongsByEvent(eventId, user.id);
+  return EventSongService.getSongsByEvent(eventId, orgId, user.id);
 };
 
-export const addSongToEventAction = async (data: CreateEventSongPayload) => {
+export const addSongToEventAction = async (orgId: string, data: CreateEventSongPayload) => {
   const user = await getCurrentUser();
-  return EventSongService.addSongToEvent(data, user.id);
+  return EventSongService.addSongToEvent(data, orgId, user.id);
 };
 
-export const removeEventSongAction = async (id: string) => {
+export const removeEventSongAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  await EventSongService.removeSongFromEvent(id, user.id);
+  await EventSongService.removeSongFromEvent(id, orgId, user.id);
 };

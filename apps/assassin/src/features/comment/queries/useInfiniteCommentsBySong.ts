@@ -11,8 +11,9 @@ export const useInfiniteCommentsBySong = (songId: string) => {
   return useInfiniteQuery({
     queryKey: commentKeys.bySong(orgId, songId),
     queryFn: ({ pageParam }) =>
-      getCommentsBySongPaginatedAction(songId, COMMENTS_PER_PAGE, pageParam),
+      getCommentsBySongPaginatedAction(songId, orgId, COMMENTS_PER_PAGE, pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 1000 * 60,
   });
 };

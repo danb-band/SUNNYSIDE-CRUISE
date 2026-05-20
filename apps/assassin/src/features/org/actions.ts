@@ -19,9 +19,16 @@ async function getCurrentUserId(): Promise<string> {
   return user.id;
 }
 
-export const createOrgAction = async (input: CreateOrgPayload) => {
-  const userId = await getCurrentUserId();
-  return await OrgService.createOrg(userId, input);
+export const createOrgAction = async (
+  input: CreateOrgPayload,
+): Promise<{ success: true; slug: string } | { success: false; error: string }> => {
+  try {
+    const userId = await getCurrentUserId();
+    const org = await OrgService.createOrg(userId, input);
+    return { success: true, slug: org.slug };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "오류가 발생했습니다." };
+  }
 };
 
 export const getOrgBySlugAction = async (slug: string) => {

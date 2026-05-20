@@ -1,20 +1,14 @@
 import { assertOrgMember } from "@features/org/service";
-import OrgRepository from "@features/org/repository";
 import { CreateEventSongPayload, EventSong, eventSongSchema } from "./schema";
 import EventSongRepository from "./repository";
-import { z } from "zod";
 
-const getOrgIdByEvent = async (eventId: string): Promise<string> => {
-  const orgId = await OrgRepository.getOrgIdByEvent(eventId);
-  const parsedOrgId = z.uuid().safeParse(orgId);
-  if (!parsedOrgId.success) throw new Error("CalendarEvent not found");
-  return parsedOrgId.data;
-};
-
-const getSongsByEvent = async (eventId: string, userId: string): Promise<EventSong[]> => {
-  const orgId = await getOrgIdByEvent(eventId);
+const getSongsByEvent = async (
+  eventId: string,
+  orgId: string,
+  userId: string,
+): Promise<EventSong[]> => {
   await assertOrgMember(userId, orgId);
-  const results = await EventSongRepository.getSongsByEventId(eventId);
+  const results = await EventSongRepository.getSongsByEventId(eventId, orgId);
   const parsed = eventSongSchema.array().safeParse(results);
   if (!parsed.success) {
     throw new Error("Invalid event song responses from DB");
@@ -22,19 +16,13 @@ const getSongsByEvent = async (eventId: string, userId: string): Promise<EventSo
   return parsed.data;
 };
 
-const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Promise<EventSong> => {
-  const orgId = await getOrgIdByEvent(data.eventId);
+const addSongToEvent = async (
+  data: CreateEventSongPayload,
+  orgId: string,
+  userId: string,
+): Promise<EventSong> => {
   await assertOrgMember(userId, orgId);
-
-  const songOrgId = await OrgRepository.getOrgIdBySongId(data.songId);
-  if (!songOrgId) {
-    throw new Error(`Song with ID ${data.songId} does not exist.`);
-  }
-  if (songOrgId !== orgId) {
-    throw new Error("Cross-org event-song link is not allowed");
-  }
-
-  const result = await EventSongRepository.addSongToEvent(data);
+  const result = await EventSongRepository.addSongToEvent(data, orgId);
   const parsed = eventSongSchema.safeParse(result);
   if (!parsed.success) {
     throw new Error("Invalid event song response from DB");
@@ -42,14 +30,9 @@ const addSongToEvent = async (data: CreateEventSongPayload, userId: string): Pro
   return parsed.data;
 };
 
-const removeSongFromEvent = async (id: string, userId: string): Promise<void> => {
-  const eventId = await EventSongRepository.getEventIdByEventSongId(id);
-  const parsedEventId = z.uuid().safeParse(eventId);
-  if (!parsedEventId.success) throw new Error("EventSong not found");
-
-  const orgId = await getOrgIdByEvent(parsedEventId.data);
+const removeSongFromEvent = async (id: string, orgId: string, userId: string): Promise<void> => {
   await assertOrgMember(userId, orgId);
-  await EventSongRepository.removeSongFromEvent(id);
+  await EventSongRepository.removeSongFromEvent(id, orgId);
 };
 
 const EventSongService = {

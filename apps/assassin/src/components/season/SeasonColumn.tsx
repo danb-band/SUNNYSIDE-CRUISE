@@ -6,7 +6,7 @@ import { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
 import { useDeleteSeason } from "@features/season/mutations/useDeleteSeason";
-import { useOrgRole } from "@libs/org/OrgProvider";
+import { useOrgRole } from "@/components/org/OrgProvider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Archive, Music, Plus, Pencil, Check, X, ArchiveRestore, Trash2 } from "lucide-react";
@@ -131,7 +131,7 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
               ) : (
                 <div className="flex items-center gap-2 group">
                   <h3
-                    className={`font-semibold text-base truncate ${
+                    className={`font-semibold text-base truncate w-0 flex-1 ${
                       isArchived
                         ? "text-slate-500 dark:text-slate-400"
                         : "text-slate-900 dark:text-slate-50"
@@ -240,7 +240,7 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
         title="시즌 삭제"
         description={`"${season.name}" 시즌을 삭제하면 되돌릴 수 없습니다.`}
         confirmLabel="삭제"
-        onConfirm={() => deleteSeason.mutate(season.id)}
+        onConfirm={() => deleteSeason.mutate({ id: season.id })}
         isConfirming={deleteSeason.isPending}
         icon={<Trash2 className="h-4 w-4" />}
       />

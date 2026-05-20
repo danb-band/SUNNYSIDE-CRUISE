@@ -10,25 +10,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const SLUG_REGEX = /^[a-z0-9-]+$/;
+
 export default function CreateOrgPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  const slugError =
+    slug && !SLUG_REGEX.test(slug) ? "소문자, 숫자, 하이픈만 사용할 수 있습니다." : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
-    const slug = formData.get("slug") as string;
+
+    if (!SLUG_REGEX.test(slug)) {
+      setError("슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다.");
+      return;
+    }
 
     setPending(true);
     setError(null);
-    try {
-      const org = await createOrgAction({ name, slug });
-      router.push(`/org/${org.slug}/season`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+    const result = await createOrgAction({ name, slug });
+    if (!result.success) {
+      setError(result.error);
       setPending(false);
+    } else {
+      setName("");
+      setSlug("");
+      setPending(false);
+      router.replace(`/org/${result.slug}/season`);
     }
   }
 
@@ -59,6 +71,8 @@ export default function CreateOrgPage() {
                 required
                 maxLength={100}
                 placeholder="예: 선셋 밴드"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
               />
             </div>
@@ -73,17 +87,22 @@ export default function CreateOrgPage() {
                 required
                 maxLength={50}
                 placeholder="예: sunset-band"
-                pattern="[a-z0-9-]+"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
                 className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                소문자, 숫자, 하이픈만 허용 · 생성 후 변경 불가
-              </p>
+              {slugError ? (
+                <p className="text-xs text-red-500">{slugError}</p>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  소문자, 숫자, 하이픈만 허용 · 생성 후 변경 불가
+                </p>
+              )}
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || !!slugError}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white"
             >
               {pending ? (

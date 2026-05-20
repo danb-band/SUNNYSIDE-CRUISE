@@ -8,6 +8,6 @@ export const useSong = (id: string) => {
 
   return useSuspenseQuery({
     queryKey: songKeys.detail(orgId, id),
-    queryFn: () => getSongAction(id),
+    queryFn: () => getSongAction(id, orgId),
   });
 };

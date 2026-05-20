@@ -10,7 +10,7 @@ export const useUpdateComment = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: CommentUpdatePayload }) =>
-      updateCommentAction(id, data),
+      updateCommentAction(id, orgId, data),
     onSuccess: (data) => {
       if (!data) return;
 

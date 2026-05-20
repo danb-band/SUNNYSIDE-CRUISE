@@ -27,7 +27,7 @@ export function AppNav() {
       </div>
 
       <div className="hidden md:flex items-center gap-1 pb-1 sm:pb-0">
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           asChild
@@ -41,7 +41,7 @@ export function AppNav() {
             <Youtube className="h-4 w-4" />
             <span className="hidden sm:inline ml-2">YouTube</span>
           </a>
-        </Button>
+        </Button> */}
         <ProfileButton />
         <LogoutButton />
       </div>

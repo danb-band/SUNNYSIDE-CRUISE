@@ -8,7 +8,8 @@ export const useDeletePlayer = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (variables: { id: string; songId: string }) => deletePlayerAction(variables.id),
+    mutationFn: (variables: { id: string; songId: string }) =>
+      deletePlayerAction(variables.id, orgId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: playerKeys.bySong(orgId, variables.songId) });
     },

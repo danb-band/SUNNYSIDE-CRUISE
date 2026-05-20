@@ -9,7 +9,7 @@ export const useAddEventSong = () => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (data: CreateEventSongPayload) => addSongToEventAction(data),
+    mutationFn: (data: CreateEventSongPayload) => addSongToEventAction(orgId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, variables.eventId) });
     },

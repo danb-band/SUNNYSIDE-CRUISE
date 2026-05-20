@@ -1,37 +1,41 @@
 import { prisma } from "@libs/prisma/client";
 import { CreateEventSongPayload } from "./schema";
 
-async function getSongsByEventId(eventId: string) {
+async function getSongsByEventId(eventId: string, orgId: string) {
   return prisma.calendarEventSong.findMany({
-    where: { eventId },
+    where: { eventId, event: { orgId } },
     include: { song: { select: { id: true, name: true, artist: true } } },
     orderBy: { createdAt: "asc" },
   });
 }
 
-async function getEventIdByEventSongId(id: string): Promise<string | null> {
-  const eventSong = await prisma.calendarEventSong.findFirst({
-    where: { id },
-    select: { eventId: true },
+async function addSongToEvent(data: CreateEventSongPayload, orgId: string) {
+  const event = await prisma.calendarEvent.findFirst({
+    where: { id: data.eventId, orgId },
+    select: { id: true },
   });
+  if (!event) throw new Error("Event not found in org");
 
-  return eventSong?.eventId ?? null;
-}
+  const song = await prisma.song.findFirst({
+    where: { id: data.songId, season: { orgId }, deletedAt: null },
+    select: { id: true },
+  });
+  if (!song) throw new Error("Song not found in org");
 
-async function addSongToEvent(data: CreateEventSongPayload) {
   return prisma.calendarEventSong.create({
     data: { eventId: data.eventId, songId: data.songId },
     include: { song: { select: { id: true, name: true, artist: true } } },
   });
 }
 
-async function removeSongFromEvent(id: string) {
-  return prisma.calendarEventSong.delete({ where: { id } });
+async function removeSongFromEvent(id: string, orgId: string) {
+  return prisma.calendarEventSong.deleteMany({
+    where: { id, event: { orgId } },
+  });
 }
 
 const EventSongRepository = {
   getSongsByEventId,
-  getEventIdByEventSongId,
   addSongToEvent,
   removeSongFromEvent,
 };

@@ -80,11 +80,11 @@ async function OrgSongPageContent({
   await Promise.all([
     queryClient.prefetchQuery({
       queryKey: playerKeys.bySong(orgId, songId),
-      queryFn: () => PlayerService.getPlayersBySongId(songId, userId),
+      queryFn: () => PlayerService.getPlayersBySongId(songId, orgId, userId),
     }),
     queryClient.prefetchQuery({
       queryKey: userKeys.profilesBySong(orgId, songId),
-      queryFn: () => UserService.getProfilesBySong(songId, userId),
+      queryFn: () => UserService.getProfilesBySong(songId, orgId, userId),
     }),
   ]);
 

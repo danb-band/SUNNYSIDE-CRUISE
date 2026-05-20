@@ -2,13 +2,12 @@
 
 import { revalidateSeasonBoard } from "@libs/cache/seasonBoard";
 import { getCurrentUser } from "@libs/supabase/auth";
-import OrgService from "@features/org/service";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
 
-export const getSongAction = async (id: string) => {
+export const getSongAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  return await SongService.getSongByIdForUser(id, user.id);
+  return await SongService.getSongByIdForUser(id, orgId, user.id);
 };
 
 export const getSongsBySeasonAction = async (seasonId: string, orgId: string) => {
@@ -33,24 +32,15 @@ export const createSongAction = async (
   return result;
 };
 
-export const updateSongAction = async (id: string, data: SongUpdatePayload) => {
+export const updateSongAction = async (id: string, orgId: string, data: SongUpdatePayload) => {
   const user = await getCurrentUser();
-  const result = await SongService.updateSong(id, data, user.id);
-  const orgId = await OrgService.getOrgIdBySongId(id);
-  if (!orgId) {
-    throw new Error(`Song with ID ${id} does not exist.`);
-  }
+  const song = await SongService.updateSong(id, orgId, data, user.id);
   revalidateSeasonBoard(orgId);
-  return result;
+  return song;
 };
 
-export const deleteSongAction = async (id: string) => {
+export const deleteSongAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  const orgId = await OrgService.getOrgIdBySongId(id);
-  if (!orgId) {
-    throw new Error(`Song with ID ${id} does not exist.`);
-  }
-  const result = await SongService.deleteSong(id, user.id);
+  await SongService.deleteSong(id, orgId, user.id);
   revalidateSeasonBoard(orgId);
-  return result;
 };

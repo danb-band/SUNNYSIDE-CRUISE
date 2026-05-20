@@ -8,6 +8,6 @@ export const useProfilesBySong = (songId: string) => {
 
   return useSuspenseQuery({
     queryKey: userKeys.profilesBySong(orgId, songId),
-    queryFn: () => getProfilesBySongAction(songId),
+    queryFn: () => getProfilesBySongAction(songId, orgId),
   });
 };

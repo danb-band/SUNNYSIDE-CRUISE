@@ -8,7 +8,7 @@ export const useRsvpByEvent = (eventId: string) => {
 
   return useQuery({
     queryKey: rsvpKeys.byEvent(orgId, eventId),
-    queryFn: () => getRsvpAttendeesAction(eventId),
+    queryFn: () => getRsvpAttendeesAction(eventId, orgId),
     staleTime: 1000 * 60,
   });
 };
