@@ -42,7 +42,7 @@ export function NavOverflowMenu() {
           className="w-52 p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg"
         >
           <div className="flex flex-col gap-1">
-            <a
+            {/* <a
               href="https://youtube.com/@dnab-dnab?si=iX2ulzqGQYl_4Xm9"
               target="_blank"
               rel="noopener noreferrer"
@@ -51,7 +51,7 @@ export function NavOverflowMenu() {
             >
               <Youtube className="mr-2 h-4 w-4" />
               YouTube
-            </a>
+            </a> */}
 
             <Link
               href="/profile"
