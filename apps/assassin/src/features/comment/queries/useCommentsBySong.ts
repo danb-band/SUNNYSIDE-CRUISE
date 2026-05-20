@@ -8,6 +8,7 @@ export const useCommentsBySong = (songId: string) => {
 
   return useSuspenseQuery({
     queryKey: commentKeys.bySong(orgId, songId),
-    queryFn: () => getCommentsBySongAction(songId),
+    queryFn: () => getCommentsBySongAction(songId, orgId),
+    staleTime: 1000 * 60,
   });
 };

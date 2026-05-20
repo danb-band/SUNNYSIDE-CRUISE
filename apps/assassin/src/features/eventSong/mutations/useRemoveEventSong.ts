@@ -8,7 +8,7 @@ export const useRemoveEventSong = (eventId: string) => {
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (id: string) => removeEventSongAction(id),
+    mutationFn: (id: string) => removeEventSongAction(id, orgId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, eventId) });
     },

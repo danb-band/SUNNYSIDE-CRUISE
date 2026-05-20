@@ -117,8 +117,8 @@ const deleteSeason = async (id: string, orgId: string, userId: string): Promise<
   try {
     await prisma.$transaction(async (tx) => {
       for (const song of parsedSongs.data) {
-        await PlayerRepository.deletePlayersBySongId(song.id, tx);
-        await CommentRepository.deleteCommentsBySongId(song.id, tx);
+        await PlayerRepository.deletePlayersBySongId(song.id, orgId, tx);
+        await CommentRepository.deleteCommentsBySongId(song.id, orgId, tx);
         await SongRepository.deleteSong(song.id, orgId, tx);
       }
     });

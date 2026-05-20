@@ -58,15 +58,15 @@ async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
     events.flatMap((event) => [
       queryClient.prefetchQuery({
         queryKey: rsvpKeys.byEvent(org.id, event.id),
-        queryFn: () => getRsvpAttendeesAction(event.id),
+        queryFn: () => getRsvpAttendeesAction(event.id, org.id),
       }),
       queryClient.prefetchQuery({
         queryKey: rsvpKeys.byUser(org.id, event.id),
-        queryFn: () => getUserRsvpStatusAction(event.id),
+        queryFn: () => getUserRsvpStatusAction(event.id, org.id),
       }),
       queryClient.prefetchQuery({
         queryKey: eventSongKeys.byEvent(org.id, event.id),
-        queryFn: () => getSongsByEventAction(event.id),
+        queryFn: () => getSongsByEventAction(event.id, org.id),
       }),
     ]),
   );

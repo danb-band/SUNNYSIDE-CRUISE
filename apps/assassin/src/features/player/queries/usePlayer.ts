@@ -8,6 +8,7 @@ export const usePlayer = (id: string) => {
 
   return useSuspenseQuery({
     queryKey: playerKeys.detail(orgId, id),
-    queryFn: () => getPlayerAction(id),
+    queryFn: () => getPlayerAction(id, orgId),
+    staleTime: 1000 * 60,
   });
 };

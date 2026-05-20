@@ -147,8 +147,8 @@ const deleteSong = async (id: string, orgId: string, userId: string) => {
 
   try {
     await prisma.$transaction(async (tx) => {
-      await PlayerRepository.deletePlayersBySongId(id, tx);
-      await CommentRepository.deleteCommentsBySongId(id, tx);
+      await PlayerRepository.deletePlayersBySongId(id, orgId, tx);
+      await CommentRepository.deleteCommentsBySongId(id, orgId, tx);
       await SongRepository.deleteSong(id, orgId, tx);
     });
   } catch (error) {
