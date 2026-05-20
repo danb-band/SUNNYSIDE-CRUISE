@@ -173,6 +173,19 @@ const cancelInvitation = async (invitationId: string, orgId: string, requesterId
   return parsedUpdated.data;
 };
 
+const updateMemberRole = async (
+  orgId: string,
+  targetUserId: string,
+  requesterId: string,
+  role: OrgRole,
+) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  if (requesterId === targetUserId) {
+    throw new Error("자신의 역할은 변경할 수 없습니다.");
+  }
+  return await OrgRepository.updateMemberRole(orgId, targetUserId, role);
+};
+
 const removeMember = async (orgId: string, targetUserId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
 
@@ -280,6 +293,7 @@ const OrgService = {
   getOrgIdBySongId,
   getOrgIdByEvent,
   inviteMember,
+  updateMemberRole,
   acceptInvitation,
   acceptInvitationById,
   getInvitationInfo,
