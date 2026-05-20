@@ -131,7 +131,7 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
               ) : (
                 <div className="flex items-center gap-2 group">
                   <h3
-                    className={`font-semibold text-base truncate ${
+                    className={`font-semibold text-base truncate w-0 flex-1 ${
                       isArchived
                         ? "text-slate-500 dark:text-slate-400"
                         : "text-slate-900 dark:text-slate-50"
