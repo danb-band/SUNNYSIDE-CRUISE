@@ -1,80 +1,91 @@
 import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { songKeys } from "@features/song/queries/keys";
-import { eventSongKeys } from "@features/eventSong/queries/keys";
-import { seasonKeys } from "@features/season/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { useOrgId } from "@/components/org/OrgProvider";
-import type { Season } from "@features/season/schema";
 
-type RealtimeRow = { seasonId?: string; season_id?: string };
-
-const getPayloadSeasonId = (payload: { new: unknown; old: unknown }): string | null => {
-  const next = payload.new as RealtimeRow | null;
-  const prev = payload.old as RealtimeRow | null;
-  return next?.seasonId ?? next?.season_id ?? prev?.seasonId ?? prev?.season_id ?? null;
+type SongRow = {
+  id?: string;
+  seasonId?: string;
+  season_id?: string;
 };
 
-const hasSeasonId = (value: unknown): value is { id: string } => {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof (value as { id?: unknown }).id === "string"
-  );
+const getSongId = (row: SongRow | undefined | null): string | null => {
+  const songId = row?.id ?? null;
+  return typeof songId === "string" ? songId : null;
 };
 
-export const useRealtimeSongSync = () => {
+const getSeasonId = (row: SongRow | undefined | null): string | null => {
+  const seasonId = row?.seasonId ?? row?.season_id ?? null;
+  return typeof seasonId === "string" ? seasonId : null;
+};
+
+export const useRealtimeSongSync = (songId: string) => {
   const queryClient = useQueryClient();
   const orgId = useOrgId();
-
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const songsChannel = supabase
-      .channel(`realtime:song:${orgId}`)
+    const channel = supabase
+      .channel(`realtime:song:detail:${orgId}:${songId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "song" }, (payload) => {
-        const seasonId = getPayloadSeasonId(payload);
-        if (!seasonId) return;
+        const nextRow = payload.new as SongRow | undefined;
+        const prevRow = payload.old as SongRow | undefined;
+        const affectedSongId = getSongId(nextRow) ?? getSongId(prevRow);
 
-        const seasonQueryData = queryClient.getQueriesData<Season | Season[]>({
-          queryKey: seasonKeys.org(orgId),
-        });
-
-        let hasScopedSeasonCache = false;
-        let belongsToCurrentOrg = false;
-
-        for (const [, data] of seasonQueryData) {
-          if (Array.isArray(data)) {
-            if (data.length > 0) hasScopedSeasonCache = true;
-            if (data.some((season) => hasSeasonId(season) && season.id === seasonId)) {
-              belongsToCurrentOrg = true;
-              break;
-            }
-            continue;
-          }
-
-          if (hasSeasonId(data)) {
-            hasScopedSeasonCache = true;
-            if (data.id === seasonId) {
-              belongsToCurrentOrg = true;
-              break;
-            }
-          }
-        }
-
-        if (hasScopedSeasonCache && !belongsToCurrentOrg) {
-          return;
-        }
-
-        queryClient.invalidateQueries({ queryKey: songKeys.byOrg(orgId) });
-        queryClient.invalidateQueries({ queryKey: songKeys.bySeason(orgId, seasonId) });
-        queryClient.invalidateQueries({ queryKey: eventSongKeys.org(orgId) });
+        if (affectedSongId && affectedSongId !== songId) return;
+        queryClient.invalidateQueries({ queryKey: songKeys.detail(orgId, songId) });
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(songsChannel);
+      supabase.removeChannel(channel);
     };
-  }, [orgId, queryClient, supabase]);
+  }, [orgId, queryClient, songId, supabase]);
+};
+
+export const useRealtimeSongsBySeasonSync = (seasonIds: string[]) => {
+  const queryClient = useQueryClient();
+  const orgId = useOrgId();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+
+  useEffect(() => {
+    if (seasonIds.length === 0) return;
+
+    const channel = supabase
+      .channel(`realtime:song:season:${orgId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "song" }, (payload) => {
+        const nextRow = payload.new as SongRow | undefined;
+        const prevRow = payload.old as SongRow | undefined;
+        const nextSeasonId = getSeasonId(nextRow);
+        const prevSeasonId = getSeasonId(prevRow);
+
+        if (
+          nextSeasonId !== null &&
+          prevSeasonId !== null &&
+          !seasonIds.includes(nextSeasonId) &&
+          !seasonIds.includes(prevSeasonId)
+        ) {
+          return;
+        }
+
+        if (nextSeasonId === null && prevSeasonId === null) {
+          seasonIds.forEach((seasonId) => {
+            queryClient.invalidateQueries({ queryKey: songKeys.bySeason(orgId, seasonId) });
+          });
+          return;
+        }
+
+        seasonIds.forEach((seasonId) => {
+          if (seasonId === nextSeasonId || seasonId === prevSeasonId) {
+            queryClient.invalidateQueries({ queryKey: songKeys.bySeason(orgId, seasonId) });
+          }
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, queryClient, seasonIds, supabase]);
 };

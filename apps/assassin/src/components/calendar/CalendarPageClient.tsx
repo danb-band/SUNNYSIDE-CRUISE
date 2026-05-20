@@ -19,7 +19,6 @@ import { RsvpButton } from "@/components/calendar/RsvpButton";
 import { RsvpList } from "@/components/calendar/RsvpList";
 import { EventSongList } from "@/components/calendar/EventSongList";
 import { EventSongAddForm } from "@/components/calendar/EventSongAddForm";
-import { useRealtimeSongSync } from "@/features/song/hooks/useRealtimeSongSync";
 import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
 
 type DialogState =
@@ -44,7 +43,6 @@ export function CalendarPageClient() {
   const month = urlDate.getMonth() + 1;
 
   useRealtimeCalendarEventSync();
-  useRealtimeSongSync();
   useRealtimeSeasonSync();
 
   const { getEventsForDay } = useCalendarEventLogic(year, month);

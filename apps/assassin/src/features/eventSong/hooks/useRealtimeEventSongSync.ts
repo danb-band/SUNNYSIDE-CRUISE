@@ -16,7 +16,7 @@ export const useRealtimeEventSongSync = (eventId: string) => {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const channel = supabase
+    const eventSongChannel = supabase
       .channel(`realtime:calendar_event_song:${eventId}`)
       .on(
         "postgres_changes",
@@ -35,8 +35,16 @@ export const useRealtimeEventSongSync = (eventId: string) => {
       )
       .subscribe();
 
+    const songChannel = supabase
+      .channel(`realtime:song:event-song:${orgId}:${eventId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "song" }, () => {
+        queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, eventId) });
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(eventSongChannel);
+      supabase.removeChannel(songChannel);
     };
   }, [orgId, queryClient, eventId, supabase]);
 };
