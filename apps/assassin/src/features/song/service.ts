@@ -16,16 +16,12 @@ const assertSongAccess = async (songId: string, userId: string): Promise<string>
   return orgId;
 };
 
-const getSongByIdForUser = async (id: string, userId: string): Promise<Song | null> => {
-  const orgId = await OrgRepository.getOrgIdBySongId(id);
-  if (!orgId) return null;
-
-  try {
-    await assertOrgMember(userId, orgId);
-  } catch {
-    return null;
-  }
-
+const getSongByIdForUser = async (
+  id: string,
+  orgId: string,
+  userId: string,
+): Promise<Song | null> => {
+  await assertOrgMember(userId, orgId);
   const song = await SongRepository.getSongByIdInOrg(id, orgId);
   if (!song) return null;
 

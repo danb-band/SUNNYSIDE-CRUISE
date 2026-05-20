@@ -15,9 +15,9 @@ export const getCurrentUserProfileAction = async () => {
   return await UserService.getProfile(user.id);
 };
 
-export const getProfilesBySongAction = async (songId: string) => {
+export const getProfilesBySongAction = async (songId: string, orgId: string) => {
   const user = await getCurrentUser();
-  return await UserService.getProfilesBySong(songId, user.id);
+  return await UserService.getProfilesBySong(songId, orgId, user.id);
 };
 
 export const updateProfileAction = async (payload: UpdateProfilePayload) => {

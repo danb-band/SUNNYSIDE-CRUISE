@@ -1,5 +1,5 @@
-import SongService from "@features/song/service";
 import { assertOrgMember } from "@features/org/service";
+import SongRepository from "@features/song/repository";
 import UserRepository from "./repository";
 import { Profile, profileSchema, updateProfileSchema, UpdateProfilePayload } from "./schema";
 
@@ -13,8 +13,18 @@ const getProfilesByOrg = async (orgId: string, requesterId: string): Promise<Pro
   return parsed.data;
 };
 
-const getProfilesBySong = async (songId: string, requesterId: string): Promise<Profile[]> => {
-  const orgId = await SongService.assertSongAccess(songId, requesterId);
+const getProfilesBySong = async (
+  songId: string,
+  orgId: string,
+  requesterId: string,
+): Promise<Profile[]> => {
+  await assertOrgMember(requesterId, orgId);
+
+  const song = await SongRepository.getSongByIdInOrg(songId, orgId);
+  if (!song) {
+    throw new Error("Song not found");
+  }
+
   return await getProfilesByOrg(orgId, requesterId);
 };
 

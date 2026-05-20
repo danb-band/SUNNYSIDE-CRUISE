@@ -5,9 +5,9 @@ import { getCurrentUser } from "@libs/supabase/auth";
 import SongService from "./service";
 import { SongUpdatePayload } from "./schema";
 
-export const getSongAction = async (id: string) => {
+export const getSongAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  return await SongService.getSongByIdForUser(id, user.id);
+  return await SongService.getSongByIdForUser(id, orgId, user.id);
 };
 
 export const getSongsBySeasonAction = async (seasonId: string, orgId: string) => {

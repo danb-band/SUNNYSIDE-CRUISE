@@ -70,7 +70,7 @@ async function SongModalContent({
     }),
     queryClient.prefetchQuery({
       queryKey: userKeys.profilesBySong(orgId, songId),
-      queryFn: () => UserService.getProfilesBySong(songId, userId),
+      queryFn: () => UserService.getProfilesBySong(songId, orgId, userId),
     }),
   ]);
 
