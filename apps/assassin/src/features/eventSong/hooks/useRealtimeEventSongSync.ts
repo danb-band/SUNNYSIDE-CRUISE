@@ -26,12 +26,6 @@ export const useRealtimeEventSongSync = (eventId: string) => {
           const prevRow = payload.old as EventSongRow | undefined;
           const affectedEventId = nextRow?.eventId ?? prevRow?.eventId;
 
-          console.log("[Realtime Sync] Received event song change:", {
-            eventType: payload.eventType,
-            nextRow,
-            prevRow,
-          });
-
           // affectedEventId가 undefined인 경우는 REPLICA IDENTITY FULL 미설정으로 인해
           // DELETE payload에 eventId가 없는 것 — 어느 이벤트인지 모르므로 일단 invalidate
           if (affectedEventId !== undefined && affectedEventId !== eventId) return;

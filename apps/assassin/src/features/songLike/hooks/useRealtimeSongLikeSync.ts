@@ -32,21 +32,28 @@ export const useRealtimeSongLikeSync = (songId: string) => {
         const affectedUserId = nextLike?.userId ?? prevLike?.userId;
 
         if (affectedSongId && affectedSongId !== songId) return;
-        if (affectedUserId && affectedUserId !== userId) return;
 
         const isInsert = payload.eventType === "INSERT";
         const likeId = isInsert ? (nextLike?.id ?? null) : null;
         const delta = isInsert ? 1 : -1;
 
-        queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), likeId);
-
-        queryClient.setQueryData(songKeys.detail(orgId, songId), (old: Song | null | undefined) =>
-          old ? { ...old, likeCount: old.likeCount + delta } : old,
-        );
-
-        queryClient.setQueriesData<Song[]>({ queryKey: songKeys.byOrg(orgId) }, (old) =>
-          old?.map((s) => (s.id === songId ? { ...s, likeCount: s.likeCount + delta } : s)),
-        );
+        if (affectedUserId === userId) {
+          // 다른 탭에서의 본인 이벤트 — byUser만 동기화 (mutation이 likeCount 처리)
+          queryClient.setQueryData(songLikeKeys.byUser(orgId, songId), likeId);
+        } else if (affectedUserId !== undefined) {
+          // 다른 유저의 이벤트 — likeCount만 업데이트
+          queryClient.setQueryData(songKeys.detail(orgId, songId), (old: Song | null | undefined) =>
+            old ? { ...old, likeCount: old.likeCount + delta } : old,
+          );
+          queryClient.setQueriesData<Song[]>({ queryKey: songKeys.byOrg(orgId) }, (old) =>
+            old?.map((s) => (s.id === songId ? { ...s, likeCount: s.likeCount + delta } : s)),
+          );
+        } else {
+          // userId 미확인 (DELETE + REPLICA IDENTITY FULL 미설정) — 서버에서 재조회
+          queryClient.invalidateQueries({ queryKey: songKeys.detail(orgId, songId) });
+          queryClient.invalidateQueries({ queryKey: songKeys.byOrg(orgId) });
+          queryClient.invalidateQueries({ queryKey: songLikeKeys.byUser(orgId, songId) });
+        }
       })
       .subscribe();
 
