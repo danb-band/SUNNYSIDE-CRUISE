@@ -20,7 +20,7 @@ export function AppNav() {
         >
           <Link href="/onboarding" aria-label="조직 선택 화면으로 이동">
             <House className="h-4 w-4" />
-            <span className="hidden sm:inline ml-2">Home</span>
+            <span className="hidden sm:inline ml-2">홈</span>
           </Link>
         </Button>
         <TabNav />
