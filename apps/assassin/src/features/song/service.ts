@@ -138,14 +138,14 @@ const updateSong = async (id: string, orgId: string, song: SongUpdatePayload, us
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, orgId: string, userId: string) => {
+const softDeleteSong = async (id: string, orgId: string, userId: string) => {
   await assertOrgMember(userId, orgId);
 
   try {
     await prisma.$transaction(async (tx) => {
-      await PlayerRepository.deletePlayersBySongId(id, orgId, tx);
-      await CommentRepository.deleteCommentsBySongId(id, orgId, tx);
-      await SongRepository.deleteSong(id, orgId, tx);
+      await PlayerRepository.softDeletePlayersBySongId(id, orgId, tx);
+      await CommentRepository.softDeleteCommentsBySongId(id, orgId, tx);
+      await SongRepository.softDeleteSong(id, orgId, tx);
     });
   } catch (error) {
     console.error(`Failed to delete song ${id}:`, error);
@@ -160,7 +160,7 @@ const SongService = {
   getSongByIdInOrg,
   getSongsBySeasonId,
   updateSong,
-  deleteSong,
+  softDeleteSong,
 };
 
 export default SongService;

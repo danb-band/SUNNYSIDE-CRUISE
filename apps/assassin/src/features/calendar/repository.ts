@@ -1,5 +1,6 @@
 import { prisma } from "@libs/prisma/client";
 import type { CalendarEventPayload, CalendarEventUpdatePayload } from "./schema";
+import { TransactionClient } from "@libs/prisma/types";
 
 async function getAllCalendarEvents(orgId: string) {
   return await prisma.calendarEvent.findMany({
@@ -35,12 +36,20 @@ async function updateCalendarEvent(id: string, orgId: string, input: CalendarEve
   return await prisma.calendarEvent.update({ where: { id }, data: input });
 }
 
-async function deleteCalendarEvent(id: string, orgId: string) {
-  const existing = await prisma.calendarEvent.findFirst({ where: { id, orgId } });
+async function hardDeleteCalendarEvent(id: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  const existing = await prismaClient.calendarEvent.findFirst({ where: { id, orgId } });
   if (!existing) {
     throw new Error(`CalendarEvent with ID ${id} not found in this org.`);
   }
-  await prisma.calendarEvent.delete({ where: { id } });
+  await prismaClient.calendarEvent.delete({ where: { id } });
+}
+
+async function hardDeleteCalendarEventsByOrgId(orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.calendarEvent.deleteMany({
+    where: { orgId },
+  });
 }
 
 const CalendarEventRepository = {
@@ -49,7 +58,8 @@ const CalendarEventRepository = {
   getCalendarEventById,
   createCalendarEvent,
   updateCalendarEvent,
-  deleteCalendarEvent,
+  hardDeleteCalendarEvent,
+  hardDeleteCalendarEventsByOrgId,
 };
 
 export default CalendarEventRepository;

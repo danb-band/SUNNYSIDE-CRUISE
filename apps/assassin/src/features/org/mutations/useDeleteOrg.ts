@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { deleteOrgAction } from "../actions";
+import { hardDeleteOrgAction } from "../actions";
 
-export const useDeleteOrg = () => {
+export const useHardDeleteOrg = () => {
   return useMutation({
-    mutationFn: (orgId: string) => deleteOrgAction(orgId),
+    mutationFn: (orgId: string) => hardDeleteOrgAction(orgId),
   });
 };

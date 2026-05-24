@@ -11,7 +11,7 @@ import { cn } from "@/libs/shadcn/utils";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { CalendarEventUpsertDialog } from "@/components/calendar/CalendarEventUpsertDialog";
-import { useDeleteCalendarEvent } from "@/features/calendar/mutations/useDeleteCalendarEvent";
+import { useHardDeleteCalendarEvent } from "@/features/calendar/mutations/useDeleteCalendarEvent";
 import { useCalendarEventLogic } from "@/features/calendar/hooks/useCalendarEventLogic";
 import { useRealtimeCalendarEventSync } from "@/features/calendar/hooks/useRealtimeCalendarEventSync";
 import type { CalendarEvent } from "@/features/calendar/schema";
@@ -46,7 +46,7 @@ export function CalendarPageClient() {
   useRealtimeSeasonSync();
 
   const { getEventsForDay } = useCalendarEventLogic(year, month);
-  const deleteMutation = useDeleteCalendarEvent();
+  const deleteMutation = useHardDeleteCalendarEvent();
 
   const [selected, setSelected] = useState<Date | undefined>(urlDate);
   const [calendarMonth, setCalendarMonth] = useState<Date>(urlDate);

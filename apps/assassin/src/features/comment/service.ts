@@ -108,7 +108,7 @@ const updateComment = async (
   return parsed.data;
 };
 
-const deleteComment = async (id: string, userId: string, orgId: string): Promise<void> => {
+const softDeleteComment = async (id: string, userId: string, orgId: string): Promise<void> => {
   await assertOrgMember(userId, orgId);
 
   const comment = await CommentRepository.getCommentById(id, orgId);
@@ -119,7 +119,7 @@ const deleteComment = async (id: string, userId: string, orgId: string): Promise
     throw new Error("Unauthorized: you can only delete your own comments");
   }
 
-  await CommentRepository.deleteComment(id, orgId);
+  await CommentRepository.softDeleteComment(id, orgId);
 };
 
 const CommentService = {
@@ -129,7 +129,7 @@ const CommentService = {
   getCommentsBySongId,
   getCommentsBySongIdPaginated,
   updateComment,
-  deleteComment,
+  softDeleteComment,
 };
 
 export default CommentService;

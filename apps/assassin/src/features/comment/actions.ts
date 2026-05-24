@@ -46,9 +46,9 @@ export const updateCommentAction = async (
   return result;
 };
 
-export const deleteCommentAction = async (id: string, orgId: string) => {
+export const softDeleteCommentAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
   const existing = await CommentService.getCommentById(id, user.id, orgId);
-  await CommentService.deleteComment(id, user.id, orgId);
+  await CommentService.softDeleteComment(id, user.id, orgId);
   revalidateSongDetail(existing.songId);
 };

@@ -29,8 +29,8 @@ export const updatePlayerAction = async (id: string, orgId: string, data: Player
   return result;
 };
 
-export const deletePlayerAction = async (id: string, orgId: string) => {
+export const softDeletePlayerAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  await PlayerService.deletePlayer(id, orgId, user.id);
+  await PlayerService.softDeletePlayer(id, orgId, user.id);
   revalidateSeasonBoard(orgId);
 };

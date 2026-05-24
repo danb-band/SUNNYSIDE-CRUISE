@@ -76,9 +76,13 @@ const updateCalendarEvent = async (
   return parsed.data;
 };
 
-const deleteCalendarEvent = async (id: string, orgId: string, userId: string): Promise<void> => {
+const hardDeleteCalendarEvent = async (
+  id: string,
+  orgId: string,
+  userId: string,
+): Promise<void> => {
   await assertOrgMember(userId, orgId);
-  await CalendarEventRepository.deleteCalendarEvent(id, orgId);
+  await CalendarEventRepository.hardDeleteCalendarEvent(id, orgId);
 };
 
 const CalendarEventService = {
@@ -87,7 +91,7 @@ const CalendarEventService = {
   getCalendarEventById,
   createCalendarEvent,
   updateCalendarEvent,
-  deleteCalendarEvent,
+  hardDeleteCalendarEvent,
 };
 
 export default CalendarEventService;

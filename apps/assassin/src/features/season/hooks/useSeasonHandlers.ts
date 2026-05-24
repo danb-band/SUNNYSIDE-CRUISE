@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useCreateSeason } from "../mutations/useCreateSeason";
-import { useDeleteSeason } from "../mutations/useDeleteSeason";
+import { useHardDeleteSeason } from "../mutations/useDeleteSeason";
 import { useUpdateSeason } from "../mutations/useUpdateSeason";
 import { useSeasonForm } from "./useSeasonForm";
 import type { SeasonPayload, SeasonUpdatePayload } from "../schema";
@@ -23,7 +23,7 @@ type UseSeasonHandlersProps =
 export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
   const createSeasonMutation = useCreateSeason();
   const updateSeasonMutation = useUpdateSeason();
-  const deleteSeasonMutation = useDeleteSeason();
+  const deleteSeasonMutation = useHardDeleteSeason();
 
   const formConfig =
     props.mode === "create"

@@ -43,8 +43,9 @@ async function updateOrg(id: string, input: UpdateOrgPayload) {
   });
 }
 
-async function deleteOrg(id: string) {
-  await prisma.org.delete({ where: { id } });
+async function hardDeleteOrg(id: string, tx?: TransactionClient) {
+  const client = tx ?? prisma;
+  await client.org.delete({ where: { id } });
 }
 
 // OrgMember
@@ -235,7 +236,7 @@ const OrgRepository = {
   getOrgsByUserId,
   createOrg,
   updateOrg,
-  deleteOrg,
+  hardDeleteOrg,
   addMember,
   getMember,
   getOrgMembers,

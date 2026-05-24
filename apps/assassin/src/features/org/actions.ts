@@ -45,9 +45,9 @@ export const updateOrgAction = async (orgId: string, input: UpdateOrgPayload) =>
   return await OrgService.updateOrg(orgId, userId, input);
 };
 
-export const deleteOrgAction = async (orgId: string) => {
+export const hardDeleteOrgAction = async (orgId: string) => {
   const userId = await getCurrentUserId();
-  await OrgService.deleteOrg(orgId, userId);
+  await OrgService.hardDeleteOrg(orgId, userId);
 };
 
 export const getOrgMembersAction = async (orgId: string) => {

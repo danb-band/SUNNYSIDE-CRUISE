@@ -86,13 +86,13 @@ const updatePlayer = async (
   return parsed.data;
 };
 
-const deletePlayer = async (id: string, orgId: string, actorUserId: string) => {
+const softDeletePlayer = async (id: string, orgId: string, actorUserId: string) => {
   await assertOrgMember(actorUserId, orgId);
   const player = await PlayerRepository.getPlayerById(id, orgId);
   if (!playerSchema.safeParse(player).success) {
     throw new Error(`Player with ID ${id} does not exist.`);
   }
-  await PlayerRepository.deletePlayer(id, orgId);
+  await PlayerRepository.softDeletePlayer(id, orgId);
 };
 
 const PlayerService = {
@@ -100,7 +100,7 @@ const PlayerService = {
   getPlayerById,
   getPlayersBySongId,
   updatePlayer,
-  deletePlayer,
+  softDeletePlayer,
 };
 
 export default PlayerService;

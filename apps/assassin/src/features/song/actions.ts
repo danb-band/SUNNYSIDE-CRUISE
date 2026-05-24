@@ -39,8 +39,8 @@ export const updateSongAction = async (id: string, orgId: string, data: SongUpda
   return song;
 };
 
-export const deleteSongAction = async (id: string, orgId: string) => {
+export const softDeleteSongAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  await SongService.deleteSong(id, orgId, user.id);
+  await SongService.softDeleteSong(id, orgId, user.id);
   revalidateSeasonBoard(orgId);
 };

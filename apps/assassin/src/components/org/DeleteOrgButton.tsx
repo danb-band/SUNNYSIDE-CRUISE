@@ -15,12 +15,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useDeleteOrg } from "@/features/org/mutations/useDeleteOrg";
+import { useHardDeleteOrg } from "@/features/org/mutations/useDeleteOrg";
 
 export function DeleteOrgButton({ orgId, orgName }: { orgId: string; orgName: string }) {
   const [input, setInput] = useState("");
   const router = useRouter();
-  const deleteOrgMutation = useDeleteOrg();
+  const deleteOrgMutation = useHardDeleteOrg();
 
   const isMatch = input === orgName;
 

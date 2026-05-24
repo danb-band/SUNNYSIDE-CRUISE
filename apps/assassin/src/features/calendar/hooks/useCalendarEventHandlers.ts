@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useCreateCalendarEvent } from "../mutations/useCreateCalendarEvent";
 import { useUpdateCalendarEvent } from "../mutations/useUpdateCalendarEvent";
-import { useDeleteCalendarEvent } from "../mutations/useDeleteCalendarEvent";
+import { useHardDeleteCalendarEvent } from "../mutations/useDeleteCalendarEvent";
 import { useCalendarEventForm, CalendarEventFormData } from "./useCalendarEventForm";
 import type { CalendarEventUpdatePayload } from "../schema";
 
@@ -23,7 +23,7 @@ type UseCalendarEventHandlersProps =
 export const useCalendarEventHandlers = (props: UseCalendarEventHandlersProps) => {
   const createCalendarEventMutation = useCreateCalendarEvent();
   const updateCalendarEventMutation = useUpdateCalendarEvent();
-  const deleteCalendarEventMutation = useDeleteCalendarEvent();
+  const deleteCalendarEventMutation = useHardDeleteCalendarEvent();
 
   const formConfig =
     props.mode === "create"

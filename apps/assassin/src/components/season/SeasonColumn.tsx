@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Season } from "@features/season/schema";
 import type { Song } from "@features/song/schema";
 import { useUpdateSeason } from "@features/season/mutations/useUpdateSeason";
-import { useDeleteSeason } from "@features/season/mutations/useDeleteSeason";
+import { useHardDeleteSeason } from "@features/season/mutations/useDeleteSeason";
 import { useOrgRole } from "@/components/org/OrgProvider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ export function SeasonColumn({ season, variant = "grid" }: SeasonColumnProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const updateSeason = useUpdateSeason();
-  const deleteSeason = useDeleteSeason();
+  const deleteSeason = useHardDeleteSeason();
   const isOwner = useOrgRole() === "OWNER";
 
   const { songs } = useSongLogic(season.id);

@@ -43,7 +43,7 @@ async function updateComment(id: string, orgId: string, input: CommentUpdatePayl
   });
 }
 
-async function deleteComment(id: string, orgId: string, tx?: TransactionClient) {
+async function softDeleteComment(id: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.comment.updateMany({
     where: { id, deletedAt: null, song: { season: { orgId } } },
@@ -66,7 +66,7 @@ async function getCommentsBySongIdPaginated(
   });
 }
 
-async function deleteCommentsBySongId(songId: string, orgId: string, tx?: TransactionClient) {
+async function softDeleteCommentsBySongId(songId: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.comment.updateMany({
     where: { songId, song: { season: { orgId } } },
@@ -74,14 +74,50 @@ async function deleteCommentsBySongId(songId: string, orgId: string, tx?: Transa
   });
 }
 
+async function hardDeleteComment(id: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.deleteMany({
+    where: { id, song: { season: { orgId } } },
+  });
+}
+
+async function hardDeleteCommentsBySongId(songId: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.deleteMany({
+    where: { songId, song: { season: { orgId } } },
+  });
+}
+
+async function hardDeleteCommentsBySeasonId(
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.deleteMany({
+    where: { song: { seasonId, season: { orgId } } },
+  });
+}
+
+async function hardDeleteCommentsByOrgId(orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.comment.deleteMany({
+    where: { song: { season: { orgId } } },
+  });
+}
+
 const CommentRepository = {
   getCommentById,
   getCommentsBySongId,
   getCommentsBySongIdPaginated,
-  deleteCommentsBySongId,
+  softDeleteCommentsBySongId,
+  hardDeleteComment,
+  hardDeleteCommentsBySongId,
+  hardDeleteCommentsBySeasonId,
+  hardDeleteCommentsByOrgId,
   createComment,
   updateComment,
-  deleteComment,
+  softDeleteComment,
 };
 
 export default CommentRepository;
