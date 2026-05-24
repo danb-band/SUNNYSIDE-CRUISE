@@ -38,8 +38,8 @@ async function OnboardingContent() {
         <h1 className="text-3xl font-bold mb-2">시작하기</h1>
         <p className="text-muted-foreground">
           {orgs.length > 0
-            ? "소속된 조직을 선택하세요."
-            : "소속된 조직이 없습니다. 새 조직을 만들거나 초대를 확인하세요."}
+            ? "소속된 밴드를 선택하세요."
+            : "소속된 밴드가 없습니다. 새 밴드를 만들거나 초대를 확인하세요."}
         </p>
       </div>
 
@@ -62,7 +62,7 @@ async function OnboardingContent() {
         href="/org/new"
         className="px-6 py-3 bg-primary text-primary-foreground rounded-md font-medium"
       >
-        새 조직 만들기
+        새 밴드 만들기
       </Link>
     </div>
   );

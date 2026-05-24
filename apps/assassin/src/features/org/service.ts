@@ -23,7 +23,7 @@ export async function assertOrgMember(
   const member = await OrgRepository.getMember(orgId, userId);
   const parsedMember = orgMemberSchema.safeParse(member);
   if (!parsedMember.success) {
-    throw new Error("이 조직의 멤버가 아닙니다.");
+    throw new Error("이 밴드의 멤버가 아닙니다.");
   }
 
   if (minRole && ROLE_HIERARCHY[parsedMember.data.role] < ROLE_HIERARCHY[minRole]) {
@@ -52,7 +52,7 @@ const getOrgById = async (orgId: string) => {
 const getOrgBySlug = async (slug: string) => {
   const org = await OrgRepository.getOrgBySlug(slug);
   if (!org) {
-    throw new Error("조직을 찾을 수 없습니다.");
+    throw new Error("밴드를 찾을 수 없습니다.");
   }
   return org;
 };
@@ -99,7 +99,7 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
   if (existingUserId) {
     const existingMember = await OrgRepository.getMember(orgId, existingUserId);
     if (existingMember) {
-      throw new Error("이미 조직의 멤버입니다.");
+      throw new Error("이미 밴드의 멤버입니다.");
     }
   }
 
@@ -199,8 +199,8 @@ const removeMember = async (orgId: string, targetUserId: string, requesterId: st
 
 const leaveOrg = async (orgId: string, userId: string) => {
   const member = await OrgRepository.getMember(orgId, userId);
-  if (!member) throw new Error("조직의 멤버가 아닙니다.");
-  if (member.role === "OWNER") throw new Error("OWNER는 조직을 나갈 수 없습니다.");
+  if (!member) throw new Error("밴드의 멤버가 아닙니다.");
+  if (member.role === "OWNER") throw new Error("OWNER는 밴드를 나갈 수 없습니다.");
   await OrgRepository.removeMember(orgId, userId);
 };
 

@@ -14,17 +14,17 @@ function getErrorContent(code: string): { title: string; description: string } {
     case "EXPIRED":
       return {
         title: "만료된 초대",
-        description: "초대 링크가 만료되었습니다. 조직 관리자에게 재초대를 요청해주세요.",
+        description: "초대 링크가 만료되었습니다. 밴드 관리자에게 재초대를 요청해주세요.",
       };
     case "REVOKED":
       return {
         title: "취소된 초대",
-        description: "초대가 취소되었습니다. 조직 관리자에게 문의해주세요.",
+        description: "초대가 취소되었습니다. 밴드 관리자에게 문의해주세요.",
       };
     case "ALREADY_ACCEPTED":
       return {
         title: "이미 수락된 초대",
-        description: "이미 조직의 멤버입니다.",
+        description: "이미 밴드의 멤버입니다.",
       };
     case "EMAIL_MISMATCH":
       return {

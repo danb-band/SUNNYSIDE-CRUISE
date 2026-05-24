@@ -205,7 +205,7 @@ export function MembersPageClient({ org, members, pendingInvitations, currentUse
           }
         : {
             title: "멤버 제거",
-            description: `${memberName}님을 조직에서 제거합니다. 이 작업은 되돌릴 수 없습니다.`,
+            description: `${memberName}님을 밴드에서 제거합니다. 이 작업은 되돌릴 수 없습니다.`,
             confirmLabel: "제거",
             tone: "destructive" as const,
             icon: <UserMinus className="h-4 w-4" />,

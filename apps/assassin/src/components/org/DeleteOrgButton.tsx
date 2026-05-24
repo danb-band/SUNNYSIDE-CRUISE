@@ -34,22 +34,22 @@ export function DeleteOrgButton({ orgId, orgName }: { orgId: string; orgName: st
     <AlertDialog onOpenChange={() => setInput("")}>
       <AlertDialogTrigger asChild>
         <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white shrink-0">
-          조직 삭제
+          밴드 삭제
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>정말로 조직을 삭제하시겠습니까?</AlertDialogTitle>
+          <AlertDialogTitle>정말로 밴드를 삭제하시겠습니까?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="flex flex-col gap-3">
               <p>
                 이 작업은 되돌릴 수 없습니다.{" "}
-                <strong className="text-slate-900 dark:text-slate-100">{orgName}</strong> 조직과
+                <strong className="text-slate-900 dark:text-slate-100">{orgName}</strong> 밴드와
                 모든 관련 데이터(시즌, 곡, 캘린더 등)가 영구적으로 삭제됩니다.
               </p>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-slate-700 dark:text-slate-300">
-                  확인을 위해 조직 이름 <strong>{orgName}</strong>을 입력하세요
+                  확인을 위해 밴드 이름 <strong>{orgName}</strong>을 입력하세요
                 </Label>
                 <Input
                   value={input}

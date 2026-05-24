@@ -30,14 +30,14 @@ export function LeaveOrgButton({ orgId }: { orgId: string }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white shrink-0">
-          조직 나가기
+          밴드 나가기
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>정말로 조직에서 나가시겠습니까?</AlertDialogTitle>
+          <AlertDialogTitle>정말로 밴드에서 나가시겠습니까?</AlertDialogTitle>
           <AlertDialogDescription>
-            조직에서 나가면 더 이상 접근할 수 없습니다. 재참여하려면 다시 초대를 받아야 합니다.
+            밴드에서 나가면 더 이상 접근할 수 없습니다. 재참여하려면 다시 초대를 받아야 합니다.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

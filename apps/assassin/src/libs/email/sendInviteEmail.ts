@@ -37,7 +37,7 @@ export async function sendInviteEmail({
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
       to,
-      subject: `[${orgName}] 조직 초대장`,
+      subject: `[${orgName}] 밴드 초대장`,
       html: `
         <p>${inviterLine}<strong>${orgName}</strong>에 초대했습니다.</p>
         <p>역할: <strong>${role}</strong></p>

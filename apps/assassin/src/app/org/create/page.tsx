@@ -52,17 +52,17 @@ export default function CreateOrgPage() {
             <Building2 className="h-6 w-6 text-white" />
           </div>
           <CardTitle className="text-xl text-slate-900 dark:text-slate-50">
-            새 조직 만들기
+            새 밴드 만들기
           </CardTitle>
           <CardDescription className="text-slate-500 dark:text-slate-400">
-            조직 이름과 슬러그를 입력하세요
+            밴드 이름과 슬러그를 입력하세요
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
-                조직 이름
+                밴드 이름
               </Label>
               <Input
                 id="name"
@@ -111,7 +111,7 @@ export default function CreateOrgPage() {
                   생성 중...
                 </>
               ) : (
-                "조직 만들기"
+                "밴드 만들기"
               )}
             </Button>
           </form>

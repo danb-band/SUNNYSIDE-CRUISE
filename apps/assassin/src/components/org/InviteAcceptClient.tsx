@@ -50,7 +50,7 @@ export function InviteAcceptClient({ invitationId, orgName }: Props) {
             초대를 거절했습니다
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {orgName} 조직의 초대를 거절했습니다.
+            {orgName} 밴드의 초대를 거절했습니다.
           </p>
           <Link href="/" className="block text-sm text-blue-500 hover:text-blue-600">
             홈으로 돌아가기
@@ -65,7 +65,7 @@ export function InviteAcceptClient({ invitationId, orgName }: Props) {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">{orgName}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">조직에 참가하시겠습니까?</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">밴드에 참가하시겠습니까?</p>
         </div>
         {error && <p className="text-sm text-red-500 text-center">{error}</p>}
         <div className="flex gap-3">

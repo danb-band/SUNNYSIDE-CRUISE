@@ -33,8 +33,8 @@ export function OrgSelectPageClient({ orgs, pendingInvitations }: OrgSelectPageC
           <CardTitle className="text-xl text-slate-900 dark:text-slate-50">시작하기</CardTitle>
           <CardDescription className="text-slate-500 dark:text-slate-400">
             {hasContent
-              ? "소속된 조직을 선택하세요."
-              : "소속된 조직이 없습니다. 새 조직을 만들거나 초대를 확인하세요."}
+              ? "소속된 밴드를 선택하세요."
+              : "소속된 밴드가 없습니다. 새 밴드를 만들거나 초대를 확인하세요."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -58,7 +58,7 @@ export function OrgSelectPageClient({ orgs, pendingInvitations }: OrgSelectPageC
           {pendingInvitations.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                초대받은 조직
+                초대받은 밴드
               </p>
               {pendingInvitations.map((inv) => (
                 <Link
@@ -78,7 +78,7 @@ export function OrgSelectPageClient({ orgs, pendingInvitations }: OrgSelectPageC
             </div>
           )}
           <Button asChild className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-            <Link href="/org/create">새 조직 만들기</Link>
+            <Link href="/org/create">새 밴드 만들기</Link>
           </Button>
           <LogoutButton />
         </CardContent>

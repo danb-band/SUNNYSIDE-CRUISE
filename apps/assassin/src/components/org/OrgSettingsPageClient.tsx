@@ -66,10 +66,10 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                 <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                      조직 나가기
+                      밴드 나가기
                     </p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      조직에서 나가면 더 이상 접근할 수 없습니다.
+                      밴드에서 나가면 더 이상 접근할 수 없습니다.
                     </p>
                   </div>
                   <LeaveOrgButton orgId={org.id} />
@@ -85,7 +85,7 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                   </h2>
                   <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
                     <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
-                      조직 이름
+                      밴드 이름
                     </Label>
                     <div className="flex gap-2">
                       <Input
@@ -143,7 +143,7 @@ export function OrgSettingsPageClient({ orgSlug }: OrgSettingsPageClientProps) {
                   <div className="rounded-lg border border-red-200 dark:border-red-900/60 p-4 flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                        조직 삭제
+                        밴드 삭제
                       </p>
                       <p className="text-sm text-muted-foreground mt-0.5">
                         삭제하면 모든 데이터가 영구적으로 제거됩니다.
