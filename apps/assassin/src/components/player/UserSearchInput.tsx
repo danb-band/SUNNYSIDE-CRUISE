@@ -84,7 +84,6 @@ export function UserSearchInput({
         sideOffset={4}
         collisionPadding={12}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onPointerDown={(e) => e.preventDefault()}
         onWheel={(e) => {
           e.stopPropagation();
         }}
