@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@libs/supabase/auth";
+import { revalidateProfile } from "@libs/cache/profile";
 import UserService from "./service";
 import { UpdateProfilePayload } from "./schema";
 
@@ -23,6 +23,6 @@ export const getProfilesBySongAction = async (songId: string, orgId: string) => 
 export const updateProfileAction = async (payload: UpdateProfilePayload) => {
   const user = await getCurrentUser();
   const result = await UserService.updateProfile(payload, user.id);
-  revalidatePath("/profile");
+  revalidateProfile(user.id);
   return result;
 };
