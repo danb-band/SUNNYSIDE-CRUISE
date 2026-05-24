@@ -30,6 +30,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           DIRECT_URL=${{ secrets.DIRECT_URL }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
+          NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
           EOF
 
       - name: Generate Prisma Client
