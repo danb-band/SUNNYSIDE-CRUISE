@@ -43,7 +43,7 @@ export function AddSeasonCard({ nextSortOrder }: AddSeasonCardProps) {
 
   if (isEditing) {
     return (
-      <div className="min-w-0 flex-shrink-0 w-full">
+      <div className="flex-shrink-0 w-full snap-center">
         <Card className="border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
           <div className="p-4">
             <div className="flex items-center gap-1">
@@ -79,7 +79,7 @@ export function AddSeasonCard({ nextSortOrder }: AddSeasonCardProps) {
   }
 
   return (
-    <div className="min-w-0 flex-shrink-0 w-full">
+    <div className="flex-shrink-0 w-full snap-center">
       <button
         onClick={() => setIsEditing(true)}
         className="w-full h-full min-h-[80px] rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors flex items-center justify-center group"
