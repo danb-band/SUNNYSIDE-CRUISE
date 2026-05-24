@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useCreatePlayer } from "../mutations/useCreatePlayer";
 import { useUpdatePlayer } from "../mutations/useUpdatePlayer";
-import { useDeletePlayer } from "../mutations/useDeletePlayer";
+import { useSoftDeletePlayer } from "../mutations/useDeletePlayer";
 import { usePlayerForm } from "./usePlayerForm";
 import type { PlayerPayload, PlayerUpdatePayload } from "../schema";
 
@@ -25,7 +25,7 @@ export const usePlayerHandlers = (props: UsePlayerHandlersProps) => {
 
   const createPlayerMutation = useCreatePlayer();
   const updatePlayerMutation = useUpdatePlayer();
-  const deletePlayerMutation = useDeletePlayer();
+  const deletePlayerMutation = useSoftDeletePlayer();
 
   const formConfig =
     mode === "create"

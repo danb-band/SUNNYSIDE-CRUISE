@@ -11,7 +11,7 @@ import {
 } from "./schema";
 import PlayerRepository from "../player/repository";
 import CommentRepository from "../comment/repository";
-import { songSchema } from "../song/schema";
+import { TransactionClient } from "@/libs/prisma/types";
 
 const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void> => {
   const season = await SeasonRepository.getSeasonById(seasonId, orgId);
@@ -102,32 +102,25 @@ const updateSeason = async (
   return parsedOutput.data;
 };
 
-const deleteSeason = async (id: string, orgId: string, userId: string): Promise<void> => {
+const hardDeleteSeason = async (id: string, orgId: string, userId: string): Promise<void> => {
   await assertOrgMember(userId, orgId, "OWNER");
   await assertSeasonExists(id, orgId);
 
-  const activeSongs = await SongRepository.getSongsBySeasonId(id, orgId);
-
-  const parsedSongs = songSchema.array().safeParse(activeSongs);
-
-  if (!parsedSongs.success) {
-    throw new Error("Invalid song responses from DB");
-  }
-
   try {
     await prisma.$transaction(async (tx) => {
-      for (const song of parsedSongs.data) {
-        await PlayerRepository.deletePlayersBySongId(song.id, orgId, tx);
-        await CommentRepository.deleteCommentsBySongId(song.id, orgId, tx);
-        await SongRepository.deleteSong(song.id, orgId, tx);
-      }
+      await PlayerRepository.hardDeletePlayersBySeasonId(id, orgId, tx);
+      await CommentRepository.hardDeleteCommentsBySeasonId(id, orgId, tx);
+      await SongRepository.hardDeleteSongsBySeasonId(id, orgId, tx);
+      await SeasonRepository.hardDeleteSeason(id, orgId, tx);
     });
-
-    await SeasonRepository.deleteSeason(id, orgId);
   } catch (error) {
     console.error(`Failed to delete season ${id}:`, error);
     throw new Error("Season deletion failed");
   }
+};
+
+const hardDeleteSeasonsByOrgId = async (orgId: string, tx?: TransactionClient): Promise<void> => {
+  await SeasonRepository.hardDeleteSeasonsByOrgId(orgId, tx);
 };
 
 const SeasonService = {
@@ -136,7 +129,8 @@ const SeasonService = {
   getSeasonById,
   getAllSeasons,
   updateSeason,
-  deleteSeason,
+  hardDeleteSeason,
+  hardDeleteSeasonsByOrgId,
 };
 
 export default SeasonService;

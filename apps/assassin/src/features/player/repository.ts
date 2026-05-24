@@ -51,7 +51,7 @@ async function updatePlayer(
   });
 }
 
-async function deletePlayer(id: string, orgId: string, tx?: TransactionClient) {
+async function softDeletePlayer(id: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.player.updateMany({
     where: { id, deletedAt: null, song: { season: { orgId } } },
@@ -59,11 +59,43 @@ async function deletePlayer(id: string, orgId: string, tx?: TransactionClient) {
   });
 }
 
-async function deletePlayersBySongId(songId: string, orgId: string, tx?: TransactionClient) {
+async function softDeletePlayersBySongId(songId: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.player.updateMany({
     where: { songId, song: { season: { orgId } } },
     data: { deletedAt: new Date() },
+  });
+}
+
+async function hardDeletePlayer(id: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.deleteMany({
+    where: { id, song: { season: { orgId } } },
+  });
+}
+
+async function hardDeletePlayersBySongId(songId: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.deleteMany({
+    where: { songId, song: { season: { orgId } } },
+  });
+}
+
+async function hardDeletePlayersBySeasonId(
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.deleteMany({
+    where: { song: { seasonId, season: { orgId } } },
+  });
+}
+
+async function hardDeletePlayersByOrgId(orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.player.deleteMany({
+    where: { song: { season: { orgId } } },
   });
 }
 
@@ -72,8 +104,12 @@ const PlayerRepository = {
   getPlayersBySongId,
   createPlayer,
   updatePlayer,
-  deletePlayer,
-  deletePlayersBySongId,
+  softDeletePlayer,
+  softDeletePlayersBySongId,
+  hardDeletePlayer,
+  hardDeletePlayersBySongId,
+  hardDeletePlayersBySeasonId,
+  hardDeletePlayersByOrgId,
 };
 
 export default PlayerRepository;

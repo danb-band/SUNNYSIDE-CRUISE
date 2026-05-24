@@ -8,6 +8,7 @@ import {
   updatePlayerSchema,
 } from "./schema";
 import PlayerRepository from "./repository";
+import { TransactionClient } from "@/libs/prisma/types";
 
 const createPlayer = async (
   player: PlayerPayload,
@@ -86,13 +87,33 @@ const updatePlayer = async (
   return parsed.data;
 };
 
-const deletePlayer = async (id: string, orgId: string, actorUserId: string) => {
+const softDeletePlayer = async (id: string, orgId: string, actorUserId: string) => {
   await assertOrgMember(actorUserId, orgId);
   const player = await PlayerRepository.getPlayerById(id, orgId);
   if (!playerSchema.safeParse(player).success) {
     throw new Error(`Player with ID ${id} does not exist.`);
   }
-  await PlayerRepository.deletePlayer(id, orgId);
+  await PlayerRepository.softDeletePlayer(id, orgId);
+};
+
+const hardDeletePlayer = async (id: string, orgId: string, tx?: TransactionClient) => {
+  await PlayerRepository.hardDeletePlayer(id, orgId, tx);
+};
+
+const hardDeletePlayersBySongId = async (songId: string, orgId: string, tx?: TransactionClient) => {
+  await PlayerRepository.hardDeletePlayersBySongId(songId, orgId, tx);
+};
+
+const hardDeletePlayersBySeasonId = async (
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) => {
+  await PlayerRepository.hardDeletePlayersBySeasonId(seasonId, orgId, tx);
+};
+
+const hardDeletePlayersByOrgId = async (orgId: string, tx?: TransactionClient) => {
+  await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
 };
 
 const PlayerService = {
@@ -100,7 +121,11 @@ const PlayerService = {
   getPlayerById,
   getPlayersBySongId,
   updatePlayer,
-  deletePlayer,
+  softDeletePlayer,
+  hardDeletePlayer,
+  hardDeletePlayersBySongId,
+  hardDeletePlayersBySeasonId,
+  hardDeletePlayersByOrgId,
 };
 
 export default PlayerService;

@@ -97,11 +97,36 @@ async function updateSong(id: string, orgId: string, input: SongUpdatePayload): 
   });
 }
 
-async function deleteSong(id: string, orgId: string, tx?: TransactionClient) {
+async function softDeleteSong(id: string, orgId: string, tx?: TransactionClient) {
   const prismaClient = tx || prisma;
   await prismaClient.song.updateMany({
     where: { id, season: { orgId }, deletedAt: null },
     data: { deletedAt: new Date() },
+  });
+}
+
+async function hardDeleteSong(id: string, orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.song.deleteMany({
+    where: { id, season: { orgId } },
+  });
+}
+
+async function hardDeleteSongsBySeasonId(
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) {
+  const prismaClient = tx || prisma;
+  await prismaClient.song.deleteMany({
+    where: { seasonId, season: { orgId } },
+  });
+}
+
+async function hardDeleteSongsByOrgId(orgId: string, tx?: TransactionClient) {
+  const prismaClient = tx || prisma;
+  await prismaClient.song.deleteMany({
+    where: { season: { orgId } },
   });
 }
 
@@ -112,7 +137,10 @@ const SongRepository = {
   lockSeasonForUpdate: lockSeasonSongsForUpdate,
   createSong,
   updateSong,
-  deleteSong,
+  softDeleteSong,
+  hardDeleteSong,
+  hardDeleteSongsBySeasonId,
+  hardDeleteSongsByOrgId,
 };
 
 export default SongRepository;

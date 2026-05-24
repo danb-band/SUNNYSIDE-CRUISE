@@ -6,6 +6,7 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
+import { TransactionClient } from "@/libs/prisma/types";
 
 const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
   const orgId = await OrgRepository.getOrgIdBySongId(songId);
@@ -138,19 +139,41 @@ const updateSong = async (id: string, orgId: string, song: SongUpdatePayload, us
   return parsedOutput.data;
 };
 
-const deleteSong = async (id: string, orgId: string, userId: string) => {
+const softDeleteSong = async (id: string, orgId: string, userId: string) => {
   await assertOrgMember(userId, orgId);
 
   try {
     await prisma.$transaction(async (tx) => {
-      await PlayerRepository.deletePlayersBySongId(id, orgId, tx);
-      await CommentRepository.deleteCommentsBySongId(id, orgId, tx);
-      await SongRepository.deleteSong(id, orgId, tx);
+      await PlayerRepository.softDeletePlayersBySongId(id, orgId, tx);
+      await CommentRepository.softDeleteCommentsBySongId(id, orgId, tx);
+      await SongRepository.softDeleteSong(id, orgId, tx);
     });
   } catch (error) {
     console.error(`Failed to delete song ${id}:`, error);
     throw new Error("Song deletion failed");
   }
+};
+
+const hardDeleteSong = async (id: string, orgId: string, tx?: TransactionClient) => {
+  await PlayerRepository.hardDeletePlayersBySongId(id, orgId, tx);
+  await CommentRepository.hardDeleteCommentsBySongId(id, orgId, tx);
+  await SongRepository.hardDeleteSong(id, orgId, tx);
+};
+
+const hardDeleteSongsBySeasonId = async (
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) => {
+  await PlayerRepository.hardDeletePlayersBySeasonId(seasonId, orgId, tx);
+  await CommentRepository.hardDeleteCommentsBySeasonId(seasonId, orgId, tx);
+  await SongRepository.hardDeleteSongsBySeasonId(seasonId, orgId, tx);
+};
+
+const hardDeleteSongsByOrgId = async (orgId: string, tx?: TransactionClient) => {
+  await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
+  await CommentRepository.hardDeleteCommentsByOrgId(orgId, tx);
+  await SongRepository.hardDeleteSongsByOrgId(orgId, tx);
 };
 
 const SongService = {
@@ -160,7 +183,10 @@ const SongService = {
   getSongByIdInOrg,
   getSongsBySeasonId,
   updateSong,
-  deleteSong,
+  softDeleteSong,
+  hardDeleteSong,
+  hardDeleteSongsBySeasonId,
+  hardDeleteSongsByOrgId,
 };
 
 export default SongService;

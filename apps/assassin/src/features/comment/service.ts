@@ -8,6 +8,7 @@ import {
   CommentUpdatePayload,
   updateCommentSchema,
 } from "./schema";
+import { TransactionClient } from "@/libs/prisma/types";
 
 const assertCommentExists = async (commentId: string, orgId: string): Promise<void> => {
   const comment = await CommentRepository.getCommentById(commentId, orgId);
@@ -108,7 +109,7 @@ const updateComment = async (
   return parsed.data;
 };
 
-const deleteComment = async (id: string, userId: string, orgId: string): Promise<void> => {
+const softDeleteComment = async (id: string, userId: string, orgId: string): Promise<void> => {
   await assertOrgMember(userId, orgId);
 
   const comment = await CommentRepository.getCommentById(id, orgId);
@@ -119,7 +120,27 @@ const deleteComment = async (id: string, userId: string, orgId: string): Promise
     throw new Error("Unauthorized: you can only delete your own comments");
   }
 
-  await CommentRepository.deleteComment(id, orgId);
+  await CommentRepository.softDeleteComment(id, orgId);
+};
+
+const hardDeleteComment = async (id: string, orgId: string, tx?: TransactionClient) => {
+  await CommentRepository.hardDeleteComment(id, orgId, tx);
+};
+
+const hardDeleteCommentsBySongId = async (songId: string, orgId: string, tx?: TransactionClient) => {
+  await CommentRepository.hardDeleteCommentsBySongId(songId, orgId, tx);
+};
+
+const hardDeleteCommentsBySeasonId = async (
+  seasonId: string,
+  orgId: string,
+  tx?: TransactionClient,
+) => {
+  await CommentRepository.hardDeleteCommentsBySeasonId(seasonId, orgId, tx);
+};
+
+const hardDeleteCommentsByOrgId = async (orgId: string, tx?: TransactionClient) => {
+  await CommentRepository.hardDeleteCommentsByOrgId(orgId, tx);
 };
 
 const CommentService = {
@@ -129,7 +150,11 @@ const CommentService = {
   getCommentsBySongId,
   getCommentsBySongIdPaginated,
   updateComment,
-  deleteComment,
+  softDeleteComment,
+  hardDeleteComment,
+  hardDeleteCommentsBySongId,
+  hardDeleteCommentsBySeasonId,
+  hardDeleteCommentsByOrgId,
 };
 
 export default CommentService;

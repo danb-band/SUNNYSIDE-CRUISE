@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useCreateComment } from "../mutations/useCreateComment";
-import { useDeleteComment } from "../mutations/useDeleteComment";
+import { useSoftDeleteComment } from "../mutations/useDeleteComment";
 import { useUpdateComment } from "../mutations/useUpdateComment";
 import type { CommentUpdatePayload } from "../schema";
 import { useCommentForm, CommentFormData } from "./useCommentForm";
@@ -23,7 +23,7 @@ type UseCommentHandlersProps =
 export const useCommentHandlers = (props: UseCommentHandlersProps) => {
   const createCommentMutation = useCreateComment();
   const updateCommentMutation = useUpdateComment();
-  const deleteCommentMutation = useDeleteComment();
+  const deleteCommentMutation = useSoftDeleteComment();
 
   const formConfig =
     props.mode === "create"

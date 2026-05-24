@@ -31,8 +31,8 @@ export const updateSeasonAction = async (id: string, orgId: string, data: Season
   return result;
 };
 
-export const deleteSeasonAction = async (id: string, orgId: string) => {
+export const hardDeleteSeasonAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  await SeasonService.deleteSeason(id, orgId, user.id);
+  await SeasonService.hardDeleteSeason(id, orgId, user.id);
   revalidateSeasonBoard(orgId);
 };

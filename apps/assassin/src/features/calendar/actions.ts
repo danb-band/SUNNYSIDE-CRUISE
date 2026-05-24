@@ -37,8 +37,8 @@ export const updateCalendarEventAction = async (
   return result;
 };
 
-export const deleteCalendarEventAction = async (id: string, orgId: string) => {
+export const hardDeleteCalendarEventAction = async (id: string, orgId: string) => {
   const user = await getCurrentUser();
-  await CalendarEventService.deleteCalendarEvent(id, orgId, user.id);
+  await CalendarEventService.hardDeleteCalendarEvent(id, orgId, user.id);
   revalidateCalendar(orgId);
 };

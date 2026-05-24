@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteSongAction } from "../actions";
+import { softDeleteSongAction } from "../actions";
 import { songKeys } from "../queries/keys";
 import type { Song } from "../schema";
 import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useDeleteSong = () => {
+export const useSoftDeleteSong = () => {
   const queryClient = useQueryClient();
   const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id }: { id: string; seasonId?: string }) => deleteSongAction(id, orgId),
+    mutationFn: ({ id }: { id: string; seasonId?: string }) => softDeleteSongAction(id, orgId),
 
     onSuccess: (_, { id, seasonId }) => {
       if (seasonId) {

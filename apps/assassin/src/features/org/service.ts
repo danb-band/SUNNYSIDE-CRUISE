@@ -1,5 +1,10 @@
 import OrgRepository from "./repository";
 import { prisma } from "@libs/prisma/client";
+import CalendarEventRepository from "@features/calendar/repository";
+import CommentRepository from "@features/comment/repository";
+import PlayerRepository from "@features/player/repository";
+import SongRepository from "@features/song/repository";
+import SeasonRepository from "@features/season/repository";
 import {
   CreateOrgPayload,
   InviteMemberPayload,
@@ -66,9 +71,17 @@ const updateOrg = async (orgId: string, requesterId: string, input: UpdateOrgPay
   return await OrgRepository.updateOrg(orgId, input);
 };
 
-const deleteOrg = async (orgId: string, requesterId: string) => {
+const hardDeleteOrg = async (orgId: string, requesterId: string) => {
   await assertOrgMember(requesterId, orgId, "OWNER");
-  await OrgRepository.deleteOrg(orgId);
+
+  await prisma.$transaction(async (tx) => {
+    await CalendarEventRepository.hardDeleteCalendarEventsByOrgId(orgId, tx);
+    await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
+    await CommentRepository.hardDeleteCommentsByOrgId(orgId, tx);
+    await SongRepository.hardDeleteSongsByOrgId(orgId, tx);
+    await SeasonRepository.hardDeleteSeasonsByOrgId(orgId, tx);
+    await OrgRepository.hardDeleteOrg(orgId, tx);
+  });
 };
 
 const getOrgMembers = async (orgId: string, requesterId: string) => {
@@ -274,7 +287,7 @@ const OrgService = {
   getOrgBySlug,
   getUserOrgs,
   updateOrg,
-  deleteOrg,
+  hardDeleteOrg,
   getOrgMembers,
   getOrgRole,
   getOrgIdBySongId,
