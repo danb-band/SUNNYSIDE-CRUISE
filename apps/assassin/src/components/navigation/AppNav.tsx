@@ -18,9 +18,9 @@ export function AppNav() {
           asChild
           className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-50 dark:hover:bg-slate-700"
         >
-          <Link href="/onboarding" aria-label="조직 선택 화면으로 이동">
+          <Link href="/onboarding" aria-label="밴드 선택 화면으로 이동">
             <House className="h-4 w-4" />
-            <span className="hidden sm:inline ml-2">Home</span>
+            <span className="hidden sm:inline ml-2">홈</span>
           </Link>
         </Button>
         <TabNav />

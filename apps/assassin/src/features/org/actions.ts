@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient } from "@libs/supabase/server";
+import { revalidateOrgMembers } from "@libs/cache/orgMembers";
 import { sendInviteEmail } from "@libs/email/sendInviteEmail";
 import OrgService from "./service";
 import {
@@ -139,9 +140,25 @@ export const cancelInvitationAction = async (invitationId: string, orgId: string
   await OrgService.cancelInvitation(invitationId, orgId, userId);
 };
 
+export const updateMemberRoleAction = async (
+  orgId: string,
+  targetUserId: string,
+  role: "OWNER" | "MEMBER",
+): Promise<{ success: true } | { success: false; error: string }> => {
+  try {
+    const userId = await getCurrentUserId();
+    await OrgService.updateMemberRole(orgId, targetUserId, userId, role);
+    revalidateOrgMembers(orgId);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "오류가 발생했습니다." };
+  }
+};
+
 export const removeMemberAction = async (orgId: string, targetUserId: string) => {
   const userId = await getCurrentUserId();
   await OrgService.removeMember(orgId, targetUserId, userId);
+  revalidateOrgMembers(orgId);
 };
 
 export const leaveOrgAction = async (orgId: string) => {

@@ -19,7 +19,7 @@ export function TabNav() {
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         }`}
       >
-        Season
+        시즌
       </Link>
       <Link
         href={`/org/${currentOrg}/calendar`}
@@ -29,7 +29,7 @@ export function TabNav() {
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         }`}
       >
-        Calendar
+        일정
       </Link>
       {role !== null && (
         <Link
@@ -40,7 +40,7 @@ export function TabNav() {
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
-          Settings
+          설정
         </Link>
       )}
     </div>
