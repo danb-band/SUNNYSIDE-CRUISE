@@ -14,6 +14,47 @@ export interface GitHubPR {
   url: string
 }
 
+export async function createIssue(
+  title: string,
+  body: string,
+  labels: string[] = [],
+): Promise<number> {
+  if (!GITHUB_TOKEN || !GITHUB_REPO) {
+    throw new Error('GITHUB_TOKEN 또는 GITHUB_REPO가 설정되지 않았습니다.')
+  }
+
+  const create = async (withLabels: boolean) => {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        ...(withLabels ? { labels } : {}),
+      }),
+    })
+    return res
+  }
+
+  let res = await create(labels.length > 0)
+  if (!res.ok && labels.length > 0 && res.status === 422) {
+    res = await create(false)
+  }
+
+  if (!res.ok) {
+    const errorBody = await res.text()
+    throw new Error(`이슈 생성 실패: ${res.status} ${res.statusText} - ${errorBody}`)
+  }
+
+  const data = await res.json() as { number: number }
+  return data.number
+}
+
 export async function fetchIssue(issueNumber: number): Promise<GitHubIssue> {
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
     throw new Error('GITHUB_TOKEN 또는 GITHUB_REPO가 설정되지 않았습니다.')
@@ -49,12 +90,19 @@ export async function fetchIssue(issueNumber: number): Promise<GitHubIssue> {
   }
 }
 
-export async function createPR(issue: GitHubIssue, branchName: string, baseBranch = 'dev'): Promise<GitHubPR> {
+export async function createPR(
+  issue: GitHubIssue,
+  branchName: string,
+  baseBranch = 'dev',
+  bodyOverride?: string,
+  titleOverride?: string,
+): Promise<GitHubPR> {
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
     throw new Error('GITHUB_TOKEN 또는 GITHUB_REPO가 설정되지 않았습니다.')
   }
 
-  const body = [`closes #${issue.number}`, '', issue.body ?? ''].join('\n').trim()
+  const body = bodyOverride ?? [`closes #${issue.number}`, '', issue.body ?? ''].join('\n').trim()
+  const title = titleOverride ?? issue.title
 
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/pulls`, {
     method: 'POST',
@@ -65,7 +113,7 @@ export async function createPR(issue: GitHubIssue, branchName: string, baseBranc
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      title: issue.title,
+      title,
       body,
       head: branchName,
       base: baseBranch,

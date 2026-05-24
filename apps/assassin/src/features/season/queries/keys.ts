@@ -1,5 +1,6 @@
 export const seasonKeys = {
   all: ["seasons"] as const,
-  lists: () => [...seasonKeys.all, "list"] as const,
-  detail: (id: string) => [...seasonKeys.all, "detail", id] as const,
+  org: (orgId: string) => [...seasonKeys.all, { orgId }] as const,
+  lists: (orgId: string) => [...seasonKeys.org(orgId), "list"] as const,
+  detail: (orgId: string, id: string) => [...seasonKeys.org(orgId), "detail", { id }] as const,
 };

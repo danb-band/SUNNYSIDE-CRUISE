@@ -1,17 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCalendarEventAction } from "../actions";
+import { hardDeleteCalendarEventAction } from "../actions";
 import { calendarEventKeys } from "../queries/keys";
-import type { CalendarEvent } from "../schema";
+import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useDeleteCalendarEvent = () => {
+export const useHardDeleteCalendarEvent = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (id: string) => deleteCalendarEventAction(id),
-    onSuccess: (_, id) => {
-      queryClient.setQueryData(calendarEventKeys.lists(), (prev: CalendarEvent[] | undefined) =>
-        prev ? prev.filter((e) => e.id !== id) : prev,
-      );
+    mutationFn: (id: string) => hardDeleteCalendarEventAction(id, orgId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: calendarEventKeys.lists(orgId) });
     },
   });
 };

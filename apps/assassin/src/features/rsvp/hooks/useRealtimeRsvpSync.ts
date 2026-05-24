@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
 import { rsvpKeys } from "../queries/keys";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 type RsvpRow = {
   id?: string;
@@ -12,6 +13,7 @@ type RsvpRow = {
 
 export const useRealtimeRsvpSync = (eventId: string) => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
@@ -27,8 +29,8 @@ export const useRealtimeRsvpSync = (eventId: string) => {
 
           if (affectedEventId !== undefined && affectedEventId !== eventId) return;
 
-          queryClient.invalidateQueries({ queryKey: rsvpKeys.byEvent(eventId) });
-          queryClient.invalidateQueries({ queryKey: rsvpKeys.byUser(eventId) });
+          queryClient.invalidateQueries({ queryKey: rsvpKeys.byEvent(orgId, eventId) });
+          queryClient.invalidateQueries({ queryKey: rsvpKeys.byUser(orgId, eventId) });
         },
       )
       .subscribe();
@@ -36,5 +38,5 @@ export const useRealtimeRsvpSync = (eventId: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, eventId, supabase]);
+  }, [orgId, queryClient, eventId, supabase]);
 };

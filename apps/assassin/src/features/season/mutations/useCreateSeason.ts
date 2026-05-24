@@ -1,22 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createSeasonAction } from "../actions";
 import { seasonKeys } from "../queries/keys";
-import type { Season, SeasonPayload } from "../schema";
+import type { SeasonPayload } from "../schema";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 export const useCreateSeason = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: (data: SeasonPayload) => createSeasonAction(data),
-    onSuccess: (createdSeason) => {
-      if (!createdSeason) return;
-
-      queryClient.setQueryData(seasonKeys.detail(createdSeason.id), createdSeason);
-
-      queryClient.setQueryData(seasonKeys.lists(), (prev: Season[] | undefined) => {
-        if (!prev) return [createdSeason];
-        return [...prev, createdSeason];
-      });
+    mutationFn: (data: SeasonPayload) => createSeasonAction(data, orgId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: seasonKeys.org(orgId) });
     },
   });
 };

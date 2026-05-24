@@ -1,22 +1,32 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateCalendar } from "@libs/cache/calendar";
 import { getCurrentUser } from "@libs/supabase/auth";
 import RsvpService from "./service";
 import type { RsvpWithProfile } from "./schema";
 
-export const getRsvpAttendeesAction = async (eventId: string): Promise<RsvpWithProfile[]> => {
-  return RsvpService.getAttendeesByEvent(eventId);
+export const getRsvpAttendeesAction = async (
+  eventId: string,
+  orgId: string,
+): Promise<RsvpWithProfile[]> => {
+  const user = await getCurrentUser();
+  return RsvpService.getAttendeesByEvent(eventId, orgId, user.id);
 };
 
-export const getUserRsvpStatusAction = async (eventId: string): Promise<"ATTENDING" | "NOT_ATTENDING" | null> => {
+export const getUserRsvpStatusAction = async (
+  eventId: string,
+  orgId: string,
+): Promise<"ATTENDING" | "NOT_ATTENDING" | null> => {
   const user = await getCurrentUser();
-  return RsvpService.getUserRsvpStatus(eventId, user.id);
+  return RsvpService.getUserRsvpStatus(eventId, orgId, user.id);
 };
 
-export const toggleRsvpAction = async (eventId: string): Promise<{ status: "ATTENDING" | "NOT_ATTENDING" | null }> => {
+export const toggleRsvpAction = async (
+  eventId: string,
+  orgId: string,
+): Promise<{ status: "ATTENDING" | "NOT_ATTENDING" | null }> => {
   const user = await getCurrentUser();
-  const result = await RsvpService.toggleAttending(eventId, user.id);
-  revalidatePath("/calendar");
+  const result = await RsvpService.toggleAttending(eventId, orgId, user.id);
+  revalidateCalendar(orgId);
   return result;
 };

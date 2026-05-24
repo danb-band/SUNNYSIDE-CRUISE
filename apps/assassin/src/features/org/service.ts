@@ -1,0 +1,323 @@
+import OrgRepository from "./repository";
+import { prisma } from "@libs/prisma/client";
+import CalendarEventRepository from "@features/calendar/repository";
+import CommentRepository from "@features/comment/repository";
+import PlayerRepository from "@features/player/repository";
+import SongRepository from "@features/song/repository";
+import SeasonRepository from "@features/season/repository";
+import {
+  CreateOrgPayload,
+  InviteMemberPayload,
+  orgMemberSchema,
+  orgInvitationSchema,
+  OrgRole,
+  ROLE_HIERARCHY,
+  UpdateOrgPayload,
+} from "./schema";
+
+/**
+ * 현재 유저가 해당 org의 멤버인지 검사한다.
+ * minRole이 지정되면 해당 권한 이상인지도 검사한다.
+ * 검사 실패 시 Error를 throw한다.
+ */
+export async function assertOrgMember(
+  userId: string,
+  orgId: string,
+  minRole?: OrgRole,
+): Promise<void> {
+  const member = await OrgRepository.getMember(orgId, userId);
+  const parsedMember = orgMemberSchema.safeParse(member);
+  if (!parsedMember.success) {
+    throw new Error("이 밴드의 멤버가 아닙니다.");
+  }
+
+  if (minRole && ROLE_HIERARCHY[parsedMember.data.role] < ROLE_HIERARCHY[minRole]) {
+    throw new Error(`이 작업을 수행하려면 ${minRole} 이상의 권한이 필요합니다.`);
+  }
+}
+
+const createOrg = async (creatorUserId: string, input: CreateOrgPayload) => {
+  const existing = await OrgRepository.getOrgBySlug(input.slug);
+  if (existing) {
+    throw new Error("이미 사용 중인 slug입니다.");
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const org = await OrgRepository.createOrg(input, tx);
+    // 생성자를 OWNER로 자동 등록
+    await OrgRepository.addMember(org.id, creatorUserId, "OWNER", tx);
+    return org;
+  });
+};
+
+const getOrgById = async (orgId: string) => {
+  return await OrgRepository.getOrgById(orgId);
+};
+
+const getOrgBySlug = async (slug: string) => {
+  const org = await OrgRepository.getOrgBySlug(slug);
+  if (!org) {
+    throw new Error("밴드를 찾을 수 없습니다.");
+  }
+  return org;
+};
+
+const getUserOrgs = async (userId: string) => {
+  return await OrgRepository.getOrgsByUserId(userId);
+};
+
+const updateOrg = async (orgId: string, requesterId: string, input: UpdateOrgPayload) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  return await OrgRepository.updateOrg(orgId, input);
+};
+
+const hardDeleteOrg = async (orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+
+  await prisma.$transaction(async (tx) => {
+    await CalendarEventRepository.hardDeleteCalendarEventsByOrgId(orgId, tx);
+    await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
+    await CommentRepository.hardDeleteCommentsByOrgId(orgId, tx);
+    await SongRepository.hardDeleteSongsByOrgId(orgId, tx);
+    await SeasonRepository.hardDeleteSeasonsByOrgId(orgId, tx);
+    await OrgRepository.hardDeleteOrg(orgId, tx);
+  });
+};
+
+const getOrgMembers = async (orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId);
+  return await OrgRepository.getOrgMembers(orgId);
+};
+
+const getOrgRole = async (orgId: string, userId: string): Promise<OrgRole | null> => {
+  const member = await OrgRepository.getMember(orgId, userId);
+  return (member?.role as OrgRole) ?? null;
+};
+
+const getOrgIdBySongId = async (songId: string): Promise<string | null> => {
+  return await OrgRepository.getOrgIdBySongId(songId);
+};
+
+const getOrgIdByEvent = async (eventId: string): Promise<string | null> => {
+  return await OrgRepository.getOrgIdByEvent(eventId);
+};
+
+const inviteMember = async (orgId: string, requesterId: string, input: InviteMemberPayload) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+
+  const email = input.email.toLowerCase().trim();
+
+  // 이미 가입된 유저라면 조직 멤버 여부 확인
+  const existingUserId = await OrgRepository.findUserIdByEmail(email);
+  if (existingUserId) {
+    const existingMember = await OrgRepository.getMember(orgId, existingUserId);
+    if (existingMember) {
+      throw new Error("이미 밴드의 멤버입니다.");
+    }
+  }
+
+  // 유효한 초대가 이미 존재하면 중복 초대 차단
+  const validPending = await OrgRepository.getValidPendingInvitationByEmail(orgId, email);
+  if (validPending) {
+    throw new Error("ALREADY_INVITED");
+  }
+
+  // 만료된 PENDING 정리 후 새 초대 생성
+  return await prisma.$transaction(async (tx) => {
+    await OrgRepository.markExpiredInvitations(orgId, email, tx);
+    return await OrgRepository.createInvitation(orgId, email, "MEMBER", tx);
+  });
+};
+
+const acceptInvitation = async (token: string, userId: string, userEmail: string) => {
+  const invitation = await OrgRepository.getInvitationByToken(token);
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+
+  // 상태별 명시적 에러 코드
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt) {
+    if (invitation.status !== "EXPIRED") {
+      await OrgRepository.updateInvitationStatus(invitation.id, "EXPIRED");
+    }
+    throw new Error("EXPIRED");
+  }
+
+  // 초대 이메일과 로그인한 유저 이메일 정확히 일치해야 함
+  if (invitation.email !== userEmail.toLowerCase().trim()) {
+    throw new Error("EMAIL_MISMATCH");
+  }
+
+  // 멤버 추가와 초대 상태 업데이트를 트랜잭션으로 묶어 원자성 보장
+  // 멱등성: 트랜잭션 안에서 이미 멤버인지 확인 후 추가
+  await prisma.$transaction(async (tx) => {
+    const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
+    if (!existingMember) {
+      await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    }
+    await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
+  });
+
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return org!;
+};
+
+const cancelInvitation = async (invitationId: string, orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  const invitation = await OrgRepository.getInvitationByIdAndOrgId(invitationId, orgId);
+
+  const parsedInvitation = orgInvitationSchema.safeParse(invitation); // 유효성 검사
+
+  if (!parsedInvitation.success) {
+    throw new Error("유효하지 않은 초대입니다.");
+  }
+
+  if (parsedInvitation.data.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+
+  const updated = await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+
+  const parsedUpdated = orgInvitationSchema.safeParse(updated);
+
+  if (!parsedUpdated.success) {
+    throw new Error("초대 상태 업데이트 실패");
+  }
+
+  return parsedUpdated.data;
+};
+
+const updateMemberRole = async (
+  orgId: string,
+  targetUserId: string,
+  requesterId: string,
+  role: OrgRole,
+) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  if (requesterId === targetUserId) {
+    throw new Error("자신의 역할은 변경할 수 없습니다.");
+  }
+  return await OrgRepository.updateMemberRole(orgId, targetUserId, role);
+};
+
+const removeMember = async (orgId: string, targetUserId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+
+  const targetMember = await OrgRepository.getMember(orgId, targetUserId);
+  if (targetMember?.role === "OWNER") {
+    throw new Error("OWNER는 제거할 수 없습니다.");
+  }
+
+  await OrgRepository.removeMember(orgId, targetUserId);
+};
+
+const leaveOrg = async (orgId: string, userId: string) => {
+  const member = await OrgRepository.getMember(orgId, userId);
+  if (!member) throw new Error("밴드의 멤버가 아닙니다.");
+  if (member.role === "OWNER") throw new Error("OWNER는 밴드를 나갈 수 없습니다.");
+  await OrgRepository.removeMember(orgId, userId);
+};
+
+const getInvitationInfo = async (params: { token?: string; id?: string }, userEmail?: string) => {
+  let invitation;
+  if (params.token) {
+    invitation = await OrgRepository.getInvitationByToken(params.token);
+  } else if (params.id) {
+    invitation = await OrgRepository.getInvitationById(params.id);
+  } else {
+    throw new Error("INVALID_TOKEN");
+  }
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt)
+    throw new Error("EXPIRED");
+
+  if (userEmail && invitation.email !== userEmail.toLowerCase().trim()) {
+    throw new Error("EMAIL_MISMATCH");
+  }
+
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return { invitationId: invitation.id, orgName: org!.name };
+};
+
+const acceptInvitationById = async (invitationId: string, userId: string, userEmail: string) => {
+  const invitation = await OrgRepository.getInvitationById(invitationId);
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.status === "ACCEPTED") throw new Error("ALREADY_ACCEPTED");
+  if (invitation.status === "CANCELLED") throw new Error("REVOKED");
+  if (invitation.status === "EXPIRED" || new Date() > invitation.expiresAt) {
+    if (invitation.status !== "EXPIRED") {
+      await OrgRepository.updateInvitationStatus(invitation.id, "EXPIRED");
+    }
+    throw new Error("EXPIRED");
+  }
+  if (invitation.email !== userEmail.toLowerCase().trim()) throw new Error("EMAIL_MISMATCH");
+
+  await prisma.$transaction(async (tx) => {
+    const existingMember = await OrgRepository.getMember(invitation.orgId, userId);
+    if (!existingMember) {
+      await OrgRepository.addMember(invitation.orgId, userId, "MEMBER", tx);
+    }
+    await OrgRepository.updateInvitationStatus(invitation.id, "ACCEPTED", tx);
+  });
+
+  const org = await OrgRepository.getOrgById(invitation.orgId);
+  return org!;
+};
+
+const cancelInvitationByInvitee = async (invitationId: string, userEmail: string) => {
+  const invitation = await OrgRepository.getInvitationById(invitationId);
+
+  if (!invitation) throw new Error("INVALID_TOKEN");
+  if (invitation.email !== userEmail.toLowerCase().trim()) throw new Error("EMAIL_MISMATCH");
+  if (invitation.status !== "PENDING") throw new Error("REVOKED");
+
+  await OrgRepository.updateInvitationStatus(invitationId, "CANCELLED");
+};
+
+const getPendingInvitationsForUser = async (userEmail: string) => {
+  return await OrgRepository.getPendingInvitationsByEmail(userEmail.toLowerCase().trim());
+};
+
+const markInvitationEmailSent = async (invitationId: string) => {
+  await OrgRepository.markInvitationEmailSent(invitationId);
+};
+
+const getProfileById = async (userId: string) => {
+  return await OrgRepository.getProfileById(userId);
+};
+
+const getPendingInvitations = async (orgId: string, requesterId: string) => {
+  await assertOrgMember(requesterId, orgId, "OWNER");
+  return await OrgRepository.getPendingInvitationsByOrg(orgId);
+};
+
+const OrgService = {
+  createOrg,
+  getOrgById,
+  getOrgBySlug,
+  getUserOrgs,
+  updateOrg,
+  hardDeleteOrg,
+  getOrgMembers,
+  getOrgRole,
+  getOrgIdBySongId,
+  getOrgIdByEvent,
+  inviteMember,
+  updateMemberRole,
+  acceptInvitation,
+  acceptInvitationById,
+  getInvitationInfo,
+  cancelInvitation,
+  cancelInvitationByInvitee,
+  removeMember,
+  leaveOrg,
+  markInvitationEmailSent,
+  getProfileById,
+  getPendingInvitations,
+  getPendingInvitationsForUser,
+};
+
+export default OrgService;

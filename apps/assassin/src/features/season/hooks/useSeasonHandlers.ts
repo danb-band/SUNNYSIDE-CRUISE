@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useCreateSeason } from "../mutations/useCreateSeason";
+import { useHardDeleteSeason } from "../mutations/useDeleteSeason";
 import { useUpdateSeason } from "../mutations/useUpdateSeason";
 import { useSeasonForm } from "./useSeasonForm";
 import type { SeasonPayload, SeasonUpdatePayload } from "../schema";
@@ -22,6 +23,7 @@ type UseSeasonHandlersProps =
 export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
   const createSeasonMutation = useCreateSeason();
   const updateSeasonMutation = useUpdateSeason();
+  const deleteSeasonMutation = useHardDeleteSeason();
 
   const formConfig =
     props.mode === "create"
@@ -103,10 +105,26 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
     [updateSeasonMutation, props],
   );
 
+  const handleDeleteSeason = useCallback(
+    async (id: string) => {
+      try {
+        await deleteSeasonMutation.mutateAsync({ id });
+        props.onSuccess?.("Season deleted successfully");
+        return { success: true };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to delete season";
+        props.onError?.(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    },
+    [deleteSeasonMutation, props],
+  );
+
   // Loading states
   const isCreating = createSeasonMutation.isPending;
   const isUpdating = updateSeasonMutation.isPending;
-  const isProcessing = isCreating || isUpdating;
+  const isDeleting = deleteSeasonMutation.isPending;
+  const isProcessing = isCreating || isUpdating || isDeleting;
 
   return {
     // Form state
@@ -117,6 +135,7 @@ export const useSeasonHandlers = (props: UseSeasonHandlersProps) => {
     handleChangeField,
     handleArchiveSeason,
     handleRestoreSeason,
+    handleDeleteSeason,
 
     // States
     isProcessing,

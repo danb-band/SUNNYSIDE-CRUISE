@@ -66,60 +66,63 @@ export function PlayerItem({ player }: PlayerItemProps) {
     return (
       <>
         <div className="space-y-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-        <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(INSTRUMENT_LABELS) as Instrument[]).map((key) => {
-            const isSelected = formData.instrument === key;
-            return (
-              <Badge
-                key={key}
-                variant="outline"
-                className={cn(
-                  "cursor-pointer transition-all",
-                  isSelected
-                    ? INSTRUMENT_COLORS[key]
-                    : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800",
-                )}
-                onClick={() => handleChangeField("instrument", key)}
-              >
-                {INSTRUMENT_LABELS[key]}
-              </Badge>
-            );
-          })}
-        </div>
-        <div className="flex items-center gap-2">
-          <UserSearchInput
-            value={(formData.userId as string) ?? ""}
-            onChange={(userId) => handleChangeField("userId", userId)}
-            placeholder="이름 검색"
-          />
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCancel}
-              disabled={isProcessing}
-              className="h-8 w-8 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              onClick={handleSave}
-              disabled={isProcessing}
-              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-            </Button>
+          <div className="flex flex-wrap gap-1.5">
+            {(Object.keys(INSTRUMENT_LABELS) as Instrument[]).map((key) => {
+              const isSelected = formData.instrument === key;
+              return (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className={cn(
+                    "cursor-pointer transition-all",
+                    isSelected
+                      ? INSTRUMENT_COLORS[key]
+                      : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800",
+                  )}
+                  onClick={() => handleChangeField("instrument", key)}
+                >
+                  {INSTRUMENT_LABELS[key]}
+                </Badge>
+              );
+            })}
           </div>
-        </div>
+          <div className="flex items-center gap-2">
+            <UserSearchInput
+              songId={player.songId}
+              value={(formData.userId as string) ?? ""}
+              onChange={(userId) => handleChangeField("userId", userId)}
+              placeholder="이름 검색"
+            />
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCancel}
+                disabled={isProcessing}
+                className="h-8 w-8 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                onClick={handleSave}
+                disabled={isProcessing}
+                className="h-8 w-8 bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
 
-        {(errors.instrument || errors.userId || errors._root) && (
-          <p className="text-xs text-red-500">{errors.instrument || errors.userId || errors._root}</p>
-        )}
+          {(errors.instrument || errors.userId || errors._root) && (
+            <p className="text-xs text-red-500">
+              {errors.instrument || errors.userId || errors._root}
+            </p>
+          )}
         </div>
         <ConfirmDialog
           open={isDeleteDialogOpen}

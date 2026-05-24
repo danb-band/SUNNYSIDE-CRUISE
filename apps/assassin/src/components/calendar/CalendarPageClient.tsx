@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, startTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, startTransition } from "react";
 import { ko } from "date-fns/locale";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { CalendarIcon, MapPin, Clock, Plus, Pencil, Trash2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { cn } from "@/libs/shadcn/utils";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { CalendarEventUpsertDialog } from "@/components/calendar/CalendarEventUpsertDialog";
-import { useDeleteCalendarEvent } from "@/features/calendar/mutations/useDeleteCalendarEvent";
+import { useHardDeleteCalendarEvent } from "@/features/calendar/mutations/useDeleteCalendarEvent";
 import { useCalendarEventLogic } from "@/features/calendar/hooks/useCalendarEventLogic";
 import { useRealtimeCalendarEventSync } from "@/features/calendar/hooks/useRealtimeCalendarEventSync";
 import type { CalendarEvent } from "@/features/calendar/schema";
@@ -19,6 +19,7 @@ import { RsvpButton } from "@/components/calendar/RsvpButton";
 import { RsvpList } from "@/components/calendar/RsvpList";
 import { EventSongList } from "@/components/calendar/EventSongList";
 import { EventSongAddForm } from "@/components/calendar/EventSongAddForm";
+import { useRealtimeSeasonSync } from "@/features/season/hooks/useRealtimeSeasonSync";
 
 type DialogState =
   | { type: "none" }
@@ -42,8 +43,10 @@ export function CalendarPageClient() {
   const month = urlDate.getMonth() + 1;
 
   useRealtimeCalendarEventSync();
+  useRealtimeSeasonSync();
+
   const { getEventsForDay } = useCalendarEventLogic(year, month);
-  const deleteMutation = useDeleteCalendarEvent();
+  const deleteMutation = useHardDeleteCalendarEvent();
 
   const [selected, setSelected] = useState<Date | undefined>(urlDate);
   const [calendarMonth, setCalendarMonth] = useState<Date>(urlDate);
@@ -57,22 +60,25 @@ export function CalendarPageClient() {
     });
   }, [urlDate]);
 
-  const updateUrlParamQuietly = (date: Date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
+  const updateUrlParamQuietly = useCallback(
+    (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
 
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    params.set("date", `${y}-${m}-${d}`);
-    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-  };
+      const params = new URLSearchParams(searchParams?.toString() || "");
+      params.set("date", `${y}-${m}-${d}`);
+      window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+    },
+    [searchParams, pathname],
+  );
 
-  // 최초 로드 시 ?date= 파라미터가 없으면 url에 강제로 넣고 시작
+  // ?date= 파라미터가 없으면 url에 강제로 넣음
   useEffect(() => {
     if (!searchParams?.has("date")) {
       updateUrlParamQuietly(new Date());
     }
-  }, []);
+  }, [searchParams, updateUrlParamQuietly]);
 
   const handleMonthChange = (newMonth: Date) => {
     setCalendarMonth(newMonth);

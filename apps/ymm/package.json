@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "node --import tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "discord.js": "^14.16.3",

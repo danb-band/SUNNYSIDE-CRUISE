@@ -33,7 +33,7 @@ export function LikeButton({ song }: LikeButtonProps) {
       aria-label={liked ? "좋아요 취소" : "좋아요"}
     >
       <Heart className={cn("h-4 w-4 transition-all", liked && "fill-current")} />
-      <span className="tabular-nums">{song.likeCount}</span>
+      <span className="tabular-nums">{Math.max(0, song.likeCount)}</span>
     </Button>
   );
 }

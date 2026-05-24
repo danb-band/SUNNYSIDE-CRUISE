@@ -1,6 +1,6 @@
 export const songKeys = {
-  all: ["songs"] as const,
-  lists: () => [...songKeys.all, "list"] as const,
-  bySeason: (seasonId: string) => [...songKeys.all, "bySeason", seasonId] as const,
-  detail: (id: string) => [...songKeys.all, "detail", id] as const,
+  byOrg: (orgId: string) => ["songs", "list", { orgId }] as const,
+  bySeason: (orgId: string, seasonId: string) =>
+    ["songs", "bySeason", { orgId, seasonId }] as const,
+  detail: (orgId: string, id: string) => ["songs", "detail", { orgId, id }] as const,
 };

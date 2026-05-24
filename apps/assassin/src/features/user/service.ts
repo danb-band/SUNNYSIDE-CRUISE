@@ -1,13 +1,31 @@
+import { assertOrgMember } from "@features/org/service";
+import SongRepository from "@features/song/repository";
 import UserRepository from "./repository";
 import { Profile, profileSchema, updateProfileSchema, UpdateProfilePayload } from "./schema";
 
-const getAllProfiles = async (): Promise<Profile[]> => {
-  const profiles = await UserRepository.getAllProfiles();
+const getProfilesByOrg = async (orgId: string, requesterId: string): Promise<Profile[]> => {
+  await assertOrgMember(requesterId, orgId);
+  const profiles = await UserRepository.getProfilesByOrg(orgId);
   const parsed = profileSchema.array().safeParse(profiles);
   if (!parsed.success) {
     throw new Error("Invalid profile responses from DB");
   }
   return parsed.data;
+};
+
+const getProfilesBySong = async (
+  songId: string,
+  orgId: string,
+  requesterId: string,
+): Promise<Profile[]> => {
+  await assertOrgMember(requesterId, orgId);
+
+  const song = await SongRepository.getSongByIdInOrg(songId, orgId);
+  if (!song) {
+    throw new Error("Song not found");
+  }
+
+  return await getProfilesByOrg(orgId, requesterId);
 };
 
 const getProfile = async (id: string): Promise<Profile | null> => {
@@ -24,20 +42,27 @@ const getProfile = async (id: string): Promise<Profile | null> => {
   return parsed.data;
 };
 
-const updateProfile = async (id: string, payload: UpdateProfilePayload): Promise<Profile> => {
+const updateProfile = async (
+  payload: UpdateProfilePayload,
+  actorUserId: string,
+): Promise<Profile> => {
   const parsedInput = updateProfileSchema.safeParse(payload);
 
   if (!parsedInput.success) {
     throw new Error("Invalid profile input");
   }
 
-  const profile = await UserRepository.getProfileById(id);
-
-  if (!profile) {
-    throw new Error(`Profile with ID ${id} does not exist.`);
+  if (parsedInput.data.userId !== actorUserId) {
+    throw new Error("Unauthorized: you can only update your own profile");
   }
 
-  const updated = await UserRepository.updateProfile(id, parsedInput.data);
+  const profile = await UserRepository.getProfileById(parsedInput.data.userId);
+
+  if (!profile) {
+    throw new Error(`Profile with ID ${parsedInput.data.userId} does not exist.`);
+  }
+
+  const updated = await UserRepository.updateProfile(parsedInput.data);
 
   const parsed = profileSchema.safeParse(updated);
 
@@ -50,7 +75,8 @@ const updateProfile = async (id: string, payload: UpdateProfilePayload): Promise
 
 const UserService = {
   getProfile,
-  getAllProfiles,
+  getProfilesByOrg,
+  getProfilesBySong,
   updateProfile,
 };
 

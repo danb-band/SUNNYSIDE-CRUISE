@@ -1,14 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deletePlayerAction } from "../actions";
+import { softDeletePlayerAction } from "../actions";
 import { playerKeys } from "../queries/keys";
+import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useDeletePlayer = () => {
+export const useSoftDeletePlayer = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id, songId }: { id: string; songId: string }) => deletePlayerAction(id, songId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: playerKeys.all });
+    mutationFn: (variables: { id: string; songId: string }) =>
+      softDeletePlayerAction(variables.id, orgId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: playerKeys.bySong(orgId, variables.songId) });
     },
   });
 };

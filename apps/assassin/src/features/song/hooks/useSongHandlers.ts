@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useCreateSong } from "../mutations/useCreateSong";
 import { useUpdateSong } from "../mutations/useUpdateSong";
-import { useDeleteSong } from "../mutations/useDeleteSong";
+import { useSoftDeleteSong } from "../mutations/useDeleteSong";
 import { useSongForm, SongFormData } from "./useSongForm";
 import type { SongUpdatePayload } from "../schema";
 
@@ -23,7 +23,7 @@ type UseSongHandlersProps =
 export const useSongHandlers = (props: UseSongHandlersProps) => {
   const createSongMutation = useCreateSong();
   const updateSongMutation = useUpdateSong();
-  const deleteSongMutation = useDeleteSong();
+  const deleteSongMutation = useSoftDeleteSong();
 
   const formConfig =
     props.mode === "create"

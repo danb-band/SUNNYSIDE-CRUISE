@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventSongKeys } from "@features/eventSong/queries/keys";
 import { createBrowserSupabaseClient } from "@/libs/supabase/client";
+import { useOrgId } from "@/components/org/OrgProvider";
 
 type EventSongRow = {
   id?: string;
@@ -11,10 +12,11 @@ type EventSongRow = {
 
 export const useRealtimeEventSongSync = (eventId: string) => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
-    const channel = supabase
+    const eventSongChannel = supabase
       .channel(`realtime:calendar_event_song:${eventId}`)
       .on(
         "postgres_changes",
@@ -24,23 +26,25 @@ export const useRealtimeEventSongSync = (eventId: string) => {
           const prevRow = payload.old as EventSongRow | undefined;
           const affectedEventId = nextRow?.eventId ?? prevRow?.eventId;
 
-          console.log("[Realtime Sync] Received event song change:", {
-            eventType: payload.eventType,
-            nextRow,
-            prevRow,
-          });
-
           // affectedEventId가 undefined인 경우는 REPLICA IDENTITY FULL 미설정으로 인해
           // DELETE payload에 eventId가 없는 것 — 어느 이벤트인지 모르므로 일단 invalidate
           if (affectedEventId !== undefined && affectedEventId !== eventId) return;
 
-          queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(eventId) });
+          queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, eventId) });
         },
       )
       .subscribe();
 
+    const songChannel = supabase
+      .channel(`realtime:song:event-song:${orgId}:${eventId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "song" }, () => {
+        queryClient.invalidateQueries({ queryKey: eventSongKeys.byEvent(orgId, eventId) });
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(eventSongChannel);
+      supabase.removeChannel(songChannel);
     };
-  }, [queryClient, eventId, supabase]);
+  }, [orgId, queryClient, eventId, supabase]);
 };

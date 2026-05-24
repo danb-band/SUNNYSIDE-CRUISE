@@ -29,9 +29,6 @@ export function PlayerInput({ songId, onComplete }: PlayerInputProps) {
     }
   };
 
-  const inputClassName =
-    "h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-sm placeholder:text-slate-400";
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
@@ -57,6 +54,7 @@ export function PlayerInput({ songId, onComplete }: PlayerInputProps) {
 
       <div className="flex items-center gap-2">
         <UserSearchInput
+          songId={songId}
           value={(formData.userId as string) ?? ""}
           onChange={(userId) => handleChangeField("userId", userId)}
           placeholder="이름 검색"

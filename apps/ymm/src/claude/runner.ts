@@ -6,6 +6,7 @@ import { formatToolInput, summarizeToolResult } from './formatter.js'
 import { createDiscordLogger } from '../discord/discordLogger.js'
 import { cleanup } from '../discord/attachments.js'
 import { PROJECT_ROOT } from '../config.js'
+import { buildSharedAgentContextPrompt } from '../sharedAgentContext.js'
 
 const WORKFLOW_RULES = `[WORKFLOW RULES]
 
@@ -71,7 +72,11 @@ export function runClaudeCode(
   console.log(`${ts()} ${c.cyan}프롬프트:${c.reset} "${promptPreview}"`)
   discordLogger.log(`\n══ 작업 시작${sessionLabel} ══\n프롬프트: "${promptPreview}"`)
 
-  const fullPrompt = WORKFLOW_RULES + prompt + COMMIT_INSTRUCTIONS
+  const fullPrompt =
+    WORKFLOW_RULES +
+    buildSharedAgentContextPrompt({ projectRoot: PROJECT_ROOT }) +
+    prompt +
+    COMMIT_INSTRUCTIONS
 
   const args = sessionId
     ? ['--resume', sessionId, '-p', fullPrompt]

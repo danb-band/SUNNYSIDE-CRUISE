@@ -2,32 +2,41 @@ import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { CalendarPageClient } from "@/components/calendar/CalendarPageClient";
 import { CalendarPageSkeleton } from "@/components/calendar/CalendarPageSkeleton";
-import { getCalendarEventsByMonthAction } from "@features/calendar/actions";
+import CalendarEventService from "@features/calendar/service";
 import { calendarEventKeys } from "@features/calendar/queries/keys";
 import type { CalendarEvent } from "@features/calendar/schema";
 import { getRsvpAttendeesAction, getUserRsvpStatusAction } from "@features/rsvp/actions";
 import { rsvpKeys } from "@features/rsvp/queries/keys";
 import { getSongsByEventAction } from "@features/eventSong/actions";
 import { eventSongKeys } from "@features/eventSong/queries/keys";
+import { getOrgBySlugAction } from "@features/org/actions";
 import { getQueryClient } from "@libs/react-query/getQueryClient";
 import { CALENDAR_CACHE_TAG } from "@libs/cache/calendar";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { notFound } from "next/navigation";
+import { getCurrentUser } from "@libs/supabase/auth";
 
 interface CalendarPageProps {
+  params: Promise<{ orgSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getCachedCalendarEvents(year: number, month: number) {
+async function getCachedCalendarEvents(year: number, month: number, orgId: string, userId: string) {
   "use cache";
-  cacheTag(CALENDAR_CACHE_TAG);
+  cacheTag(`${CALENDAR_CACHE_TAG}-${orgId}`);
   cacheLife("max");
-  return getCalendarEventsByMonthAction(year, month);
+  return CalendarEventService.getCalendarEventsByMonth(year, month, orgId, userId);
 }
 
-// 데이터를 패칭하고 클라이언트 컴포넌트에 공급하는 서버 컴포넌트
-async function CalendarDataFetch({ searchParams }: CalendarPageProps) {
-  const params = await searchParams;
-  const dateParam = typeof params.date === "string" ? params.date : undefined;
+async function CalendarDataFetch({ params, searchParams }: CalendarPageProps) {
+  const { orgSlug } = await params;
+  const org = await getOrgBySlugAction(orgSlug).catch(() => null);
+  if (!org) notFound();
+  const user = await getCurrentUser();
+
+  const resolvedSearchParams = await searchParams;
+  const dateParam =
+    typeof resolvedSearchParams.date === "string" ? resolvedSearchParams.date : undefined;
 
   const targetDate = dateParam ? new Date(dateParam) : new Date();
   if (isNaN(targetDate.getTime())) {
@@ -39,25 +48,25 @@ async function CalendarDataFetch({ searchParams }: CalendarPageProps) {
 
   const queryClient = getQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: calendarEventKeys.lists(year, month),
-    queryFn: () => getCachedCalendarEvents(year, month),
+    queryKey: calendarEventKeys.lists(org.id, year, month),
+    queryFn: () => getCachedCalendarEvents(year, month, org.id, user.id),
   });
 
   const events =
-    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(year, month)) ?? [];
+    queryClient.getQueryData<CalendarEvent[]>(calendarEventKeys.lists(org.id, year, month)) ?? [];
   await Promise.all(
     events.flatMap((event) => [
       queryClient.prefetchQuery({
-        queryKey: rsvpKeys.byEvent(event.id),
-        queryFn: () => getRsvpAttendeesAction(event.id),
+        queryKey: rsvpKeys.byEvent(org.id, event.id),
+        queryFn: () => getRsvpAttendeesAction(event.id, org.id),
       }),
       queryClient.prefetchQuery({
-        queryKey: rsvpKeys.byUser(event.id),
-        queryFn: () => getUserRsvpStatusAction(event.id),
+        queryKey: rsvpKeys.byUser(org.id, event.id),
+        queryFn: () => getUserRsvpStatusAction(event.id, org.id),
       }),
       queryClient.prefetchQuery({
-        queryKey: eventSongKeys.byEvent(event.id),
-        queryFn: () => getSongsByEventAction(event.id),
+        queryKey: eventSongKeys.byEvent(org.id, event.id),
+        queryFn: () => getSongsByEventAction(event.id, org.id),
       }),
     ]),
   );
@@ -69,18 +78,10 @@ async function CalendarDataFetch({ searchParams }: CalendarPageProps) {
   );
 }
 
-/**
- * Next.js 15 Suspense 최적화 구조:
- * 최상단 CalendarPage 컴포넌트 내부에서 곧바로 `await searchParams`나 DB 조회를 실행하면
- * 데이터를 모두 불러올 때까지 화면 전체가 렌더링되지 않고 흰 화면(블로킹)으로 멈춰있게 됩니다.
- *
- * 이를 방지하기 위해 로딩이 오래 걸리는 비동기 작업(await)을 하위의 `<CalendarDataFetch>`로 분리하고,
- * 최상단은 즉시 렌더링하여 `<Suspense>`의 fallback(스켈레톤 UI)을 먼저 브라우저에 보여주도록 설계했습니다.
- */
-export default async function CalendarPage(props: CalendarPageProps) {
+export default async function OrgCalendarPage(props: CalendarPageProps) {
   return (
     <Suspense fallback={<CalendarPageSkeleton />}>
-      <CalendarDataFetch searchParams={props.searchParams} />
+      <CalendarDataFetch params={props.params} searchParams={props.searchParams} />
     </Suspense>
   );
 }

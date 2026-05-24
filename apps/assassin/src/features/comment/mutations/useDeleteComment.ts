@@ -1,14 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCommentAction } from "../actions";
+import { softDeleteCommentAction } from "../actions";
 import { commentKeys } from "../queries/keys";
+import { useOrgId } from "@/components/org/OrgProvider";
 
-export const useDeleteComment = () => {
+export const useSoftDeleteComment = () => {
   const queryClient = useQueryClient();
+  const orgId = useOrgId();
 
   return useMutation({
-    mutationFn: ({ id, songId }: { id: string; songId: string }) => deleteCommentAction(id, songId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(variables.songId) });
+    mutationFn: (variables: { id: string; songId: string }) =>
+      softDeleteCommentAction(variables.id, orgId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: commentKeys.bySong(orgId, variables.songId) });
     },
   });
 };
