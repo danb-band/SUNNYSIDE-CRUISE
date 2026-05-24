@@ -8,7 +8,6 @@ import {
   updatePlayerSchema,
 } from "./schema";
 import PlayerRepository from "./repository";
-import { TransactionClient } from "@/libs/prisma/types";
 
 const createPlayer = async (
   player: PlayerPayload,
@@ -96,36 +95,12 @@ const softDeletePlayer = async (id: string, orgId: string, actorUserId: string) 
   await PlayerRepository.softDeletePlayer(id, orgId);
 };
 
-const hardDeletePlayer = async (id: string, orgId: string, tx?: TransactionClient) => {
-  await PlayerRepository.hardDeletePlayer(id, orgId, tx);
-};
-
-const hardDeletePlayersBySongId = async (songId: string, orgId: string, tx?: TransactionClient) => {
-  await PlayerRepository.hardDeletePlayersBySongId(songId, orgId, tx);
-};
-
-const hardDeletePlayersBySeasonId = async (
-  seasonId: string,
-  orgId: string,
-  tx?: TransactionClient,
-) => {
-  await PlayerRepository.hardDeletePlayersBySeasonId(seasonId, orgId, tx);
-};
-
-const hardDeletePlayersByOrgId = async (orgId: string, tx?: TransactionClient) => {
-  await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
-};
-
 const PlayerService = {
   createPlayer,
   getPlayerById,
   getPlayersBySongId,
   updatePlayer,
   softDeletePlayer,
-  hardDeletePlayer,
-  hardDeletePlayersBySongId,
-  hardDeletePlayersBySeasonId,
-  hardDeletePlayersByOrgId,
 };
 
 export default PlayerService;

@@ -8,7 +8,6 @@ import {
   updateCalendarEventSchema,
 } from "./schema";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { TransactionClient } from "@/libs/prisma/types";
 
 const getAllCalendarEvents = async (orgId: string, userId: string): Promise<CalendarEvent[]> => {
   await assertOrgMember(userId, orgId);
@@ -86,10 +85,6 @@ const hardDeleteCalendarEvent = async (
   await CalendarEventRepository.hardDeleteCalendarEvent(id, orgId);
 };
 
-const hardDeleteCalendarEventsByOrgId = async (orgId: string, tx?: TransactionClient) => {
-  await CalendarEventRepository.hardDeleteCalendarEventsByOrgId(orgId, tx);
-};
-
 const CalendarEventService = {
   getAllCalendarEvents,
   getCalendarEventsByMonth,
@@ -97,7 +92,6 @@ const CalendarEventService = {
   createCalendarEvent,
   updateCalendarEvent,
   hardDeleteCalendarEvent,
-  hardDeleteCalendarEventsByOrgId,
 };
 
 export default CalendarEventService;

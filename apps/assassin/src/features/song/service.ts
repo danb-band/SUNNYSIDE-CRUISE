@@ -6,7 +6,6 @@ import { SongPayload, Song, songSchema, SongUpdatePayload, updateSongSchema } fr
 import { prisma } from "@libs/prisma/client";
 import PlayerRepository from "@features/player/repository";
 import CommentRepository from "@features/comment/repository";
-import { TransactionClient } from "@/libs/prisma/types";
 
 const assertSongAccess = async (songId: string, userId: string): Promise<string> => {
   const orgId = await OrgRepository.getOrgIdBySongId(songId);
@@ -154,28 +153,6 @@ const softDeleteSong = async (id: string, orgId: string, userId: string) => {
   }
 };
 
-const hardDeleteSong = async (id: string, orgId: string, tx?: TransactionClient) => {
-  await PlayerRepository.hardDeletePlayersBySongId(id, orgId, tx);
-  await CommentRepository.hardDeleteCommentsBySongId(id, orgId, tx);
-  await SongRepository.hardDeleteSong(id, orgId, tx);
-};
-
-const hardDeleteSongsBySeasonId = async (
-  seasonId: string,
-  orgId: string,
-  tx?: TransactionClient,
-) => {
-  await PlayerRepository.hardDeletePlayersBySeasonId(seasonId, orgId, tx);
-  await CommentRepository.hardDeleteCommentsBySeasonId(seasonId, orgId, tx);
-  await SongRepository.hardDeleteSongsBySeasonId(seasonId, orgId, tx);
-};
-
-const hardDeleteSongsByOrgId = async (orgId: string, tx?: TransactionClient) => {
-  await PlayerRepository.hardDeletePlayersByOrgId(orgId, tx);
-  await CommentRepository.hardDeleteCommentsByOrgId(orgId, tx);
-  await SongRepository.hardDeleteSongsByOrgId(orgId, tx);
-};
-
 const SongService = {
   assertSongAccess,
   createSong,
@@ -184,9 +161,6 @@ const SongService = {
   getSongsBySeasonId,
   updateSong,
   softDeleteSong,
-  hardDeleteSong,
-  hardDeleteSongsBySeasonId,
-  hardDeleteSongsByOrgId,
 };
 
 export default SongService;
