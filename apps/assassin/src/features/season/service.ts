@@ -11,7 +11,6 @@ import {
 } from "./schema";
 import PlayerRepository from "../player/repository";
 import CommentRepository from "../comment/repository";
-import { TransactionClient } from "@/libs/prisma/types";
 
 const assertSeasonExists = async (seasonId: string, orgId: string): Promise<void> => {
   const season = await SeasonRepository.getSeasonById(seasonId, orgId);
@@ -119,10 +118,6 @@ const hardDeleteSeason = async (id: string, orgId: string, userId: string): Prom
   }
 };
 
-const hardDeleteSeasonsByOrgId = async (orgId: string, tx?: TransactionClient): Promise<void> => {
-  await SeasonRepository.hardDeleteSeasonsByOrgId(orgId, tx);
-};
-
 const SeasonService = {
   assertSeasonExists,
   createSeason,
@@ -130,7 +125,6 @@ const SeasonService = {
   getAllSeasons,
   updateSeason,
   hardDeleteSeason,
-  hardDeleteSeasonsByOrgId,
 };
 
 export default SeasonService;
