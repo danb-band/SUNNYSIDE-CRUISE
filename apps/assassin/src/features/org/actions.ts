@@ -86,7 +86,7 @@ export const inviteMemberAction = async (
     let emailError: string | undefined;
 
     try {
-      // 이메일 발송에 필요한 조직명, 초대자 이름 조회
+      // 이메일 발송에 필요한 밴드명, 초대자 이름 조회
       const [org, inviterProfile] = await Promise.all([
         OrgService.getOrgById(orgId),
         OrgService.getProfileById(userId),

@@ -107,7 +107,7 @@ const inviteMember = async (orgId: string, requesterId: string, input: InviteMem
 
   const email = input.email.toLowerCase().trim();
 
-  // 이미 가입된 유저라면 조직 멤버 여부 확인
+  // 이미 가입된 유저라면 밴드 멤버 여부 확인
   const existingUserId = await OrgRepository.findUserIdByEmail(email);
   if (existingUserId) {
     const existingMember = await OrgRepository.getMember(orgId, existingUserId);
